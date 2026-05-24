@@ -3,10 +3,14 @@
 import Link from 'next/link'
 import { useParams, usePathname } from 'next/navigation'
 
-export default function NavHeader() {
+interface Props {
+  enfantOverride?: string  // utilisé sur /session/[id] où l'URL n'a pas le prénom
+}
+
+export default function NavHeader({ enfantOverride }: Props = {}) {
   const params = useParams()
   const pathname = usePathname()
-  const enfant = (params?.enfant || params?.prenom || '') as string
+  const enfant = (enfantOverride || params?.enfant || params?.prenom || '') as string
   const isParent = pathname.startsWith('/parent')
   const isEnfant = pathname.startsWith('/enfant')
 
@@ -14,7 +18,7 @@ export default function NavHeader() {
     <header className="sticky top-0 z-50 border-b" style={{ background: 'white', borderColor: 'var(--border)' }}>
       <div className="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="text-lg font-light" style={{ fontFamily: 'Georgia, serif' }}>
+        <Link href={enfant ? `/parent/${enfant}` : '/'} className="text-lg font-light" style={{ fontFamily: 'Georgia, serif' }}>
           Parents<span style={{ color: 'var(--accent)', fontStyle: 'italic' }}>AI</span>
         </Link>
 

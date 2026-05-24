@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useParams, useSearchParams } from 'next/navigation'
+import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import NavHeader from '@/components/NavHeader'
 import QCMExercice from '@/components/exercices/QCMExercice'
 import ProblemeExercice from '@/components/exercices/ProblemeExercice'
@@ -11,6 +11,7 @@ import { Session, Reponse, ExerciceQCM, ExerciceProbleme } from '@/types'
 export default function SessionPage() {
   const params       = useParams()
   const searchParams = useSearchParams()
+  const router       = useRouter()
   const sessionId    = params.id as string
   const modeParent   = searchParams.get('mode') === 'parent'
 
@@ -45,8 +46,9 @@ export default function SessionPage() {
     if (!session) return
     setValidating(true)
     await supabase.from('sessions').update({ statut: 'validé' }).eq('id', sessionId)
-    setSession({ ...session, statut: 'validé' })
     setValidating(false)
+    // Redirige vers le dashboard parent après validation
+    router.push(`/parent/${session.enfant}`)
   }
 
   if (loading) {
@@ -93,7 +95,7 @@ export default function SessionPage() {
 
   return (
     <div className="min-h-screen">
-      <NavHeader />
+      <NavHeader enfantOverride={session.enfant} />
       <div className="px-4 py-8 max-w-3xl mx-auto">
 
         {/* Header session */}
