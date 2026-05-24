@@ -21,6 +21,14 @@ export default function SessionPage() {
   const [validating, setValidating] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
+  function handleReponseQCM(exerciceNum: number, estCorrect: boolean) {
+    setReponses(prev => {
+      const existe = prev.find(r => r.exercice_num === exerciceNum)
+      if (existe) return prev.map(r => r.exercice_num === exerciceNum ? { ...r, est_correct: estCorrect } : r)
+      return [...prev, { exercice_num: exerciceNum, type: 'qcm', est_correct: estCorrect, session_id: sessionId } as Reponse]
+    })
+  }
+
   useEffect(() => { charger() }, [sessionId])
 
   async function charger() {
@@ -156,6 +164,7 @@ export default function SessionPage() {
                 reponseInitiale={repExo?.reponse_index ?? null}
                 modeParent={modeParent}
                 estBloque={estBloque}
+                onReponse={handleReponseQCM}
               />
             )
           }

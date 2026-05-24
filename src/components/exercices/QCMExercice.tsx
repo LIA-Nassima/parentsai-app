@@ -10,11 +10,12 @@ interface Props {
   reponseInitiale?: number | null
   modeParent?: boolean
   estBloque?: boolean
+  onReponse?: (exerciceNum: number, estCorrect: boolean) => void
 }
 
 const LETTRES = ['A', 'B', 'C', 'D', 'E']
 
-export default function QCMExercice({ exercice, sessionId, reponseInitiale, modeParent = false, estBloque = false }: Props) {
+export default function QCMExercice({ exercice, sessionId, reponseInitiale, modeParent = false, estBloque = false, onReponse }: Props) {
   const [reponseChoisie, setReponseChoisie] = useState<number | null>(reponseInitiale ?? null)
   const [revealed, setRevealed] = useState(reponseInitiale !== null && reponseInitiale !== undefined)
 
@@ -38,6 +39,7 @@ export default function QCMExercice({ exercice, sessionId, reponseInitiale, mode
       est_correct: estCorrect,
       est_termine: true,
     }, { onConflict: 'session_id,exercice_num' })
+    onReponse?.(exercice.num, estCorrect)
   }
 
   const isCorrect = reponseChoisie === exercice.correct
