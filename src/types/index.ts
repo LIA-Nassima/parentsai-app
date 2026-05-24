@@ -1,0 +1,72 @@
+export interface ExerciceQCM {
+  num: number
+  type: 'qcm'
+  badge_type: string
+  badge_label: string
+  enonce: string
+  reponses: string[]
+  correct: number
+  correction: string
+  piege: string
+  metacog: string
+}
+
+export interface ExerciceProbleme {
+  num: number
+  type: 'probleme'
+  badge_type: string
+  badge_label: string
+  contexte: string
+  questions: { lettre: string; enonce: string; correction: string }[]
+  metacog: string
+}
+
+export type Exercice = ExerciceQCM | ExerciceProbleme
+
+export interface ExercicesData {
+  niveau: string
+  duree_estimee: string
+  encouragement: string
+  competences: string[]
+  points_vigilance: string
+  exercices: Exercice[]
+}
+
+export interface Session {
+  id: string
+  enfant: string
+  matiere: string
+  chapitre: string
+  numero_session: number
+  nb_qcm: number
+  nb_problemes: number
+  html_enfant_url: string
+  html_parent_url: string
+  statut: 'en_attente' | 'fait' | 'validé'
+  created_at: string
+  exercices_json?: ExercicesData
+}
+
+export interface Reponse {
+  id: string
+  session_id: string
+  exercice_num: number
+  type: 'qcm' | 'probleme'
+  reponse_index: number | null
+  est_correct: boolean | null
+  est_termine: boolean | null
+  photo_url: string | null
+}
+
+export interface Famille {
+  id: string
+  enfant: string
+  tel_enfant: string
+  tel_parent: string
+}
+
+export interface SessionAvecStats extends Session {
+  qcm_juste: number
+  qcm_total: number
+  pb_termine: number
+}
