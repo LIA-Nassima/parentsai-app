@@ -25,6 +25,10 @@ export default function Home() {
           router.push(`/parent/${noms[0]}`)
           return
         }
+      } else {
+        // Aucune famille → onboarding
+        router.push('/onboarding')
+        return
       }
       setLoading(false)
     }
