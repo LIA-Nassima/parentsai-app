@@ -29,7 +29,7 @@ export default function EspaceEnfant() {
     const { data: sessionsData } = await supabase
       .from('sessions')
       .select('*')
-      .ilike('enfant', prenom)
+      .eq('enfant', prenom)
       .order('created_at', { ascending: false })
 
     if (!sessionsData) { setLoading(false); return }
