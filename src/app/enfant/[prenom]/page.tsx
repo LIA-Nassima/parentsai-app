@@ -7,6 +7,7 @@ import NavHeader from '@/components/NavHeader'
 import { supabase } from '@/lib/supabase'
 import { Session, Reponse, SessionAvecStats } from '@/types'
 import { Card, CardContent } from '@/components/ui/card'
+import { normaliserPrenom } from '@/lib/normaliser'
 
 const BADGE_CONFIG: Record<string, { emoji: string; color: string }> = {
   'en_attente': { emoji: '⏳', color: '#f59e0b' },
@@ -16,7 +17,7 @@ const BADGE_CONFIG: Record<string, { emoji: string; color: string }> = {
 
 export default function EspaceEnfant() {
   const params = useParams()
-  const prenom = params.prenom as string
+  const prenom = normaliserPrenom(decodeURIComponent(params.prenom as string))
   const [sessions, setSessions] = useState<SessionAvecStats[]>([])
   const [loading, setLoading] = useState(true)
 

@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase'
 import { Session, Reponse, SessionAvecStats } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
+import { normaliserPrenom } from '@/lib/normaliser'
 
 const STATUT_CONFIG = {
   'en_attente': { label: 'En attente', color: '#6b6560', bg: '#f0ebe6' },
@@ -28,7 +29,7 @@ function normaliserMatiere(m: string): string {
 
 export default function DashboardParent() {
   const params = useParams()
-  const enfant = params.enfant as string
+  const enfant = normaliserPrenom(decodeURIComponent(params.enfant as string))
   const [sessions, setSessions] = useState<SessionAvecStats[]>([])
   const [loading, setLoading] = useState(true)
   const [filtreMat, setFiltreMat] = useState<string>('toutes')

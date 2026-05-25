@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { normaliserPrenom } from '@/lib/normaliser'
 
 const CLASSES = ['6ème', '5ème', '4ème', '3ème', '2nde', '1ère', 'Terminale']
 const MCP_URL = 'mcp.parentsai.eu'
@@ -53,21 +54,25 @@ export default function Onboarding() {
   }
 
   async function configurerFamille() {
-    if (!enfant.trim()) { setErreur('Entrez le prénom de votre enfant'); return }
+    const enfantNorm = normaliserPrenom(enfant)
+    if (!enfantNorm) { setErreur('Entrez le prénom de votre enfant'); return }
     setLoading(true)
     setErreur('')
     try {
       const res = await fetch('https://mcp.parentsai.eu/api/famille', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ enfant: enfant.trim(), classe }),
+        body: JSON.stringify({ enfant: enfantNorm, classe }),
       })
       const data = await res.json()
       if (!data.succes) throw new Error(data.message)
 
+      // Met à jour l'input avec la forme canonique pour cohérence visuelle
+      setEnfant(enfantNorm)
+
       // Charge les professeurs disponibles
       const resPofs = await fetch(
-        `https://mcp.parentsai.eu/api/professeurs?enfant=${encodeURIComponent(enfant.trim())}&classe=${encodeURIComponent(classe)}`
+        `https://mcp.parentsai.eu/api/professeurs?enfant=${encodeURIComponent(enfantNorm)}&classe=${encodeURIComponent(classe)}`
       )
       const dataPofs = await resPofs.json()
       setProfesseurs(dataPofs.professeurs || [])
@@ -85,7 +90,7 @@ export default function Onboarding() {
   }
 
   function terminer() {
-    router.push(`/parent/${encodeURIComponent(enfant.trim())}`)
+    router.push(`/parent/${encodeURIComponent(normaliserPrenom(enfant))}`)
   }
 
   return (

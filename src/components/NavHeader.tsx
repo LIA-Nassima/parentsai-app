@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useParams, usePathname } from 'next/navigation'
+import { normaliserPrenom } from '@/lib/normaliser'
 
 interface Props {
   enfantOverride?: string  // utilisé sur /session/[id] où l'URL n'a pas le prénom
@@ -10,7 +11,8 @@ interface Props {
 export default function NavHeader({ enfantOverride }: Props = {}) {
   const params = useParams()
   const pathname = usePathname()
-  const enfant = (enfantOverride || params?.enfant || params?.prenom || '') as string
+  const enfantBrut = (enfantOverride || params?.enfant || params?.prenom || '') as string
+  const enfant = normaliserPrenom(decodeURIComponent(enfantBrut))
   const isParent = pathname.startsWith('/parent')
   const isEnfant = pathname.startsWith('/enfant')
 
