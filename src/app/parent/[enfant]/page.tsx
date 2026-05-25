@@ -214,7 +214,7 @@ export default function DashboardParent() {
                       <div className="flex flex-col gap-2 text-right">
                         {/* Travail de l'enfant — visible seulement après soumission */}
                         {(s.statut === 'fait' || s.statut === 'validé') && (
-                          <Link href={s.exercices_json ? `/session/${s.id}?mode=parent` : s.html_enfant_url}
+                          <Link href={s.exercices_json ? `/session/${s.id}` : s.html_enfant_url}
                             target={s.exercices_json ? undefined : '_blank'}
                             className="text-xs px-3 py-1.5 rounded-lg font-medium transition-opacity hover:opacity-80"
                             style={{ background: 'var(--primary)', color: 'white' }}>
