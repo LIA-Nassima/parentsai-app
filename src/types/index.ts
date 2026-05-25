@@ -70,3 +70,28 @@ export interface SessionAvecStats extends Session {
   qcm_total: number
   pb_termine: number
 }
+
+export interface JourPlanning {
+  date: string             // YYYY-MM-DD
+  jour: 'lundi' | 'mardi' | 'mercredi' | 'jeudi' | 'vendredi' | 'samedi' | 'dimanche'
+  type: 'session' | 'repos'
+  matiere?: string
+  chapitre?: string
+  duree_min?: number
+  raison?: string
+}
+
+export interface PlanningData {
+  semaine_debut: string    // YYYY-MM-DD (lundi)
+  focus: string
+  points_vigilance: string
+  jours: JourPlanning[]
+}
+
+export interface Planning {
+  id: string
+  enfant: string
+  semaine_debut: string
+  planning_json: PlanningData
+  created_at: string
+}

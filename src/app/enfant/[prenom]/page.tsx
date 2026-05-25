@@ -82,7 +82,7 @@ export default function EspaceEnfant() {
       <div className="px-4 py-8 max-w-2xl mx-auto">
 
       {/* Header enfant */}
-      <div className="text-center mb-10">
+      <div className="text-center mb-6">
         <div className="text-5xl mb-3">🎓</div>
         <h1 className="text-2xl font-light" style={{ fontFamily: 'Georgia, serif' }}>
           Salut <em style={{ color: 'var(--accent)', fontStyle: 'italic' }}>{prenom}</em> !
@@ -91,6 +91,15 @@ export default function EspaceEnfant() {
           {totalValides} session{totalValides > 1 ? 's' : ''} validée{totalValides > 1 ? 's' : ''} ·{' '}
           {totalQcm > 0 ? `${Math.round((scoreGlobal / totalQcm) * 100)}% de réussite` : 'Commence ta première session !'}
         </p>
+      </div>
+
+      {/* Lien vers le planning */}
+      <div className="text-center mb-10">
+        <Link href={`/planning/${encodeURIComponent(prenom)}`}
+          className="inline-block px-5 py-2.5 rounded-xl text-sm font-medium transition-opacity hover:opacity-90"
+          style={{ background: 'var(--primary)', color: 'white' }}>
+          📅 Mon planning de la semaine
+        </Link>
       </div>
 
       {/* Session en cours / dernière */}

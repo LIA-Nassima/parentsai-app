@@ -101,13 +101,20 @@ export default function DashboardParent() {
       <div className="px-4 py-8 max-w-4xl mx-auto">
 
         {/* Header */}
-        <div className="mb-8">
-          <p className="text-xs uppercase tracking-widest mb-1" style={{ color: 'var(--muted-foreground)' }}>
-            Espace Parent
-          </p>
-          <h1 className="text-3xl font-light" style={{ fontFamily: 'Georgia, serif' }}>
-            Suivi de <em style={{ color: 'var(--accent)', fontStyle: 'italic' }}>{enfant}</em>
-          </h1>
+        <div className="mb-8 flex items-start justify-between gap-4">
+          <div>
+            <p className="text-xs uppercase tracking-widest mb-1" style={{ color: 'var(--muted-foreground)' }}>
+              Espace Parent
+            </p>
+            <h1 className="text-3xl font-light" style={{ fontFamily: 'Georgia, serif' }}>
+              Suivi de <em style={{ color: 'var(--accent)', fontStyle: 'italic' }}>{enfant}</em>
+            </h1>
+          </div>
+          <Link href={`/planning/${encodeURIComponent(enfant)}`}
+            className="shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition-opacity hover:opacity-90"
+            style={{ background: 'var(--primary)', color: 'white' }}>
+            📅 Planning de la semaine
+          </Link>
         </div>
 
         {/* Filtre par enfant (si plusieurs enfants) */}
