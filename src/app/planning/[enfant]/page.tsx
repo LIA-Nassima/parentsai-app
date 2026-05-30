@@ -73,6 +73,7 @@ export default function PagePlanning() {
   async function charger() {
     setLoading(true)
     setPasDePlanning(false)
+    setPlanning(null)
     const finSemaine = decalerSemaine(semaineDebut, 1)
 
     const [{ data: p }, { data: s }] = await Promise.all([
