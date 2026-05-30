@@ -27,6 +27,15 @@ const JOURS_LABEL: Record<string, string> = {
   dimanche: 'Dim',
 }
 
+// Formate une Date en YYYY-MM-DD en heure locale (évite le décalage UTC)
+function toLocalISO(d: Date): string {
+  return [
+    d.getFullYear(),
+    String(d.getMonth() + 1).padStart(2, '0'),
+    String(d.getDate()).padStart(2, '0'),
+  ].join('-')
+}
+
 // Calcule le lundi de la semaine en cours (YYYY-MM-DD)
 function lundiCourant(): string {
   const aujourd = new Date()
@@ -34,14 +43,14 @@ function lundiCourant(): string {
   const decalage = jourSem === 0 ? -6 : 1 - jourSem
   const lundi = new Date(aujourd)
   lundi.setDate(aujourd.getDate() + decalage)
-  return lundi.toISOString().slice(0, 10)
+  return toLocalISO(lundi)
 }
 
 // Décale une date de N semaines (renvoie YYYY-MM-DD)
 function decalerSemaine(dateIso: string, deltaSemaines: number): string {
   const d = new Date(dateIso + 'T00:00:00')
   d.setDate(d.getDate() + deltaSemaines * 7)
-  return d.toISOString().slice(0, 10)
+  return toLocalISO(d)
 }
 
 function formaterDate(dateIso: string): string {
