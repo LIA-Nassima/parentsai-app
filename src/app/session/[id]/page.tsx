@@ -92,7 +92,12 @@ export default function SessionPage() {
     )
   }
 
-  const { exercices, niveau, duree_estimee, encouragement, competences } = session.exercices_json
+  const { exercices, niveau, duree_estimee, encouragement, competences, titre, bareme_total, calculatrice } = session.exercices_json
+  const typeEval   = session.type_evaluation ?? 'session'
+  const isDS       = typeEval === 'ds'
+  const isBB       = typeEval === 'brevet_blanc'
+  const isEval     = isDS || isBB
+
   const qcmExos    = exercices.filter(e => e.type === 'qcm') as ExerciceQCM[]
   const pbExos     = exercices.filter(e => e.type === 'probleme') as ExerciceProbleme[]
   const qcmJuste   = reponses.filter(r => r.type === 'qcm' && r.est_correct).length
@@ -101,28 +106,58 @@ export default function SessionPage() {
   // Bloque les modifications si déjà soumis ou validé (sauf en mode parent qui a ses propres règles)
   const estBloque  = !modeParent && (session.statut === 'fait' || session.statut === 'validé')
 
+  // Couleurs selon le type
+  const evalColor  = isDS ? '#b45309' : '#1e3a5f'
+  const evalBg     = isDS ? '#fff8e1' : '#eef3fa'
+  const evalBorder = isDS ? '#fbbf24' : '#93b4d4'
+  const evalLabel  = isDS ? 'DEVOIR SURVEILLÉ' : 'BREVET BLANC'
+
   return (
     <div className="min-h-screen">
       <NavHeader enfantOverride={session.enfant} />
       <div className="px-4 py-8 max-w-3xl mx-auto">
 
+        {/* Bandeau DS / Brevet Blanc */}
+        {isEval && (
+          <div className="rounded-xl px-5 py-3 mb-5 flex items-center justify-between"
+            style={{ background: evalBg, border: `1px solid ${evalBorder}`, color: evalColor }}>
+            <div>
+              <span className="text-xs font-bold uppercase tracking-widest">{evalLabel}</span>
+              {titre && <p className="text-sm font-medium mt-0.5">{titre}</p>}
+            </div>
+            <div className="text-right text-xs" style={{ color: evalColor }}>
+              {bareme_total && <div className="font-bold text-base">/{bareme_total} pts</div>}
+              <div>{duree_estimee}</div>
+              {calculatrice !== undefined && (
+                <div>{calculatrice ? '🖩 calculatrice autorisée' : '🚫 sans calculatrice'}</div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Header session */}
         <div className="mb-6">
           <p className="text-xs uppercase tracking-widest mb-1" style={{ color: 'var(--muted-foreground)' }}>
-            Session n°{String(session.numero_session).padStart(2,'0')} · {niveau} · {modeParent ? 'Corrigés' : session.enfant}
+            {isEval
+              ? `${evalLabel} · ${session.matiere} · ${modeParent ? 'Corrigés' : session.enfant}`
+              : `Session n°${String(session.numero_session).padStart(2,'0')} · ${niveau} · ${modeParent ? 'Corrigés' : session.enfant}`
+            }
           </p>
           <h1 className="text-2xl font-light mb-1" style={{ fontFamily: 'Georgia, serif' }}>
             {session.matiere} — <em style={{ color: 'var(--accent)', fontStyle: 'italic' }}>{session.chapitre}</em>
           </h1>
           <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
-            {competences?.join(', ')} · Durée estimée : {duree_estimee}
+            {isEval
+              ? `Durée : ${duree_estimee}${bareme_total ? ` · Barème sur ${bareme_total} points` : ''}`
+              : `${competences?.join(', ')} · Durée estimée : ${duree_estimee}`
+            }
           </p>
         </div>
 
         {/* Bandeau parent */}
         {modeParent && (
           <div className="p-4 rounded-xl mb-6 text-sm font-mono text-center"
-            style={{ background: 'var(--primary)', color: 'white' }}>
+            style={{ background: isEval ? evalColor : 'var(--primary)', color: 'white' }}>
             📋 MODE CORRIGÉS — {session.enfant} · {session.matiere}
           </div>
         )}

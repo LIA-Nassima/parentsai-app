@@ -17,7 +17,8 @@ export interface ExerciceProbleme {
   badge_type: string
   badge_label: string
   contexte: string
-  questions: { lettre: string; enonce: string; correction: string }[]
+  points?: number
+  questions: { lettre: string; enonce: string; points?: number; correction: string }[]
   metacog: string
 }
 
@@ -30,6 +31,11 @@ export interface ExercicesData {
   competences: string[]
   points_vigilance: string
   exercices: Exercice[]
+  // Champs DS / Brevet Blanc (optionnels, absents pour les sessions classiques)
+  type_evaluation?: 'session' | 'ds' | 'brevet_blanc'
+  titre?: string
+  bareme_total?: number
+  calculatrice?: boolean
 }
 
 export interface Session {
@@ -43,6 +49,7 @@ export interface Session {
   html_enfant_url: string
   html_parent_url: string
   statut: 'en_attente' | 'fait' | 'validé'
+  type_evaluation?: 'session' | 'ds' | 'brevet_blanc'
   created_at: string
   exercices_json?: ExercicesData
 }
