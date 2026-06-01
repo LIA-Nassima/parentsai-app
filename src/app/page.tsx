@@ -87,47 +87,50 @@ export default function Home() {
                     </div>
                   </div>
 
-                  {/* Badge profs configurés */}
-                  <div
-                    className="text-xs font-medium px-2.5 py-1 rounded-full"
+                  {/* Badge profs — cliquable pour aller dans la config */}
+                  <a
+                    href={`/espace/${encodeURIComponent(f.enfant)}?tab=profs`}
+                    className="text-xs font-medium px-2.5 py-1 rounded-full transition-opacity hover:opacity-70"
                     style={{
                       background: tousConfigures ? '#edf7f2' : '#f0ebe6',
                       color:      tousConfigures ? '#2d7a4f' : '#6b6560',
                     }}
                   >
                     {nbProfs === 0
-                      ? '⚙️ À configurer'
+                      ? 'Configurer les profs'
                       : tousConfigures
                         ? `✅ ${nbProfs} profs`
-                        : `📋 ${nbProfs} profs`}
-                  </div>
+                        : `${nbProfs} profs configurés`}
+                  </a>
                 </div>
 
-                {/* Boutons */}
-                <div className="flex gap-2">
-                  <a
-                    href={`/espace/${encodeURIComponent(f.enfant)}`}
-                    className="flex-1 py-2.5 rounded-xl text-sm font-medium text-center text-white transition-opacity hover:opacity-90"
-                    style={{ background: 'var(--primary)' }}
-                  >
-                    Ouvrir →
-                  </a>
-                  <a
-                    href={`/espace/${encodeURIComponent(f.enfant)}?tab=profs`}
-                    className="px-4 py-2.5 rounded-xl text-sm font-medium text-center transition-opacity hover:opacity-90"
-                    style={{ background: 'var(--background)', border: '1px solid var(--border)', color: 'var(--foreground)' }}
-                    title="Configurer les professeurs"
-                  >
-                    ⚙️
-                  </a>
-                </div>
+                {/* Bouton principal */}
+                <a
+                  href={`/espace/${encodeURIComponent(f.enfant)}`}
+                  className="block w-full py-2.5 rounded-xl text-sm font-medium text-center text-white transition-opacity hover:opacity-90"
+                  style={{ background: 'var(--primary)' }}
+                >
+                  Ouvrir →
+                </a>
               </div>
             )
           })}
         </div>
 
+        {/* Lien Claude.ai */}
+        <a
+          href="https://claude.ai/projects"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-between w-full mt-4 px-5 py-3 rounded-2xl text-sm font-medium transition-opacity hover:opacity-80"
+          style={{ background: 'white', border: '1px solid var(--border)', color: 'var(--foreground)' }}
+        >
+          <span>🤖 Ouvrir Claude.ai — Mes projets</span>
+          <span style={{ color: 'var(--muted-foreground)' }}>↗</span>
+        </a>
+
         {/* Ajouter un enfant */}
-        <div className="mt-6 text-center">
+        <div className="mt-5 text-center">
           <a
             href="/onboarding"
             className="text-sm transition-opacity hover:opacity-70"

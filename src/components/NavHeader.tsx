@@ -48,15 +48,6 @@ export default function NavHeader({ enfantOverride }: Props = {}) {
           >
             🎓 Enfant
           </Link>
-          {/* Lien retour à la sélection de la famille (utile si plusieurs enfants) */}
-          <Link
-            href="/"
-            className="px-3 py-1.5 rounded-full text-sm transition-all"
-            style={{ color: 'var(--muted-foreground)', border: '1px solid var(--border)' }}
-            title="Changer d'enfant"
-          >
-            🏠
-          </Link>
         </nav>
       </div>
     </header>
