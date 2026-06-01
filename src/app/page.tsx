@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
 
 export default function Home() {
   const router = useRouter()
@@ -11,22 +10,29 @@ export default function Home() {
 
   useEffect(() => {
     async function charger() {
-      const { data } = await supabase
-        .from('familles')
-        .select('enfant')
-        .order('enfant')
+      try {
+        // Utilise l'API MCP (clé service) plutôt que Supabase anon
+        // pour éviter les blocages RLS sur la table familles
+        const res = await fetch('https://mcp.parentsai.eu/api/familles')
+        const json = await res.json()
+        const familles: { enfant: string }[] = json.familles || []
 
-      if (data && data.length > 0) {
-        const noms = data.map((f: { enfant: string }) => f.enfant)
-        setEnfants(noms)
+        if (familles.length > 0) {
+          const noms = familles.map(f => f.enfant)
+          setEnfants(noms)
 
-        // Si un seul enfant, redirige directement vers l'espace parent
-        if (noms.length === 1) {
-          router.push(`/parent/${noms[0]}`)
+          // Si un seul enfant, redirige directement vers l'espace parent
+          if (noms.length === 1) {
+            router.push(`/parent/${noms[0]}`)
+            return
+          }
+        } else {
+          // Aucune famille configurée → onboarding
+          router.push('/onboarding')
           return
         }
-      } else {
-        // Aucune famille → onboarding
+      } catch {
+        // En cas d'erreur réseau → onboarding
         router.push('/onboarding')
         return
       }
@@ -97,7 +103,18 @@ export default function Home() {
           </div>
         )}
 
-        <p className="mt-10 text-xs" style={{ color: 'var(--muted-foreground)' }}>
+        {/* Bouton pour ajouter un enfant supplémentaire */}
+        <div className="mt-8 text-center">
+          <a
+            href="/onboarding"
+            className="text-sm transition-opacity hover:opacity-70"
+            style={{ color: 'var(--muted-foreground)' }}
+          >
+            + Ajouter un enfant
+          </a>
+        </div>
+
+        <p className="mt-6 text-xs" style={{ color: 'var(--muted-foreground)' }}>
           ParentsAI · Propulsé par Claude + MCP
         </p>
       </div>

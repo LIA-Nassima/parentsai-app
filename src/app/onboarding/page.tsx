@@ -35,6 +35,7 @@ export default function Onboarding() {
   const [loading, setLoading] = useState(false)
   const [erreur, setErreur] = useState('')
   const [professeurs, setProfesseurs] = useState<Professeur[]>([])
+  const [avertissementNiveau, setAvertissementNiveau] = useState<string | null>(null)
   const [copie, setCopie] = useState<string | null>(null)
   const [expanded, setExpanded] = useState<string | null>(null)
   const [copiesPermanents, setCopiesPermanents] = useState<Record<string, boolean>>({})
@@ -76,6 +77,7 @@ export default function Onboarding() {
       )
       const dataPofs = await resPofs.json()
       setProfesseurs(dataPofs.professeurs || [])
+      setAvertissementNiveau(dataPofs.avertissement || null)
       setEtape(2)
     } catch (e: unknown) {
       setErreur(e instanceof Error ? e.message : 'Erreur serveur')
@@ -229,6 +231,14 @@ export default function Onboarding() {
                 Créer un projet → Nommez-le → Collez les instructions dans "Project Instructions" → Connectez le MCP ParentsAI
               </div>
             </div>
+
+            {/* Avertissement si aucun prof pour ce niveau (ex: 5ème) */}
+            {avertissementNiveau && (
+              <div className="rounded-xl p-4 mb-4 text-sm"
+                style={{ background: '#fdf0ed', border: '1px solid #f0c4b8', color: '#c9543a' }}>
+                ⚠️ {avertissementNiveau}
+              </div>
+            )}
 
             {professeurs.length === 0 ? (
               <div className="text-center py-8" style={{ color: 'var(--muted-foreground)' }}>
