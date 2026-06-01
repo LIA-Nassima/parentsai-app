@@ -66,10 +66,9 @@ export interface Reponse {
 }
 
 export interface Famille {
-  id: string
   enfant: string
-  tel_enfant: string
-  tel_parent: string
+  classe: string
+  profs_configures: string[]  // matières dont le template a été copié dans Claude.ai
 }
 
 export interface SessionAvecStats extends Session {
