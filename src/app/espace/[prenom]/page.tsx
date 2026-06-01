@@ -143,16 +143,15 @@ export default function EspaceEnfant() {
 // ─── Tab Suivi ────────────────────────────────────────────────────────────────
 
 function TabSuivi({ prenom }: { prenom: string }) {
-  const [sessions, setSessions]  = useState<SessionAvecStats[]>([])
-  const [loading, setLoading]    = useState(true)
-  const [filtreMat, setFiltreMat] = useState('toutes')
+  const [sessions, setSessions] = useState<SessionAvecStats[]>([])
+  const [loading, setLoading]   = useState(true)
+  const [ouverteMat, setOuverteMat] = useState<string | null>(null)
 
   useEffect(() => {
     async function charger() {
       setLoading(true)
       const { data } = await supabase
-        .from('sessions')
-        .select('*')
+        .from('sessions').select('*')
         .ilike('enfant', prenom)
         .order('created_at', { ascending: false })
 
@@ -178,9 +177,6 @@ function TabSuivi({ prenom }: { prenom: string }) {
     charger()
   }, [prenom])
 
-  const matieres = ['toutes', ...Array.from(new Set(sessions.map(s => s.matiere)))]
-  const filtrees = sessions.filter(s => filtreMat === 'toutes' || s.matiere === filtreMat)
-
   if (loading) return (
     <div className="text-center py-16">
       <div className="text-3xl mb-3 animate-pulse">⏳</div>
@@ -188,22 +184,44 @@ function TabSuivi({ prenom }: { prenom: string }) {
     </div>
   )
 
+  if (sessions.length === 0) return (
+    <div className="text-center py-16" style={{ color: 'var(--muted-foreground)' }}>
+      <div className="text-4xl mb-3">📭</div>
+      <p>Aucune session pour le moment.</p>
+      <p className="text-sm mt-1">Lance une session depuis Claude.ai !</p>
+    </div>
+  )
+
+  // ── Groupement par matière ──────────────────────────────────────────────────
+  const parMatiere = sessions.reduce<Record<string, SessionAvecStats[]>>((acc, s) => {
+    if (!acc[s.matiere]) acc[s.matiere] = []
+    acc[s.matiere].push(s)
+    return acc
+  }, {})
+
+  // Stats globales (pour les 3 cartes du haut)
+  const totalValides = sessions.filter(s => s.statut === 'validé').length
+  const totalQcm     = sessions.reduce((a, s) => a + s.qcm_total, 0)
+  const totalJuste   = sessions.reduce((a, s) => a + s.qcm_juste, 0)
+  const pctReussite  = totalQcm > 0 ? Math.round(totalJuste / totalQcm * 100) : null
+
   return (
     <div>
-      {/* Stats rapides */}
+      {/* Stats globales */}
       <div className="grid grid-cols-3 gap-3 mb-6">
         {[
-          { label: 'Sessions',  value: sessions.length },
-          { label: 'Validées',  value: sessions.filter(s => s.statut === 'validé').length },
-          { label: 'Réussite',  value: (() => {
-            const total = sessions.reduce((a, s) => a + s.qcm_total, 0)
-            const juste = sessions.reduce((a, s) => a + s.qcm_juste, 0)
-            return total > 0 ? `${Math.round(juste / total * 100)}%` : '—'
-          })() },
+          { label: 'Matières',  value: Object.keys(parMatiere).length },
+          { label: 'Validées',  value: totalValides },
+          { label: 'Réussite',  value: pctReussite !== null ? `${pctReussite}%` : '—' },
         ].map(stat => (
           <Card key={stat.label}>
             <CardContent className="pt-4 pb-4 text-center">
-              <div className="text-2xl font-light mb-0.5">{stat.value}</div>
+              <div className="text-2xl font-light mb-0.5"
+                style={{ color: stat.label === 'Réussite' && pctReussite !== null
+                  ? pctReussite >= 70 ? '#2d7a4f' : 'var(--accent)'
+                  : 'inherit' }}>
+                {stat.value}
+              </div>
               <div className="text-xs uppercase tracking-wide" style={{ color: 'var(--muted-foreground)' }}>
                 {stat.label}
               </div>
@@ -212,100 +230,115 @@ function TabSuivi({ prenom }: { prenom: string }) {
         ))}
       </div>
 
-      {/* Filtre matières */}
-      {matieres.length > 1 && (
-        <div className="flex gap-2 mb-4 flex-wrap">
-          {matieres.map(m => (
-            <button
-              key={m}
-              onClick={() => setFiltreMat(m)}
-              className="px-3 py-1.5 rounded-full text-xs font-medium transition-all"
-              style={{
-                background: filtreMat === m ? 'var(--primary)' : 'white',
-                color:      filtreMat === m ? 'white' : 'var(--foreground)',
-                border:     '1px solid var(--border)',
-              }}
-            >
-              {m === 'toutes' ? 'Toutes' : m}
-            </button>
-          ))}
-        </div>
-      )}
+      {/* Accordéon par matière */}
+      <div className="space-y-2">
+        {Object.entries(parMatiere).map(([matiere, sessMat]) => {
+          const icone     = ICONES_MATIERE[matiere] || '📚'
+          const ouvert    = ouverteMat === matiere
+          const qcmTotal  = sessMat.reduce((a, s) => a + s.qcm_total, 0)
+          const qcmJuste  = sessMat.reduce((a, s) => a + s.qcm_juste, 0)
+          const pct       = qcmTotal > 0 ? Math.round(qcmJuste / qcmTotal * 100) : null
+          const derniere  = new Date(sessMat[0].created_at).toLocaleDateString('fr-FR', {
+            day: 'numeric', month: 'short',
+          })
 
-      {/* Liste sessions */}
-      {filtrees.length === 0 ? (
-        <div className="text-center py-16" style={{ color: 'var(--muted-foreground)' }}>
-          <div className="text-4xl mb-3">📭</div>
-          <p>Aucune session pour le moment.</p>
-          <p className="text-sm mt-1">Lance une session depuis Claude.ai !</p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {filtrees.map(s => {
-            const statut = STATUT_CONFIG[s.statut] || STATUT_CONFIG['en_attente']
-            const score  = s.qcm_total > 0 ? `${s.qcm_juste}/${s.qcm_total}` : null
-            const date   = new Date(s.created_at).toLocaleDateString('fr-FR', {
-              day: 'numeric', month: 'short',
-            })
-            const typeLabel = s.type_evaluation === 'ds'
-              ? '📝 DS'
-              : s.type_evaluation === 'brevet_blanc'
-                ? '🏆 Brevet Blanc'
-                : null
+          return (
+            <div key={matiere} className="rounded-xl overflow-hidden"
+              style={{ background: 'white', border: '1px solid var(--border)' }}>
 
-            return (
-              <Card key={s.id}>
-                <CardContent className="pt-4 pb-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap mb-1">
-                        <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{date}</span>
-                        <span className="text-xs px-2 py-0.5 rounded-full font-medium"
-                          style={{ background: statut.bg, color: statut.color }}>
-                          {statut.label}
-                        </span>
-                        {typeLabel && (
-                          <span className="text-xs px-2 py-0.5 rounded-full"
-                            style={{ background: 'var(--border)', color: 'var(--muted-foreground)' }}>
-                            {typeLabel}
-                          </span>
-                        )}
-                      </div>
-                      <p className="font-medium text-sm">{s.matiere}</p>
-                      <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
-                        {s.chapitre}
-                      </p>
-                      {score && (
-                        <p className="text-xs mt-1 font-medium" style={{ color: '#2d7a4f' }}>
-                          📊 {score} QCM
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex flex-col gap-1.5 shrink-0">
-                      {(s.statut === 'fait' || s.statut === 'validé') && (
-                        <Link
-                          href={`/session/${s.id}`}
-                          className="text-xs px-3 py-1.5 rounded-lg font-medium"
-                          style={{ background: 'var(--primary)', color: 'white' }}
-                        >
-                          📝 Travail
-                        </Link>
-                      )}
-                      <Link
-                        href={`/session/${s.id}?mode=parent`}
-                        className="text-xs px-3 py-1.5 rounded-lg font-medium text-center"
-                        style={{ background: 'var(--border)', color: 'var(--foreground)' }}
-                      >
-                        📋 Corrigés
-                      </Link>
+              {/* En-tête matière — cliquable */}
+              <button
+                onClick={() => setOuverteMat(ouvert ? null : matiere)}
+                className="w-full px-4 py-4 flex items-center justify-between text-left hover:bg-gray-50 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">{icone}</span>
+                  <div>
+                    <div className="font-medium text-sm">{matiere}</div>
+                    <div className="text-xs mt-0.5" style={{ color: 'var(--muted-foreground)' }}>
+                      {sessMat.length} session{sessMat.length > 1 ? 's' : ''} · dernière le {derniere}
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            )
-          })}
-        </div>
-      )}
+                </div>
+                <div className="flex items-center gap-3 shrink-0">
+                  {/* Taux de réussite */}
+                  {pct !== null && (
+                    <span className="text-sm font-medium"
+                      style={{ color: pct >= 70 ? '#2d7a4f' : 'var(--accent)' }}>
+                      {pct}%
+                    </span>
+                  )}
+                  <span style={{
+                    color: 'var(--muted-foreground)',
+                    display: 'inline-block',
+                    transition: 'transform 0.2s',
+                    transform: ouvert ? 'rotate(180deg)' : 'none',
+                  }}>⌄</span>
+                </div>
+              </button>
+
+              {/* Liste des sessions de cette matière */}
+              {ouvert && (
+                <div className="border-t px-4 pb-3" style={{ borderColor: 'var(--border)' }}>
+                  <div className="space-y-2 mt-3">
+                    {sessMat.map(s => {
+                      const statut    = STATUT_CONFIG[s.statut] || STATUT_CONFIG['en_attente']
+                      const score     = s.qcm_total > 0 ? `${s.qcm_juste}/${s.qcm_total}` : null
+                      const date      = new Date(s.created_at).toLocaleDateString('fr-FR', {
+                        day: 'numeric', month: 'short',
+                      })
+                      const typeLabel = s.type_evaluation === 'ds'
+                        ? '📝 DS'
+                        : s.type_evaluation === 'brevet_blanc'
+                          ? '🏆 BB'
+                          : null
+
+                      return (
+                        <div key={s.id} className="flex items-center justify-between gap-3 py-2"
+                          style={{ borderBottom: '1px solid var(--border)' }}>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{date}</span>
+                              <span className="text-xs px-2 py-0.5 rounded-full font-medium"
+                                style={{ background: statut.bg, color: statut.color }}>
+                                {statut.label}
+                              </span>
+                              {typeLabel && (
+                                <span className="text-xs px-1.5 py-0.5 rounded-full"
+                                  style={{ background: 'var(--border)', color: 'var(--muted-foreground)' }}>
+                                  {typeLabel}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs mt-0.5" style={{ color: 'var(--muted-foreground)' }}>
+                              {s.chapitre}
+                              {score && <span className="ml-2 font-medium" style={{ color: '#2d7a4f' }}>· {score} QCM</span>}
+                            </p>
+                          </div>
+                          <div className="flex gap-1.5 shrink-0">
+                            {(s.statut === 'fait' || s.statut === 'validé') && (
+                              <Link href={`/session/${s.id}`}
+                                className="text-xs px-2.5 py-1.5 rounded-lg font-medium"
+                                style={{ background: 'var(--primary)', color: 'white' }}>
+                                📝
+                              </Link>
+                            )}
+                            <Link href={`/session/${s.id}?mode=parent`}
+                              className="text-xs px-2.5 py-1.5 rounded-lg font-medium"
+                              style={{ background: 'var(--border)', color: 'var(--foreground)' }}>
+                              📋
+                            </Link>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }

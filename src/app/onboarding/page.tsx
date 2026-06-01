@@ -99,6 +99,17 @@ export default function Onboarding() {
     <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12">
       <div className="w-full max-w-lg">
 
+        {/* Lien retour — visible seulement si on n'est pas au tout début */}
+        <div className="mb-6">
+          <a
+            href="/"
+            className="text-sm transition-opacity hover:opacity-70 flex items-center gap-1"
+            style={{ color: 'var(--muted-foreground)' }}
+          >
+            ← Retour
+          </a>
+        </div>
+
         {/* Logo */}
         <div className="text-center mb-10">
           <h1 className="text-4xl font-light" style={{ fontFamily: 'Georgia, serif' }}>
