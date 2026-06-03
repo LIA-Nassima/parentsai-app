@@ -125,12 +125,21 @@ export default function EspaceEnfant() {
 // ─── Tab À faire ──────────────────────────────────────────────────────────────
 
 function TabAFaire({ prenom }: { prenom: string }) {
-  const [sessions, setSessions] = useState<SessionAvecStats[]>([])
-  const [loading, setLoading]   = useState(true)
+  const [sessions, setSessions]       = useState<SessionAvecStats[]>([])
+  const [totalSessions, setTotal]     = useState(0)
+  const [loading, setLoading]         = useState(true)
 
   useEffect(() => {
     async function charger() {
       setLoading(true)
+
+      // Compte le total de sessions (tous statuts) pour distinguer "rien du tout" vs "tout validé"
+      const { count } = await supabase
+        .from('sessions').select('*', { count: 'exact', head: true })
+        .ilike('enfant', prenom)
+      setTotal(count ?? 0)
+
+      // Sessions à faire (en_attente ou fait)
       const { data } = await supabase
         .from('sessions').select('*')
         .ilike('enfant', prenom)
@@ -166,13 +175,24 @@ function TabAFaire({ prenom }: { prenom: string }) {
     </div>
   )
 
-  if (sessions.length === 0) return (
-    <div className="text-center py-16" style={{ color: 'var(--muted-foreground)' }}>
-      <div className="text-4xl mb-3">🎉</div>
-      <p className="font-medium">Tout est fait !</p>
-      <p className="text-sm mt-1">Aucune session en attente pour le moment.</p>
-    </div>
-  )
+  if (sessions.length === 0) {
+    // Aucune session du tout → l'enfant n'a pas encore commencé
+    if (totalSessions === 0) return (
+      <div className="text-center py-16" style={{ color: 'var(--muted-foreground)' }}>
+        <div className="text-4xl mb-3">📖</div>
+        <p className="font-medium">Aucune session pour le moment.</p>
+        <p className="text-sm mt-1">Demande à tes parents de lancer une session !</p>
+      </div>
+    )
+    // Il y a des sessions mais toutes sont validées → bravo !
+    return (
+      <div className="text-center py-16" style={{ color: 'var(--muted-foreground)' }}>
+        <div className="text-4xl mb-3">🎉</div>
+        <p className="font-medium">Tout est fait !</p>
+        <p className="text-sm mt-1">Toutes tes sessions sont validées. Bravo !</p>
+      </div>
+    )
+  }
 
   return (
     <div>

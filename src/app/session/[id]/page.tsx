@@ -56,7 +56,7 @@ export default function SessionPage() {
     await supabase.from('sessions').update({ statut: 'validé' }).eq('id', sessionId)
     setValidating(false)
     // Redirige vers le dashboard parent après validation
-    router.push(`/parent/${session.enfant}`)
+    router.push(`/espace/${session.enfant}`)
   }
 
   if (loading) {

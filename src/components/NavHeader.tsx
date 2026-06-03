@@ -46,7 +46,7 @@ export default function NavHeader({ enfantOverride }: Props = {}) {
               border: isEnfant ? 'none' : '1px solid var(--border)',
             }}
           >
-            🎓 Enfant
+            🎓 {enfant || 'Enfant'}
           </Link>
         </nav>
       </div>
