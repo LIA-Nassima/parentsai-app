@@ -20,14 +20,14 @@ export default function NavHeader({ enfantOverride }: Props = {}) {
     <header className="sticky top-0 z-50 border-b" style={{ background: 'white', borderColor: 'var(--border)' }}>
       <div className="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
         {/* Logo */}
-        <Link href={enfant ? `/parent/${enfant}` : '/'} className="text-lg font-light" style={{ fontFamily: 'Georgia, serif' }}>
+        <Link href={enfant ? `/espace/${enfant}` : '/'} className="text-lg font-light" style={{ fontFamily: 'Georgia, serif' }}>
           Parents<span style={{ color: 'var(--accent)', fontStyle: 'italic' }}>AI</span>
         </Link>
 
         {/* Navigation */}
         <nav className="flex gap-2 items-center">
           <Link
-            href={enfant ? `/parent/${enfant}` : '/'}
+            href={enfant ? `/espace/${enfant}` : '/'}
             className="px-4 py-1.5 rounded-full text-sm font-medium transition-all"
             style={{
               background: isParent ? 'var(--primary)' : 'transparent',
