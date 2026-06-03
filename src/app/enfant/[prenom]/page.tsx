@@ -128,6 +128,7 @@ function TabAFaire({ prenom }: { prenom: string }) {
   const [sessions, setSessions]       = useState<SessionAvecStats[]>([])
   const [totalSessions, setTotal]     = useState(0)
   const [loading, setLoading]         = useState(true)
+  const [ouverteMat, setOuverteMat]   = useState<string | null>(null)
 
   useEffect(() => {
     async function charger() {
@@ -194,6 +195,13 @@ function TabAFaire({ prenom }: { prenom: string }) {
     )
   }
 
+  // Groupement par matière
+  const parMatiere = sessions.reduce<Record<string, SessionAvecStats[]>>((acc, s) => {
+    if (!acc[s.matiere]) acc[s.matiere] = []
+    acc[s.matiere].push(s)
+    return acc
+  }, {})
+
   return (
     <div>
       {/* Message d'encouragement */}
@@ -201,51 +209,87 @@ function TabAFaire({ prenom }: { prenom: string }) {
         style={{ background: 'white', border: '1px solid var(--border)' }}>
         <p className="font-medium">Salut <em style={{ color: 'var(--accent)' }}>{prenom}</em> ! 👋</p>
         <p className="text-sm mt-1" style={{ color: 'var(--muted-foreground)' }}>
-          {sessions.length} session{sessions.length > 1 ? 's' : ''} t'attend{sessions.length > 1 ? 'ent' : ''} !
+          {sessions.length} session{sessions.length > 1 ? 's' : ''} t'attend{sessions.length > 1 ? 'ent' : ''} dans{' '}
+          {Object.keys(parMatiere).length} matière{Object.keys(parMatiere).length > 1 ? 's' : ''}
         </p>
       </div>
 
-      {/* Liste des sessions à faire */}
-      <div className="space-y-3">
-        {sessions.map(s => {
-          const icone = ICONES_MATIERE[s.matiere] || '📚'
-          const estFait = s.statut === 'fait'
+      {/* Accordéon par matière */}
+      <div className="space-y-2">
+        {Object.entries(parMatiere).map(([matiere, sessMat]) => {
+          const icone    = ICONES_MATIERE[matiere] || '📚'
+          const ouvert   = ouverteMat === matiere
+          const nbFait   = sessMat.filter(s => s.statut === 'fait').length
 
           return (
-            <Link
-              key={s.id}
-              href={`/session/${s.id}`}
-              className="block rounded-2xl p-4 transition-all hover:shadow-md"
-              style={{
-                background: 'white',
-                border: `2px solid ${estFait ? 'var(--accent)' : 'var(--primary)'}`,
-              }}
-            >
-              <div className="flex items-center gap-4">
-                <span className="text-3xl">{icone}</span>
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium text-sm truncate">{s.chapitre}</div>
-                  <div className="text-xs mt-0.5" style={{ color: 'var(--muted-foreground)' }}>
-                    {s.matiere}
-                    {s.type_evaluation === 'ds' && ' · 📝 DS'}
-                    {s.type_evaluation === 'brevet_blanc' && ' · 🏆 Brevet Blanc'}
+            <div key={matiere} className="rounded-xl overflow-hidden"
+              style={{ background: 'white', border: '1px solid var(--border)' }}>
+
+              {/* En-tête matière */}
+              <button
+                onClick={() => setOuverteMat(ouvert ? null : matiere)}
+                className="w-full px-4 py-4 flex items-center justify-between text-left hover:bg-gray-50 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">{icone}</span>
+                  <div>
+                    <div className="font-medium text-sm">{matiere}</div>
+                    <div className="text-xs mt-0.5" style={{ color: 'var(--muted-foreground)' }}>
+                      {sessMat.length} session{sessMat.length > 1 ? 's' : ''}
+                      {nbFait > 0 && ` · ${nbFait} à corriger`}
+                    </div>
                   </div>
                 </div>
-                <div className="shrink-0">
-                  {estFait ? (
-                    <span className="text-xs px-2.5 py-1 rounded-full font-medium"
+                <div className="flex items-center gap-2 shrink-0">
+                  {/* Badge "À corriger" si des sessions sont déjà soumises */}
+                  {nbFait > 0 && (
+                    <span className="text-xs px-2 py-0.5 rounded-full font-medium"
                       style={{ background: '#fdf0ed', color: 'var(--accent)' }}>
-                      ✏️ Reprendre
-                    </span>
-                  ) : (
-                    <span className="text-xs px-2.5 py-1 rounded-full font-medium text-white"
-                      style={{ background: 'var(--primary)' }}>
-                      Commencer →
+                      ✏️ {nbFait}
                     </span>
                   )}
+                  <span style={{
+                    color: 'var(--muted-foreground)', display: 'inline-block',
+                    transition: 'transform 0.2s', transform: ouvert ? 'rotate(180deg)' : 'none',
+                  }}>⌄</span>
                 </div>
-              </div>
-            </Link>
+              </button>
+
+              {/* Sessions de cette matière */}
+              {ouvert && (
+                <div className="border-t px-4 pb-3" style={{ borderColor: 'var(--border)' }}>
+                  <div className="space-y-2 mt-3">
+                    {sessMat.map(s => {
+                      const estFait = s.statut === 'fait'
+                      return (
+                        <Link key={s.id} href={`/session/${s.id}`}
+                          className="flex items-center justify-between py-2.5 px-3 rounded-xl transition-all hover:opacity-80"
+                          style={{
+                            background: estFait ? '#fdf0ed' : 'var(--background)',
+                            border: `1px solid ${estFait ? 'var(--accent)' : 'var(--border)'}`,
+                          }}>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{s.chapitre}</p>
+                            <p className="text-xs mt-0.5" style={{ color: 'var(--muted-foreground)' }}>
+                              {s.type_evaluation === 'ds' && '📝 DS · '}
+                              {s.type_evaluation === 'brevet_blanc' && '🏆 Brevet Blanc · '}
+                              {new Date(s.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                            </p>
+                          </div>
+                          <span className="text-xs px-2.5 py-1 rounded-full font-medium ml-3 shrink-0"
+                            style={{
+                              background: estFait ? 'var(--accent)' : 'var(--primary)',
+                              color: 'white',
+                            }}>
+                            {estFait ? '✏️ Reprendre' : 'Commencer →'}
+                          </span>
+                        </Link>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
           )
         })}
       </div>
