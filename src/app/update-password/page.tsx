@@ -2,26 +2,22 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 
-export default function Login() {
+export default function UpdatePassword() {
   const router = useRouter()
-  const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
+  const [confirm, setConfirm]   = useState('')
   const [loading, setLoading]   = useState(false)
   const [erreur, setErreur]     = useState('')
 
-  async function seConnecter() {
-    if (!email || !password) { setErreur('Email et mot de passe requis'); return }
+  async function mettrAJour() {
+    if (password.length < 6)   { setErreur('6 caractères minimum'); return }
+    if (password !== confirm)   { setErreur('Les mots de passe ne correspondent pas'); return }
     setLoading(true)
     setErreur('')
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) {
-      setErreur('Email ou mot de passe incorrect')
-      setLoading(false)
-      return
-    }
+    const { error } = await supabase.auth.updateUser({ password })
+    if (error) { setErreur(error.message); setLoading(false); return }
     router.push('/')
     router.refresh()
   }
@@ -35,32 +31,31 @@ export default function Login() {
             Parents<span style={{ color: 'var(--accent)', fontStyle: 'italic' }}>AI</span>
           </h1>
           <p className="mt-2 text-xs uppercase tracking-widest" style={{ color: 'var(--muted-foreground)' }}>
-            Connexion
+            Nouveau mot de passe
           </p>
         </div>
 
         <div className="rounded-2xl p-8" style={{ background: 'white', border: '1px solid var(--border)' }}>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-2">Email</label>
+              <label className="block text-sm font-medium mb-2">Nouveau mot de passe</label>
               <input
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && seConnecter()}
-                placeholder="votre@email.fr"
+                type="password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="6 caractères minimum"
                 className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all"
                 style={{ border: '1.5px solid var(--border)', background: 'var(--background)' }}
                 autoFocus
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">Mot de passe</label>
+              <label className="block text-sm font-medium mb-2">Confirmer</label>
               <input
                 type="password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && seConnecter()}
+                value={confirm}
+                onChange={e => setConfirm(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && mettrAJour()}
                 placeholder="••••••••"
                 className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all"
                 style={{ border: '1.5px solid var(--border)', background: 'var(--background)' }}
@@ -70,27 +65,14 @@ export default function Login() {
             {erreur && <p className="text-sm" style={{ color: 'var(--accent)' }}>{erreur}</p>}
 
             <button
-              onClick={seConnecter}
+              onClick={mettrAJour}
               disabled={loading}
               className="w-full py-3 rounded-xl font-medium text-white text-sm transition-opacity hover:opacity-90 disabled:opacity-50"
               style={{ background: 'var(--primary)' }}>
-              {loading ? 'Connexion...' : 'Se connecter →'}
+              {loading ? 'Mise à jour...' : 'Enregistrer →'}
             </button>
           </div>
         </div>
-
-        <p className="mt-6 text-center text-sm" style={{ color: 'var(--muted-foreground)' }}>
-          Pas encore de compte ?{' '}
-          <Link href="/register" className="font-medium underline" style={{ color: 'var(--primary)' }}>
-            S'inscrire
-          </Link>
-        </p>
-
-        <p className="mt-3 text-center text-sm" style={{ color: 'var(--muted-foreground)' }}>
-          <Link href="/forgot-password" className="underline" style={{ color: 'var(--muted-foreground)' }}>
-            Mot de passe oublié ?
-          </Link>
-        </p>
       </div>
     </div>
   )

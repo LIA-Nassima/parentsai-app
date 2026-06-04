@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 const PROTECTED = ['/espace', '/parent', '/planning', '/onboarding']
-const AUTH_PAGES = ['/login', '/register']
+const AUTH_PAGES = ['/login', '/register', '/forgot-password', '/update-password']
 
 export async function proxy(request: NextRequest) {
   const response = NextResponse.next({
