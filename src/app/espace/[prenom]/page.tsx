@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import QRCode from 'react-qr-code'
 import { normaliserPrenom } from '@/lib/normaliser'
 import { supabase } from '@/lib/supabase'
 import { Session, Reponse, SessionAvecStats } from '@/types'
@@ -346,34 +347,95 @@ function TabSuivi({ prenom }: { prenom: string }) {
 // ─── Tab Exercices ────────────────────────────────────────────────────────────
 
 function TabExercices({ prenom }: { prenom: string }) {
-  const url = `${typeof window !== 'undefined' ? window.location.origin : ''}/enfant/${encodeURIComponent(prenom)}`
+  const [accessToken, setAccessToken] = useState<string | null>(null)
+  const [loading, setLoading]         = useState(true)
+  const [copie, setCopie]             = useState(false)
+
+  useEffect(() => {
+    async function chargerToken() {
+      const { data } = await supabase
+        .from('familles')
+        .select('access_token')
+        .ilike('enfant', prenom)
+        .single()
+      setAccessToken(data?.access_token || null)
+      setLoading(false)
+    }
+    chargerToken()
+  }, [prenom])
+
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://app.parentsai.eu'
+  const qrUrl  = accessToken
+    ? `${origin}/enfant/${encodeURIComponent(prenom)}?t=${accessToken}`
+    : null
+
+  function copierLien() {
+    if (!qrUrl) return
+    navigator.clipboard.writeText(qrUrl)
+    setCopie(true)
+    setTimeout(() => setCopie(false), 2000)
+  }
+
+  if (loading) return (
+    <div className="text-center py-16">
+      <div className="text-3xl animate-pulse">⏳</div>
+    </div>
+  )
+
+  if (!accessToken) return (
+    <div className="rounded-2xl p-6 text-center" style={{ background: 'white', border: '1px solid var(--border)' }}>
+      <div className="text-4xl mb-3">⚠️</div>
+      <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
+        Aucun code d'accès trouvé pour {prenom}.<br />
+        Reconfigurer la famille dans l'onboarding pour en générer un.
+      </p>
+    </div>
+  )
 
   return (
     <div className="space-y-4">
+      {/* QR Code */}
       <div className="rounded-2xl p-6 text-center" style={{ background: 'white', border: '1px solid var(--border)' }}>
-        <div className="text-5xl mb-4">📚</div>
-        <h2 className="text-lg font-medium mb-2">Espace de {prenom}</h2>
+        <h2 className="text-lg font-medium mb-1">QR Code de {prenom}</h2>
         <p className="text-sm mb-6" style={{ color: 'var(--muted-foreground)' }}>
-          Cet espace est destiné à {prenom} pour faire ses exercices.
-          Ouvre-le sur le téléphone ou la tablette de ton enfant.
+          Montre ce QR code à {prenom}. Il l'ouvrira avec son téléphone ou sa tablette.
         </p>
+
+        {/* QR */}
+        <div className="inline-block p-4 rounded-2xl mb-6" style={{ background: 'white', border: '2px solid var(--border)' }}>
+          <QRCode value={qrUrl!} size={200} />
+        </div>
+
+        {/* Bouton ouvrir direct (pour le parent, sur cet appareil) */}
         <a
-          href={`/enfant/${encodeURIComponent(prenom)}`}
-          className="inline-block px-6 py-3 rounded-xl font-medium text-white transition-opacity hover:opacity-90"
+          href={qrUrl!}
+          className="block w-full py-2.5 rounded-xl font-medium text-white text-sm transition-opacity hover:opacity-90"
           style={{ background: 'var(--primary)' }}
         >
-          🎓 Ouvrir les exercices de {prenom}
+          🎓 Ouvrir l'espace de {prenom}
         </a>
       </div>
 
-      {/* URL à partager */}
+      {/* Lien à copier */}
       <div className="rounded-xl p-4" style={{ background: 'white', border: '1px solid var(--border)' }}>
         <p className="text-xs uppercase tracking-wide mb-2" style={{ color: 'var(--muted-foreground)' }}>
-          Lien à partager avec {prenom}
+          Ou partage ce lien
         </p>
-        <p className="text-xs font-mono break-all" style={{ color: 'var(--primary)' }}>
-          {url}
-        </p>
+        <div className="flex items-center gap-3">
+          <p className="flex-1 text-xs font-mono break-all" style={{ color: 'var(--primary)' }}>
+            {qrUrl}
+          </p>
+          <button
+            onClick={copierLien}
+            className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+            style={{
+              background: copie ? '#edf7f1' : 'var(--primary)',
+              color: copie ? '#2d7a4f' : 'white',
+            }}
+          >
+            {copie ? '✓ Copié' : 'Copier'}
+          </button>
+        </div>
       </div>
     </div>
   )

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Famille } from '@/types'
+import { supabase } from '@/lib/supabase'
 
 const ICONES_CLASSE: Record<string, string> = {
   '6ème': '🌱', '5ème': '📗', '4ème': '📘', '3ème': '🎓',
@@ -50,14 +51,24 @@ export default function Home() {
     <div className="min-h-screen flex flex-col items-center justify-center px-6 py-12">
       <div className="w-full max-w-md">
 
-        {/* Logo */}
-        <div className="text-center mb-10">
+        {/* Logo + déconnexion */}
+        <div className="text-center mb-10 relative">
           <h1 className="text-4xl font-light tracking-tight" style={{ fontFamily: 'Georgia, serif' }}>
             Parents<span style={{ color: 'var(--accent)', fontStyle: 'italic' }}>AI</span>
           </h1>
           <p className="mt-2 text-xs uppercase tracking-widest" style={{ color: 'var(--muted-foreground)' }}>
             Le professeur particulier IA
           </p>
+          <button
+            onClick={async () => {
+              await supabase.auth.signOut()
+              window.location.href = '/login'
+            }}
+            className="absolute right-0 top-1 text-xs transition-opacity hover:opacity-70"
+            style={{ color: 'var(--muted-foreground)' }}
+          >
+            Déconnexion
+          </button>
         </div>
 
         {/* Cartes enfants */}

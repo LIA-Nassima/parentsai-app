@@ -26,6 +26,24 @@ function normaliserMatiere(m: string): string {
   return map[m] ?? m
 }
 
+// ─── Écran accès refusé ───────────────────────────────────────────────────────
+
+function EcranAccesRefuse({ prenom }: { prenom: string }) {
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center px-6 py-12">
+      <div className="w-full max-w-xs text-center">
+        <div className="text-6xl mb-6">🔒</div>
+        <h1 className="text-2xl font-medium mb-2" style={{ fontFamily: 'Georgia, serif' }}>
+          Accès refusé
+        </h1>
+        <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
+          Demande à tes parents de scanner le QR code pour toi.
+        </p>
+      </div>
+    </div>
+  )
+}
+
 // ─── Composant principal ──────────────────────────────────────────────────────
 
 export default function EspaceEnfant() {
@@ -35,7 +53,42 @@ export default function EspaceEnfant() {
   const prenom       = normaliserPrenom(decodeURIComponent(params.prenom as string))
   const activeTab    = (searchParams.get('tab') as Tab) || 'afaire'
 
-  const [classe, setClasse] = useState('')
+  const [classe, setClasse]             = useState('')
+  const [tokenVerifie, setTokenVerifie] = useState<boolean | null>(null)
+
+  // Vérifie le token QR : d'abord localStorage, sinon via le paramètre ?t=
+  useEffect(() => {
+    async function verifierToken() {
+      // Déjà vérifié dans cette session
+      if (localStorage.getItem(`qr_ok_${prenom}`) === '1') {
+        setTokenVerifie(true)
+        return
+      }
+      // Token présent dans l'URL (?t=xxx)
+      const params = new URLSearchParams(window.location.search)
+      const token = params.get('t')
+      if (!token) { setTokenVerifie(false); return }
+
+      try {
+        const res = await fetch('/api/verify-token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ enfant: prenom, token }),
+        })
+        if (res.ok) {
+          localStorage.setItem(`qr_ok_${prenom}`, '1')
+          // Nettoie le token de l'URL sans recharger la page
+          window.history.replaceState({}, '', `/enfant/${encodeURIComponent(prenom)}`)
+          setTokenVerifie(true)
+        } else {
+          setTokenVerifie(false)
+        }
+      } catch {
+        setTokenVerifie(false)
+      }
+    }
+    verifierToken()
+  }, [prenom])
 
   // Charge la classe de l'enfant
   useEffect(() => {
@@ -62,6 +115,14 @@ export default function EspaceEnfant() {
     { id: 'progres',  label: 'Progrès',  icon: '🏆' },
     { id: 'planning', label: 'Planning', icon: '📅' },
   ]
+
+  // Hydratation en cours
+  if (tokenVerifie === null) return null
+
+  // Token invalide → accès refusé
+  if (!tokenVerifie) {
+    return <EcranAccesRefuse prenom={prenom} />
+  }
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--background)' }}>
