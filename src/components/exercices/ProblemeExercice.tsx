@@ -50,15 +50,9 @@ export default function ProblemeExercice({ exercice, sessionId, estTermineInitia
       })
       const json = await res.json()
       if (json.succes) {
-        const url = json.photo_url as string
-        setPhotoUrl(url)
-        // Persiste l'URL dans Supabase pour que le parent et l'enfant la retrouvent
-        await supabase.from('reponses').upsert({
-          session_id: sessionId,
-          exercice_num: exercice.num,
-          type: 'probleme',
-          photo_url: url,
-        }, { onConflict: 'session_id,exercice_num' })
+        setPhotoUrl(json.photo_url as string)
+      } else {
+        console.error('Erreur upload photo:', json.erreur)
       }
       setUploading(false)
     }
