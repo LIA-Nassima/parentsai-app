@@ -49,7 +49,17 @@ export default function ProblemeExercice({ exercice, sessionId, estTermineInitia
         body: JSON.stringify({ data_url: dataUrl }),
       })
       const json = await res.json()
-      if (json.succes) setPhotoUrl(json.photo_url)
+      if (json.succes) {
+        const url = json.photo_url as string
+        setPhotoUrl(url)
+        // Persiste l'URL dans Supabase pour que le parent et l'enfant la retrouvent
+        await supabase.from('reponses').upsert({
+          session_id: sessionId,
+          exercice_num: exercice.num,
+          type: 'probleme',
+          photo_url: url,
+        }, { onConflict: 'session_id,exercice_num' })
+      }
       setUploading(false)
     }
     reader.readAsDataURL(file)
@@ -128,6 +138,14 @@ export default function ProblemeExercice({ exercice, sessionId, estTermineInitia
             </span>
           </label>
         </>
+      )}
+
+      {/* Photo visible côté enfant en mode bloqué (déjà soumis) */}
+      {!modeParent && estBloque && photoUrl && (
+        <div className="mt-4 rounded-xl p-4" style={{ background: 'var(--background)', border: '1px solid var(--border)' }}>
+          <p className="text-xs uppercase tracking-wide mb-2" style={{ color: 'var(--muted-foreground)' }}>Ta réponse envoyée</p>
+          <img src={photoUrl} alt="Ma réponse" className="max-w-full rounded-lg mx-auto" style={{ maxHeight: '300px' }} />
+        </div>
       )}
 
       {/* Correction mode parent */}
