@@ -2,8 +2,8 @@ import type { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'IAlla',
-    short_name: 'IAlla',
+    name: 'IAla',
+    short_name: 'IAla',
     description: 'allez, on révise — le prof IA pour vos enfants',
     start_url: '/',
     scope: '/',
