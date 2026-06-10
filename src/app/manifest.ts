@@ -1,17 +1,16 @@
 import type { MetadataRoute } from 'next'
 
-// Manifest PWA — Next.js le sert automatiquement à /manifest.webmanifest
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'ParentsAI',
-    short_name: 'ParentsAI',
-    description: 'Le professeur particulier IA pour vos enfants',
+    name: 'IAlla',
+    short_name: 'IAlla',
+    description: 'allez, on révise — le prof IA pour vos enfants',
     start_url: '/',
     scope: '/',
     display: 'standalone',
     orientation: 'portrait',
-    background_color: '#f8f4ef',
-    theme_color: '#2e3b4e',
+    background_color: '#F2F8F6',
+    theme_color: '#2E7D6B',
     icons: [
       {
         src: '/icons/192',

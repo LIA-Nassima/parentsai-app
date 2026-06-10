@@ -2,9 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import { useParams, useSearchParams, useRouter } from 'next/navigation'
-import NavHeader from '@/components/NavHeader'
+import Link from 'next/link'
+import { Home } from 'lucide-react'
+import { LogoIAla } from '@/components/brand/LogoIAla'
 import QCMExercice from '@/components/exercices/QCMExercice'
 import ProblemeExercice from '@/components/exercices/ProblemeExercice'
+import { StatusBadge } from '@/components/ui/StatusBadge'
 import { supabase } from '@/lib/supabase'
 import { Session, Reponse, ExerciceQCM, ExerciceProbleme } from '@/types'
 
@@ -55,42 +58,38 @@ export default function SessionPage() {
     setValidating(true)
     await supabase.from('sessions').update({ statut: 'validé' }).eq('id', sessionId)
     setValidating(false)
-    // Redirige vers le dashboard parent après validation
     router.push(`/espace/${session.enfant}`)
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-4xl mb-4 animate-pulse">📚</div>
-          <p style={{ color: 'var(--muted-foreground)' }}>Chargement des exercices...</p>
-        </div>
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center" style={{ background: '#F2F8F6' }}>
+      <div className="text-center">
+        <LogoIAla size={36} dark />
+        <p className="mt-4 text-sm" style={{ color: '#6E827B' }}>Chargement des exercices...</p>
       </div>
-    )
-  }
+    </div>
+  )
 
-  if (!session?.exercices_json) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center max-w-sm">
-          <div className="text-4xl mb-4">📄</div>
-          <p className="font-medium mb-2">Exercices non disponibles</p>
-          <p className="text-sm mb-4" style={{ color: 'var(--muted-foreground)' }}>
-            Cette session a été créée avant la mise à jour de l'app.
-          </p>
-          {session?.html_enfant_url && (
-            <a href={modeParent ? session.html_parent_url : session.html_enfant_url}
-              target="_blank" rel="noopener noreferrer"
-              className="px-5 py-2 rounded-lg text-sm font-medium text-white inline-block"
-              style={{ background: 'var(--primary)' }}>
-              Voir la version HTML →
-            </a>
-          )}
-        </div>
+  if (!session?.exercices_json) return (
+    <div className="min-h-screen flex items-center justify-center px-4" style={{ background: '#F2F8F6' }}>
+      <div className="text-center max-w-sm">
+        <div className="text-4xl mb-4">📄</div>
+        <p className="font-bold mb-2" style={{ color: '#1E2A26' }}>Exercices non disponibles</p>
+        <p className="text-sm mb-4" style={{ color: '#6E827B' }}>Cette session a été créée avant la mise à jour.</p>
+        {session?.html_enfant_url && (
+          <a
+            href={modeParent ? session.html_parent_url : session.html_enfant_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-5 py-2.5 rounded-xl text-sm font-bold text-white inline-block"
+            style={{ background: '#2E7D6B' }}
+          >
+            Voir la version HTML →
+          </a>
+        )}
       </div>
-    )
-  }
+    </div>
+  )
 
   const { exercices, niveau, duree_estimee, encouragement, competences, titre, bareme_total, calculatrice } = session.exercices_json
   const typeEval   = session.type_evaluation ?? 'session'
@@ -103,50 +102,75 @@ export default function SessionPage() {
   const qcmJuste   = reponses.filter(r => r.type === 'qcm' && r.est_correct).length
   const qcmTotal   = reponses.filter(r => r.type === 'qcm').length
   const pbTermines = reponses.filter(r => r.type === 'probleme' && r.est_termine).length
-  // Bloque les modifications si déjà soumis ou validé (sauf en mode parent qui a ses propres règles)
   const estBloque  = !modeParent && (session.statut === 'fait' || session.statut === 'validé')
 
-  // Couleurs selon le type
-  const evalColor  = isDS ? '#b45309' : '#1e3a5f'
-  const evalBg     = isDS ? '#fff8e1' : '#eef3fa'
-  const evalBorder = isDS ? '#fbbf24' : '#93b4d4'
+  const evalColor  = isDS ? '#B8881F' : '#27518f'
+  const evalBg     = isDS ? '#FDF8EA' : '#E2ECFB'
+  const evalBorder = isDS ? '#E8B53A' : '#93b4d4'
   const evalLabel  = isDS ? 'DEVOIR SURVEILLÉ' : 'BREVET BLANC'
 
   return (
-    <div className="min-h-screen">
-      <NavHeader enfantOverride={session.enfant} />
-      <div className="px-4 py-8 max-w-3xl mx-auto">
+    <div className="min-h-screen" style={{ background: '#F2F8F6' }}>
+
+      {/* ── En-tête vert ── */}
+      <header className="sticky top-0 z-50 w-full" style={{ background: '#2E7D6B' }}>
+        <div
+          className="max-w-app mx-auto px-4 pt-3 pb-4 flex items-center justify-between"
+          style={{ borderBottomLeftRadius: 20, borderBottomRightRadius: 20 }}
+        >
+          <Link
+            href={session.enfant ? `/espace/${encodeURIComponent(session.enfant)}` : '/'}
+            className="flex items-center gap-1.5 text-white/70 text-xs hover:text-white transition-colors"
+          >
+            ← {session.enfant || 'Retour'}
+          </Link>
+
+          <div className="text-center">
+            <p className="text-white font-bold text-sm">{session.matiere}</p>
+            <p className="text-white/70 text-xs truncate max-w-[150px]">{session.chapitre}</p>
+          </div>
+
+          <Link
+            href="/"
+            className="w-8 h-8 flex items-center justify-center rounded-full"
+            style={{ background: 'rgba(255,255,255,0.15)', color: '#fff' }}
+          >
+            <Home size={16} />
+          </Link>
+        </div>
+      </header>
+
+      <div className="max-w-app mx-auto px-4 py-5">
 
         {/* Bandeau DS / Brevet Blanc */}
         {isEval && (
-          <div className="rounded-xl px-5 py-3 mb-5 flex items-center justify-between"
-            style={{ background: evalBg, border: `1px solid ${evalBorder}`, color: evalColor }}>
+          <div
+            className="rounded-2xl px-4 py-3 mb-4 flex items-center justify-between"
+            style={{ background: evalBg, border: `1.5px solid ${evalBorder}`, color: evalColor }}
+          >
             <div>
               <span className="text-xs font-bold uppercase tracking-widest">{evalLabel}</span>
-              {titre && <p className="text-sm font-medium mt-0.5">{titre}</p>}
+              {titre && <p className="text-sm font-semibold mt-0.5">{titre}</p>}
             </div>
-            <div className="text-right text-xs" style={{ color: evalColor }}>
+            <div className="text-right text-xs">
               {bareme_total && <div className="font-bold text-base">/{bareme_total} pts</div>}
               <div>{duree_estimee}</div>
               {calculatrice !== undefined && (
-                <div>{calculatrice ? '🖩 calculatrice autorisée' : '🚫 sans calculatrice'}</div>
+                <div>{calculatrice ? '🖩 calculatrice' : '🚫 sans calc.'}</div>
               )}
             </div>
           </div>
         )}
 
-        {/* Header session */}
-        <div className="mb-6">
-          <p className="text-xs uppercase tracking-widest mb-1" style={{ color: 'var(--muted-foreground)' }}>
+        {/* Info session */}
+        <div className="mb-5">
+          <p className="text-xs uppercase tracking-wide mb-1" style={{ color: '#6E827B' }}>
             {isEval
               ? `${evalLabel} · ${session.matiere} · ${modeParent ? 'Corrigés' : session.enfant}`
-              : `Session n°${String(session.numero_session).padStart(2,'0')} · ${niveau} · ${modeParent ? 'Corrigés' : session.enfant}`
+              : `Session n°${String(session.numero_session).padStart(2, '0')} · ${niveau} · ${modeParent ? 'Corrigés' : session.enfant}`
             }
           </p>
-          <h1 className="text-2xl font-light mb-1" style={{ fontFamily: 'Georgia, serif' }}>
-            {session.matiere} — <em style={{ color: 'var(--accent)', fontStyle: 'italic' }}>{session.chapitre}</em>
-          </h1>
-          <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
+          <p className="text-xs" style={{ color: '#6E827B' }}>
             {isEval
               ? `Durée : ${duree_estimee}${bareme_total ? ` · Barème sur ${bareme_total} points` : ''}`
               : `${competences?.join(', ')} · Durée estimée : ${duree_estimee}`
@@ -154,36 +178,40 @@ export default function SessionPage() {
           </p>
         </div>
 
-        {/* Bandeau parent */}
+        {/* Bandeau mode parent */}
         {modeParent && (
-          <div className="p-4 rounded-xl mb-6 text-sm font-mono text-center"
-            style={{ background: isEval ? evalColor : 'var(--primary)', color: 'white' }}>
+          <div
+            className="p-3.5 rounded-xl mb-5 text-sm font-bold text-center"
+            style={{ background: isEval ? evalColor : '#2E7D6B', color: '#fff' }}
+          >
             📋 MODE CORRIGÉS — {session.enfant} · {session.matiere}
           </div>
         )}
 
-        {/* Stats (si réponses enregistrées) */}
+        {/* Stats */}
         {(qcmTotal > 0 || pbTermines > 0) && (
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            <div className="rounded-xl p-4 text-center" style={{ background: 'white', border: '1px solid var(--border)' }}>
-              <div className="text-2xl font-light mb-1" style={{ color: '#2d7a4f' }}>
+          <div className="grid grid-cols-2 gap-3 mb-5">
+            <div className="rounded-2xl p-4 text-center" style={{ background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+              <div className="text-2xl font-bold mb-0.5" style={{ color: '#1F5A4D' }}>
                 {qcmTotal > 0 ? `${qcmJuste}/${qcmTotal}` : '—'}
               </div>
-              <div className="text-xs uppercase tracking-wide" style={{ color: 'var(--muted-foreground)' }}>Score QCM</div>
+              <div className="text-xs uppercase tracking-wide" style={{ color: '#6E827B', fontSize: 10 }}>Score QCM</div>
             </div>
-            <div className="rounded-xl p-4 text-center" style={{ background: 'white', border: '1px solid var(--border)' }}>
-              <div className="text-2xl font-light mb-1" style={{ color: 'var(--accent)' }}>
+            <div className="rounded-2xl p-4 text-center" style={{ background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+              <div className="text-2xl font-bold mb-0.5" style={{ color: '#E8B53A' }}>
                 {pbTermines}/{pbExos.length}
               </div>
-              <div className="text-xs uppercase tracking-wide" style={{ color: 'var(--muted-foreground)' }}>Problèmes terminés</div>
+              <div className="text-xs uppercase tracking-wide" style={{ color: '#6E827B', fontSize: 10 }}>Problèmes</div>
             </div>
           </div>
         )}
 
         {/* Encouragement */}
         {!modeParent && encouragement && (
-          <div className="p-4 rounded-xl mb-6 text-sm italic text-center"
-            style={{ background: '#eef1f5', color: '#2e3b4e', border: '1px solid #c8d4e0' }}>
+          <div
+            className="p-4 rounded-xl mb-5 text-sm italic text-center"
+            style={{ background: '#E3F0EC', color: '#1F5A4D', border: '1px solid #C2DED6' }}
+          >
             💪 {encouragement}
           </div>
         )}
@@ -215,46 +243,58 @@ export default function SessionPage() {
           )
         })}
 
-        {/* Bouton "Soumettre au parent" — côté enfant uniquement */}
+        {/* Soumettre au parent — côté enfant */}
         {!modeParent && session.statut === 'en_attente' && (
           <div className="mt-8 text-center">
-            <p className="text-xs mb-3" style={{ color: 'var(--muted-foreground)' }}>
-              Quand tu as fini tous les exercices, envoie ton travail au parent.
+            <p className="text-xs mb-3" style={{ color: '#6E827B' }}>
+              Quand tu as fini, envoie ton travail au parent.
             </p>
-            <button onClick={soumettreAuParent} disabled={submitting}
-              className="px-8 py-4 rounded-xl font-medium text-white text-sm transition-opacity hover:opacity-90 disabled:opacity-50"
-              style={{ background: 'var(--accent)' }}>
+            <button
+              onClick={soumettreAuParent}
+              disabled={submitting}
+              className="px-8 py-4 rounded-xl font-bold text-white text-sm transition-opacity hover:opacity-90 disabled:opacity-50"
+              style={{ background: '#E8B53A' }}
+            >
               {submitting ? 'Envoi...' : '📤 Envoyer au parent'}
             </button>
           </div>
         )}
 
-        {/* Bandeau "déjà soumis" — côté enfant */}
+        {/* Déjà soumis — côté enfant */}
         {!modeParent && session.statut === 'fait' && (
-          <div className="mt-8 p-4 rounded-xl text-center text-sm font-medium"
-            style={{ background: '#fff8e1', color: '#b45309', border: '1px solid #fbbf24' }}>
+          <div
+            className="mt-8 p-4 rounded-xl text-center text-sm font-semibold"
+            style={{ background: '#FDF8EA', color: '#B8881F', border: '1px solid #E8B53A' }}
+          >
             ✉️ Travail envoyé au parent — en attente de correction
           </div>
         )}
 
-        {/* Bouton validation — côté parent uniquement */}
+        {/* Valider — côté parent */}
         {modeParent && session.statut === 'fait' && (
           <div className="mt-8 text-center">
-            <button onClick={validerSession} disabled={validating}
-              className="px-8 py-4 rounded-xl font-medium text-white text-sm transition-opacity hover:opacity-90 disabled:opacity-50"
-              style={{ background: '#2d7a4f' }}>
+            <button
+              onClick={validerSession}
+              disabled={validating}
+              className="px-8 py-4 rounded-xl font-bold text-white text-sm transition-opacity hover:opacity-90 disabled:opacity-50"
+              style={{ background: '#2E7D6B' }}
+            >
               {validating ? 'Validation...' : '✅ Valider la session'}
             </button>
           </div>
         )}
 
+        {/* Validé */}
         {session.statut === 'validé' && (
-          <div className="mt-8 p-4 rounded-xl text-center text-sm font-medium"
-            style={{ background: '#edf7f1', color: '#2d7a4f', border: '1px solid #2d7a4f' }}>
+          <div
+            className="mt-8 p-4 rounded-xl text-center text-sm font-semibold"
+            style={{ background: '#E3F0EC', color: '#1F5A4D', border: '1.5px solid #2E7D6B' }}
+          >
             ✅ Session validée par le parent
           </div>
         )}
 
+        <div className="pb-8" />
       </div>
     </div>
   )

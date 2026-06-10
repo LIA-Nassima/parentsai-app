@@ -3,12 +3,11 @@
 import { useEffect, useState } from 'react'
 import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { BookOpen, Trophy, CalendarDays, ChevronDown, ChevronUp } from 'lucide-react'
+import { LogoIAla } from '@/components/brand/LogoIAla'
 import { supabase } from '@/lib/supabase'
 import { Session, Reponse, SessionAvecStats } from '@/types'
-import { Card, CardContent } from '@/components/ui/card'
 import { normaliserPrenom } from '@/lib/normaliser'
-
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 type Tab = 'afaire' | 'progres' | 'planning'
 
@@ -16,6 +15,12 @@ const ICONES_MATIERE: Record<string, string> = {
   'Mathématiques': '🔢', 'Français': '📖', 'Physique-Chimie': '🧪',
   'SVT': '🌱', 'Technologie': '⚙️', 'Histoire-Géographie-EMC': '🌍',
   'Anglais': '🇬🇧', 'Espagnol': '🇪🇸', 'Allemand': '🇩🇪', 'Coach': '🧭',
+}
+
+const COULEURS_MATIERE: Record<string, string> = {
+  'Mathématiques': '#3B7DD9', 'Français': '#2E7D6B', 'Physique-Chimie': '#5BA491',
+  'SVT': '#1F5A4D', 'Technologie': '#B8881F', 'Histoire-Géographie-EMC': '#E8B53A',
+  'Anglais': '#3B7DD9', 'Espagnol': '#E2685C', 'Allemand': '#6E827B',
 }
 
 function normaliserMatiere(m: string): string {
@@ -26,25 +31,25 @@ function normaliserMatiere(m: string): string {
   return map[m] ?? m
 }
 
-// ─── Écran accès refusé ───────────────────────────────────────────────────────
+const TABS: { id: Tab; label: string; Icon: React.ComponentType<{ size?: number; strokeWidth?: number }> }[] = [
+  { id: 'afaire',   label: 'À faire',  Icon: BookOpen },
+  { id: 'progres',  label: 'Progrès',  Icon: Trophy },
+  { id: 'planning', label: 'Planning', Icon: CalendarDays },
+]
 
-function EcranAccesRefuse({ prenom }: { prenom: string }) {
+function EcranAccesRefuse() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-6 py-12">
-      <div className="w-full max-w-xs text-center">
-        <div className="text-6xl mb-6">🔒</div>
-        <h1 className="text-2xl font-medium mb-2" style={{ fontFamily: 'Georgia, serif' }}>
-          Accès refusé
-        </h1>
-        <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
+    <div className="min-h-screen flex flex-col items-center justify-center px-6" style={{ background: '#F2F8F6' }}>
+      <div className="text-center max-w-xs">
+        <div className="text-6xl mb-5">🔒</div>
+        <p className="font-bold text-lg mb-2" style={{ color: '#1E2A26' }}>Accès refusé</p>
+        <p className="text-sm" style={{ color: '#6E827B' }}>
           Demande à tes parents de scanner le QR code pour toi.
         </p>
       </div>
     </div>
   )
 }
-
-// ─── Composant principal ──────────────────────────────────────────────────────
 
 export default function EspaceEnfant() {
   const params       = useParams()
@@ -56,19 +61,15 @@ export default function EspaceEnfant() {
   const [classe, setClasse]             = useState('')
   const [tokenVerifie, setTokenVerifie] = useState<boolean | null>(null)
 
-  // Vérifie le token QR : d'abord localStorage, sinon via le paramètre ?t=
   useEffect(() => {
     async function verifierToken() {
-      // Déjà vérifié dans cette session
       if (localStorage.getItem(`qr_ok_${prenom}`) === '1') {
         setTokenVerifie(true)
         return
       }
-      // Token présent dans l'URL (?t=xxx)
-      const params = new URLSearchParams(window.location.search)
-      const token = params.get('t')
+      const p = new URLSearchParams(window.location.search)
+      const token = p.get('t')
       if (!token) { setTokenVerifie(false); return }
-
       try {
         const res = await fetch('/api/verify-token', {
           method: 'POST',
@@ -77,7 +78,6 @@ export default function EspaceEnfant() {
         })
         if (res.ok) {
           localStorage.setItem(`qr_ok_${prenom}`, '1')
-          // Nettoie le token de l'URL sans recharger la page
           window.history.replaceState({}, '', `/enfant/${encodeURIComponent(prenom)}`)
           setTokenVerifie(true)
         } else {
@@ -90,7 +90,6 @@ export default function EspaceEnfant() {
     verifierToken()
   }, [prenom])
 
-  // Charge la classe de l'enfant
   useEffect(() => {
     async function chargerFamille() {
       try {
@@ -110,75 +109,80 @@ export default function EspaceEnfant() {
     router.push(`/enfant/${encodeURIComponent(prenom)}?tab=${tab}`)
   }
 
-  const tabs: { id: Tab; label: string; icon: string }[] = [
-    { id: 'afaire',   label: 'À faire',  icon: '📚' },
-    { id: 'progres',  label: 'Progrès',  icon: '🏆' },
-    { id: 'planning', label: 'Planning', icon: '📅' },
-  ]
-
-  // Hydratation en cours
   if (tokenVerifie === null) return null
+  if (!tokenVerifie) return <EcranAccesRefuse />
 
-  // Token invalide → accès refusé
-  if (!tokenVerifie) {
-    return <EcranAccesRefuse prenom={prenom} />
-  }
+  const initiale = prenom.charAt(0).toUpperCase()
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--background)' }}>
+    <div className="min-h-screen pb-20" style={{ background: '#F2F8F6' }}>
 
-      {/* ── Header ── */}
-      <header className="sticky top-0 z-50 border-b" style={{ background: 'white', borderColor: 'var(--border)' }}>
-        <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
-          {/* Lien retour vers l'accueil */}
-          <Link href="/" className="flex items-center gap-1 text-sm" style={{ color: 'var(--muted-foreground)' }}>
-            ← Accueil
-          </Link>
-
-          {/* Nom + classe */}
-          <div className="font-medium" style={{ fontFamily: 'Georgia, serif' }}>
-            {prenom}
-            {classe && (
-              <span className="ml-2 text-xs font-normal" style={{ color: 'var(--muted-foreground)' }}>
-                {classe}
-              </span>
-            )}
+      {/* ── En-tête vert ── */}
+      <header className="sticky top-0 z-50 w-full" style={{ background: '#2E7D6B' }}>
+        <div
+          className="max-w-app mx-auto px-4 pt-4 pb-5"
+          style={{ borderBottomLeftRadius: 24, borderBottomRightRadius: 24 }}
+        >
+          <div className="flex items-center justify-between mb-3">
+            <LogoIAla size={28} dark={false} />
+            <Link
+              href={`/espace/${encodeURIComponent(prenom)}`}
+              className="text-xs px-3 py-1.5 rounded-full font-semibold"
+              style={{ background: 'rgba(255,255,255,0.2)', color: '#fff' }}
+            >
+              Vue parent
+            </Link>
           </div>
 
-          {/* Lien vue parent */}
-          <Link
-            href={`/espace/${encodeURIComponent(prenom)}`}
-            className="text-xs px-2.5 py-1 rounded-full"
-            style={{ background: 'var(--border)', color: 'var(--muted-foreground)' }}
-          >
-            👩‍👧 Parent
-          </Link>
-        </div>
-
-        {/* Onglets */}
-        <div className="max-w-2xl mx-auto px-4 flex border-t" style={{ borderColor: 'var(--border)' }}>
-          {tabs.map(t => (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              className="flex-1 py-3 text-xs font-medium transition-all"
-              style={{
-                color:        activeTab === t.id ? 'var(--primary)' : 'var(--muted-foreground)',
-                borderBottom: activeTab === t.id ? '2px solid var(--primary)' : '2px solid transparent',
-              }}
+          <div className="flex items-center gap-3">
+            <div
+              className="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold text-white shrink-0"
+              style={{ background: 'rgba(255,255,255,0.25)' }}
             >
-              {t.icon} {t.label}
-            </button>
-          ))}
+              {initiale}
+            </div>
+            <div>
+              <p className="text-white font-bold text-lg leading-tight">
+                Salut {prenom} ! 👋
+              </p>
+              {classe && (
+                <p className="text-white/70 text-xs">{classe} · allez, on révise</p>
+              )}
+            </div>
+          </div>
         </div>
       </header>
 
       {/* ── Contenu ── */}
-      <div className="max-w-2xl mx-auto px-4 py-6">
+      <div className="max-w-app mx-auto px-4 py-5">
         {activeTab === 'afaire'   && <TabAFaire prenom={prenom} />}
         {activeTab === 'progres'  && <TabProgres prenom={prenom} />}
         {activeTab === 'planning' && <TabPlanning prenom={prenom} />}
       </div>
+
+      {/* ── Barre de navigation basse ── */}
+      <nav
+        className="fixed bottom-0 left-0 right-0 z-50 flex"
+        style={{ background: '#fff', borderTop: '1px solid #DCE8E4' }}
+      >
+        {TABS.map(({ id, label, Icon }) => {
+          const actif = activeTab === id
+          return (
+            <button
+              key={id}
+              onClick={() => setTab(id)}
+              className="flex-1 flex flex-col items-center justify-center py-2.5 gap-1 transition-colors relative"
+              style={{ color: actif ? '#2E7D6B' : '#6E827B' }}
+            >
+              <Icon size={22} strokeWidth={actif ? 2.5 : 1.8} />
+              <span className="text-xs font-semibold" style={{ fontSize: 10.5 }}>{label}</span>
+              {actif && (
+                <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full" style={{ background: '#2E7D6B' }} />
+              )}
+            </button>
+          )
+        })}
+      </nav>
     </div>
   )
 }
@@ -186,22 +190,19 @@ export default function EspaceEnfant() {
 // ─── Tab À faire ──────────────────────────────────────────────────────────────
 
 function TabAFaire({ prenom }: { prenom: string }) {
-  const [sessions, setSessions]       = useState<SessionAvecStats[]>([])
-  const [totalSessions, setTotal]     = useState(0)
-  const [loading, setLoading]         = useState(true)
-  const [ouverteMat, setOuverteMat]   = useState<string | null>(null)
+  const [sessions, setSessions]   = useState<SessionAvecStats[]>([])
+  const [totalSessions, setTotal] = useState(0)
+  const [loading, setLoading]     = useState(true)
+  const [ouverteMat, setOuverteMat] = useState<string | null>(null)
 
   useEffect(() => {
     async function charger() {
       setLoading(true)
-
-      // Compte le total de sessions (tous statuts) pour distinguer "rien du tout" vs "tout validé"
       const { count } = await supabase
         .from('sessions').select('*', { count: 'exact', head: true })
         .ilike('enfant', prenom)
       setTotal(count ?? 0)
 
-      // Sessions à faire (en_attente ou fait)
       const { data } = await supabase
         .from('sessions').select('*')
         .ilike('enfant', prenom)
@@ -232,31 +233,27 @@ function TabAFaire({ prenom }: { prenom: string }) {
 
   if (loading) return (
     <div className="text-center py-16">
-      <div className="text-3xl mb-3 animate-pulse">📚</div>
-      <p style={{ color: 'var(--muted-foreground)' }}>Chargement...</p>
+      <p className="text-sm" style={{ color: '#6E827B' }}>Chargement...</p>
     </div>
   )
 
   if (sessions.length === 0) {
-    // Aucune session du tout → l'enfant n'a pas encore commencé
     if (totalSessions === 0) return (
-      <div className="text-center py-16" style={{ color: 'var(--muted-foreground)' }}>
-        <div className="text-4xl mb-3">📖</div>
-        <p className="font-medium">Aucune session pour le moment.</p>
-        <p className="text-sm mt-1">Demande à tes parents de lancer une session !</p>
+      <div className="text-center py-16">
+        <div className="text-5xl mb-4">📖</div>
+        <p className="font-bold" style={{ color: '#1E2A26' }}>Pas encore de session.</p>
+        <p className="text-sm mt-2" style={{ color: '#6E827B' }}>Demande à tes parents de lancer une session !</p>
       </div>
     )
-    // Il y a des sessions mais toutes sont validées → bravo !
     return (
-      <div className="text-center py-16" style={{ color: 'var(--muted-foreground)' }}>
-        <div className="text-4xl mb-3">🎉</div>
-        <p className="font-medium">Tout est fait !</p>
-        <p className="text-sm mt-1">Toutes tes sessions sont validées. Bravo !</p>
+      <div className="text-center py-16">
+        <div className="text-5xl mb-4">🎉</div>
+        <p className="font-bold text-lg" style={{ color: '#1E2A26' }}>Tout est fait !</p>
+        <p className="text-sm mt-2" style={{ color: '#6E827B' }}>Toutes tes sessions sont validées. Bravo !</p>
       </div>
     )
   }
 
-  // Groupement par matière
   const parMatiere = sessions.reduce<Record<string, SessionAvecStats[]>>((acc, s) => {
     if (!acc[s.matiere]) acc[s.matiere] = []
     acc[s.matiere].push(s)
@@ -265,84 +262,91 @@ function TabAFaire({ prenom }: { prenom: string }) {
 
   return (
     <div>
-      {/* Message d'encouragement */}
-      <div className="rounded-2xl p-4 mb-5 text-center"
-        style={{ background: 'white', border: '1px solid var(--border)' }}>
-        <p className="font-medium">Salut <em style={{ color: 'var(--accent)' }}>{prenom}</em> ! 👋</p>
-        <p className="text-sm mt-1" style={{ color: 'var(--muted-foreground)' }}>
+      {/* Message */}
+      <div
+        className="rounded-2xl p-4 mb-5 text-center"
+        style={{ background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
+      >
+        <p className="font-bold" style={{ color: '#1E2A26' }}>
           {sessions.length} session{sessions.length > 1 ? 's' : ''} t'attend{sessions.length > 1 ? 'ent' : ''} dans{' '}
-          {Object.keys(parMatiere).length} matière{Object.keys(parMatiere).length > 1 ? 's' : ''}
+          {Object.keys(parMatiere).length} matière{Object.keys(parMatiere).length > 1 ? 's' : ''} 💪
         </p>
       </div>
 
       {/* Accordéon par matière */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         {Object.entries(parMatiere).map(([matiere, sessMat]) => {
-          const icone    = ICONES_MATIERE[matiere] || '📚'
-          const ouvert   = ouverteMat === matiere
-          const nbFait   = sessMat.filter(s => s.statut === 'fait').length
+          const icone  = ICONES_MATIERE[matiere] || '📚'
+          const couleur = COULEURS_MATIERE[matiere] || '#2E7D6B'
+          const ouvert  = ouverteMat === matiere
+          const nbFait  = sessMat.filter(s => s.statut === 'fait').length
 
           return (
-            <div key={matiere} className="rounded-xl overflow-hidden"
-              style={{ background: 'white', border: '1px solid var(--border)' }}>
-
-              {/* En-tête matière */}
+            <div
+              key={matiere}
+              className="rounded-2xl overflow-hidden"
+              style={{ background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
+            >
               <button
                 onClick={() => setOuverteMat(ouvert ? null : matiere)}
-                className="w-full px-4 py-4 flex items-center justify-between text-left hover:bg-gray-50 transition-colors"
+                className="w-full px-4 py-4 flex items-center justify-between text-left"
               >
                 <div className="flex items-center gap-3">
-                  <span className="text-2xl">{icone}</span>
+                  <div className="w-1 h-12 rounded-full shrink-0" style={{ background: couleur }} />
                   <div>
-                    <div className="font-medium text-sm">{matiere}</div>
-                    <div className="text-xs mt-0.5" style={{ color: 'var(--muted-foreground)' }}>
+                    <div className="font-bold text-base uppercase tracking-wide" style={{ color: '#1E2A26' }}>
+                      {matiere}
+                    </div>
+                    <div className="text-xs mt-0.5 flex items-center gap-2" style={{ color: '#6E827B' }}>
                       {sessMat.length} session{sessMat.length > 1 ? 's' : ''}
-                      {nbFait > 0 && ` · ${nbFait} à corriger`}
+                      {nbFait > 0 && (
+                        <span
+                          className="px-2 py-0.5 rounded-full text-xs font-semibold"
+                          style={{ background: '#FBE6E3', color: '#D9483B' }}
+                        >
+                          {nbFait} à corriger
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  {/* Badge "À corriger" si des sessions sont déjà soumises */}
-                  {nbFait > 0 && (
-                    <span className="text-xs px-2 py-0.5 rounded-full font-medium"
-                      style={{ background: '#fdf0ed', color: 'var(--accent)' }}>
-                      ✏️ {nbFait}
-                    </span>
-                  )}
-                  <span style={{
-                    color: 'var(--muted-foreground)', display: 'inline-block',
-                    transition: 'transform 0.2s', transform: ouvert ? 'rotate(180deg)' : 'none',
-                  }}>⌄</span>
-                </div>
+                {ouvert
+                  ? <ChevronUp size={18} style={{ color: '#6E827B' }} />
+                  : <ChevronDown size={18} style={{ color: '#6E827B' }} />
+                }
               </button>
 
-              {/* Sessions de cette matière */}
               {ouvert && (
-                <div className="border-t px-4 pb-3" style={{ borderColor: 'var(--border)' }}>
-                  <div className="space-y-2 mt-3">
+                <div className="px-4 pb-4 border-t space-y-2.5" style={{ borderColor: '#DCE8E4' }}>
+                  <div className="pt-3 space-y-2.5">
                     {sessMat.map(s => {
                       const estFait = s.statut === 'fait'
                       return (
-                        <Link key={s.id} href={`/session/${s.id}`}
-                          className="flex items-center justify-between py-2.5 px-3 rounded-xl transition-all hover:opacity-80"
+                        <Link
+                          key={s.id}
+                          href={`/session/${s.id}`}
+                          className="flex items-center justify-between p-4 rounded-xl transition-opacity active:opacity-70"
                           style={{
-                            background: estFait ? '#fdf0ed' : 'var(--background)',
-                            border: `1px solid ${estFait ? 'var(--accent)' : 'var(--border)'}`,
-                          }}>
+                            background: estFait ? '#FDF8EA' : '#F2F8F6',
+                            border: `1.5px solid ${estFait ? '#E8B53A' : '#DCE8E4'}`,
+                          }}
+                        >
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{s.chapitre}</p>
-                            <p className="text-xs mt-0.5" style={{ color: 'var(--muted-foreground)' }}>
+                            <p className="text-sm font-semibold truncate" style={{ color: '#1E2A26' }}>{s.chapitre}</p>
+                            <p className="text-xs mt-0.5" style={{ color: '#6E827B' }}>
                               {s.type_evaluation === 'ds' && '📝 DS · '}
                               {s.type_evaluation === 'brevet_blanc' && '🏆 Brevet Blanc · '}
                               {new Date(s.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
                             </p>
                           </div>
-                          <span className="text-xs px-2.5 py-1 rounded-full font-medium ml-3 shrink-0"
+                          <span
+                            className="text-xs px-3 py-1.5 rounded-xl font-bold ml-3 shrink-0"
                             style={{
-                              background: estFait ? 'var(--accent)' : 'var(--primary)',
-                              color: 'white',
-                            }}>
-                            {estFait ? '✏️ Reprendre' : 'Commencer →'}
+                              background: estFait ? '#E8B53A' : '#2E7D6B',
+                              color: '#fff',
+                            }}
+                          >
+                            {estFait ? 'Reprendre' : 'Commencer →'}
                           </span>
                         </Link>
                       )
@@ -372,9 +376,7 @@ function TabProgres({ prenom }: { prenom: string }) {
         .from('sessions').select('*')
         .ilike('enfant', prenom)
         .order('created_at', { ascending: false })
-
       if (!data) { setLoading(false); return }
-
       const avecStats: SessionAvecStats[] = await Promise.all(
         data.map(async (s: Session) => {
           const { data: rep } = await supabase
@@ -397,26 +399,23 @@ function TabProgres({ prenom }: { prenom: string }) {
 
   if (loading) return (
     <div className="text-center py-16">
-      <div className="text-3xl mb-3 animate-pulse">⏳</div>
-      <p style={{ color: 'var(--muted-foreground)' }}>Chargement...</p>
+      <p className="text-sm" style={{ color: '#6E827B' }}>Chargement...</p>
     </div>
   )
 
   if (sessions.length === 0) return (
-    <div className="text-center py-16" style={{ color: 'var(--muted-foreground)' }}>
+    <div className="text-center py-16">
       <div className="text-4xl mb-3">📖</div>
-      <p>Aucune session pour l'instant.</p>
-      <p className="text-sm mt-1">Commence ta première session dans "À faire" !</p>
+      <p className="font-semibold" style={{ color: '#1E2A26' }}>Pas encore de sessions.</p>
+      <p className="text-sm mt-2" style={{ color: '#6E827B' }}>Commence ta première session dans "À faire" !</p>
     </div>
   )
 
-  // Stats globales
   const totalValides = sessions.filter(s => s.statut === 'validé').length
   const totalQcm     = sessions.reduce((a, s) => a + s.qcm_total, 0)
   const totalJuste   = sessions.reduce((a, s) => a + s.qcm_juste, 0)
   const pctReussite  = totalQcm > 0 ? Math.round(totalJuste / totalQcm * 100) : null
 
-  // Groupement par matière (sessions validées uniquement)
   const sessionsFaites = sessions.filter(s => s.statut === 'validé')
   const parMatiere = sessionsFaites.reduce<Record<string, SessionAvecStats[]>>((acc, s) => {
     if (!acc[s.matiere]) acc[s.matiere] = []
@@ -426,95 +425,92 @@ function TabProgres({ prenom }: { prenom: string }) {
 
   return (
     <div>
-      {/* Stats globales */}
-      <div className="grid grid-cols-3 gap-3 mb-6">
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-3 mb-5">
         {[
           { label: 'Matières',  value: Object.keys(parMatiere).length },
           { label: 'Validées',  value: totalValides },
           { label: 'Réussite',  value: pctReussite !== null ? `${pctReussite}%` : '—' },
         ].map(stat => (
-          <Card key={stat.label}>
-            <CardContent className="pt-4 pb-4 text-center">
-              <div className="text-2xl font-light mb-0.5"
-                style={{ color: stat.label === 'Réussite' && pctReussite !== null
-                  ? pctReussite >= 70 ? '#2d7a4f' : 'var(--accent)'
-                  : 'inherit' }}>
-                {stat.value}
-              </div>
-              <div className="text-xs uppercase tracking-wide" style={{ color: 'var(--muted-foreground)' }}>
-                {stat.label}
-              </div>
-            </CardContent>
-          </Card>
+          <div
+            key={stat.label}
+            className="rounded-2xl text-center py-4"
+            style={{ background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
+          >
+            <div className="text-2xl font-bold" style={{ color: '#1F5A4D' }}>{stat.value}</div>
+            <div className="text-xs mt-0.5 uppercase tracking-wide" style={{ color: '#6E827B', fontSize: 10 }}>
+              {stat.label}
+            </div>
+          </div>
         ))}
       </div>
 
       {Object.keys(parMatiere).length === 0 ? (
-        <div className="text-center py-8" style={{ color: 'var(--muted-foreground)' }}>
-          <p className="text-sm">Aucune session validée encore.</p>
-          <p className="text-sm mt-1">Tes progrès apparaîtront ici une fois tes sessions terminées !</p>
+        <div className="text-center py-8">
+          <p className="text-sm font-semibold" style={{ color: '#6E827B' }}>Aucune session validée encore.</p>
+          <p className="text-sm mt-1" style={{ color: '#6E827B' }}>Tes progrès apparaîtront ici !</p>
         </div>
       ) : (
         <div className="space-y-2">
           {Object.entries(parMatiere).map(([matiere, sessMat]) => {
             const icone    = ICONES_MATIERE[matiere] || '📚'
+            const couleur  = COULEURS_MATIERE[matiere] || '#2E7D6B'
             const ouvert   = ouverteMat === matiere
             const qcmTotal = sessMat.reduce((a, s) => a + s.qcm_total, 0)
             const qcmJuste = sessMat.reduce((a, s) => a + s.qcm_juste, 0)
             const pct      = qcmTotal > 0 ? Math.round(qcmJuste / qcmTotal * 100) : null
 
             return (
-              <div key={matiere} className="rounded-xl overflow-hidden"
-                style={{ background: 'white', border: '1px solid var(--border)' }}>
-
+              <div
+                key={matiere}
+                className="rounded-2xl overflow-hidden"
+                style={{ background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
+              >
                 <button
                   onClick={() => setOuverteMat(ouvert ? null : matiere)}
-                  className="w-full px-4 py-4 flex items-center justify-between text-left hover:bg-gray-50 transition-colors"
+                  className="w-full px-4 py-4 flex items-center justify-between text-left"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl">{icone}</span>
+                    <div className="w-1 h-10 rounded-full shrink-0" style={{ background: couleur }} />
                     <div>
-                      <div className="font-medium text-sm">{matiere}</div>
-                      <div className="text-xs mt-0.5" style={{ color: 'var(--muted-foreground)' }}>
+                      <div className="font-bold text-sm uppercase tracking-wide" style={{ color: '#1E2A26' }}>
+                        {icone} {matiere}
+                      </div>
+                      <div className="text-xs mt-0.5" style={{ color: '#6E827B' }}>
                         {sessMat.length} session{sessMat.length > 1 ? 's' : ''} validée{sessMat.length > 1 ? 's' : ''}
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 shrink-0">
+                  <div className="flex items-center gap-2 shrink-0">
                     {pct !== null && (
-                      <span className="text-sm font-medium"
-                        style={{ color: pct >= 70 ? '#2d7a4f' : 'var(--accent)' }}>
-                        {pct}%
-                      </span>
+                      <span className="text-sm font-bold" style={{ color: '#1F5A4D' }}>{pct}%</span>
                     )}
-                    <span style={{
-                      color: 'var(--muted-foreground)',
-                      display: 'inline-block',
-                      transition: 'transform 0.2s',
-                      transform: ouvert ? 'rotate(180deg)' : 'none',
-                    }}>⌄</span>
+                    {ouvert
+                      ? <ChevronUp size={16} style={{ color: '#6E827B' }} />
+                      : <ChevronDown size={16} style={{ color: '#6E827B' }} />
+                    }
                   </div>
                 </button>
 
                 {ouvert && (
-                  <div className="border-t px-4 pb-3" style={{ borderColor: 'var(--border)' }}>
+                  <div className="px-4 pb-3 border-t" style={{ borderColor: '#DCE8E4' }}>
                     <div className="space-y-2 mt-3">
                       {sessMat.map(s => {
                         const date  = new Date(s.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
                         const score = s.qcm_total > 0 ? `${s.qcm_juste}/${s.qcm_total}` : null
-
                         return (
-                          <Link key={s.id} href={`/session/${s.id}`}
-                            className="flex items-center justify-between py-2 hover:opacity-70 transition-opacity"
-                            style={{ borderBottom: '1px solid var(--border)' }}>
+                          <Link
+                            key={s.id}
+                            href={`/session/${s.id}`}
+                            className="flex items-center justify-between py-2.5 transition-opacity hover:opacity-70"
+                            style={{ borderBottom: '1px solid #DCE8E4' }}
+                          >
                             <div>
-                              <p className="text-xs font-medium">{s.chapitre}</p>
-                              <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{date}</p>
+                              <p className="text-xs font-semibold" style={{ color: '#1E2A26' }}>{s.chapitre}</p>
+                              <p className="text-xs" style={{ color: '#6E827B' }}>{date}</p>
                             </div>
                             {score && (
-                              <span className="text-xs font-medium" style={{ color: '#2d7a4f' }}>
-                                ✅ {score}
-                              </span>
+                              <span className="text-xs font-bold" style={{ color: '#1F5A4D' }}>✅ {score}</span>
                             )}
                           </Link>
                         )
@@ -535,18 +531,21 @@ function TabProgres({ prenom }: { prenom: string }) {
 
 function TabPlanning({ prenom }: { prenom: string }) {
   return (
-    <div className="rounded-2xl p-6 text-center" style={{ background: 'white', border: '1px solid var(--border)' }}>
+    <div
+      className="rounded-2xl p-6 text-center"
+      style={{ background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
+    >
       <div className="text-5xl mb-4">📅</div>
-      <h2 className="text-lg font-medium mb-2">Mon planning</h2>
-      <p className="text-sm mb-6" style={{ color: 'var(--muted-foreground)' }}>
+      <p className="font-bold text-base mb-2" style={{ color: '#1E2A26' }}>Mon planning</p>
+      <p className="text-sm mb-6" style={{ color: '#6E827B' }}>
         Consulte ton planning de révision de la semaine.
       </p>
       <a
         href={`/planning/${encodeURIComponent(prenom)}`}
-        className="inline-block px-6 py-3 rounded-xl font-medium text-white transition-opacity hover:opacity-90"
-        style={{ background: 'var(--primary)' }}
+        className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl font-bold text-white text-sm transition-opacity hover:opacity-90"
+        style={{ background: '#2E7D6B' }}
       >
-        📅 Voir mon planning
+        Voir mon planning
       </a>
     </div>
   )
