@@ -32,6 +32,94 @@ function normaliserMatiere(m: string): string {
   return map[m] ?? m
 }
 
+function est3eme(classe: string): boolean {
+  return classe.trim().toLowerCase().startsWith('3')
+}
+
+// Sous-catégories par type d'évaluation
+const SOUS_CATEGORIES: {
+  id: string
+  label: string
+  emoji: string
+  match: (s: SessionAvecStats) => boolean
+  seulement3eme?: boolean
+}[] = [
+  { id: 'exo', label: 'Exercices',        emoji: '📚', match: s => s.type_evaluation !== 'ds' && s.type_evaluation !== 'brevet_blanc' },
+  { id: 'ds',  label: 'Devoir surveillé', emoji: '📝', match: s => s.type_evaluation === 'ds' },
+  { id: 'bb',  label: 'Brevet Blanc',     emoji: '🏆', match: s => s.type_evaluation === 'brevet_blanc', seulement3eme: true },
+]
+
+function SousTitre({ emoji, label, count }: { emoji: string; label: string; count: number }) {
+  return (
+    <div className="flex items-center gap-2 mt-4 mb-2">
+      <span className="text-xs font-bold uppercase tracking-wide" style={{ color: '#6E827B' }}>
+        {emoji} {label}
+      </span>
+      <span
+        className="text-xs px-1.5 py-0.5 rounded-full font-semibold"
+        style={{ background: '#F0F1F3', color: '#6E827B' }}
+      >
+        {count}
+      </span>
+    </div>
+  )
+}
+
+// Découpe une liste de sessions en groupes (Exercices / DS / Brevet Blanc)
+function grouperParType(sessions: SessionAvecStats[], classe: string) {
+  return SOUS_CATEGORIES
+    .filter(cat => !(cat.seulement3eme && !est3eme(classe)))
+    .map(cat => ({ cat, items: sessions.filter(cat.match) }))
+    .filter(g => g.items.length > 0)
+}
+
+function CarteAFaire({ s }: { s: SessionAvecStats }) {
+  const estFait = s.statut === 'fait'
+  return (
+    <Link
+      href={`/session/${s.id}`}
+      className="flex items-center justify-between p-4 rounded-xl transition-opacity active:opacity-70"
+      style={{
+        background: estFait ? '#FDF8EA' : '#F7F8FA',
+        border: `1.5px solid ${estFait ? '#E8B53A' : '#DCE8E4'}`,
+      }}
+    >
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold truncate" style={{ color: '#1E2A26' }}>{s.chapitre}</p>
+        <p className="text-xs mt-0.5" style={{ color: '#6E827B' }}>
+          {new Date(s.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+        </p>
+      </div>
+      <span
+        className="text-xs px-3 py-1.5 rounded-xl font-bold ml-3 shrink-0"
+        style={{ background: estFait ? '#E8B53A' : '#2E7D6B', color: '#fff' }}
+      >
+        {estFait ? 'Reprendre' : 'Commencer →'}
+      </span>
+    </Link>
+  )
+}
+
+function LigneValide({ s }: { s: SessionAvecStats }) {
+  const date  = new Date(s.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
+  const score = s.qcm_total > 0 ? `${s.qcm_juste}/${s.qcm_total}` : null
+  return (
+    <Link
+      href={`/session/${s.id}`}
+      className="flex items-center justify-between py-2.5 transition-opacity hover:opacity-70"
+      style={{ borderBottom: '1px solid #DCE8E4' }}
+    >
+      <div>
+        <p className="text-xs font-semibold" style={{ color: '#1E2A26' }}>{s.chapitre}</p>
+        <p className="text-xs" style={{ color: '#6E827B' }}>{date}</p>
+      </div>
+      {score && (
+        <span className="text-xs font-bold" style={{ color: '#1F5A4D' }}>✅ {score}</span>
+      )}
+    </Link>
+  )
+}
+
 const TABS: { id: Tab; label: string; Icon: React.ComponentType<{ size?: number; strokeWidth?: number }> }[] = [
   { id: 'revisions', label: 'Révisions', Icon: BookOpen },
   { id: 'planning',  label: 'Planning',  Icon: CalendarDays },
@@ -155,7 +243,7 @@ export default function EspaceEnfant() {
 
       {/* ── Contenu ── */}
       <div className="max-w-app mx-auto px-4 py-5">
-        {activeTab === 'revisions' && <TabRevisions prenom={prenom} />}
+        {activeTab === 'revisions' && <TabRevisions prenom={prenom} classe={classe} />}
         {activeTab === 'planning'  && <TabPlanning prenom={prenom} />}
       </div>
 
@@ -188,7 +276,7 @@ export default function EspaceEnfant() {
 
 // ─── Tab Révisions (À faire + Validé fusionnés) ────────────────────────────────
 
-function TabRevisions({ prenom }: { prenom: string }) {
+function TabRevisions({ prenom, classe }: { prenom: string; classe: string }) {
   const [sessions, setSessions]     = useState<SessionAvecStats[]>([])
   const [loading, setLoading]       = useState(true)
   const [filtre, setFiltre]         = useState<Filtre>('afaire')
@@ -280,8 +368,8 @@ function TabRevisions({ prenom }: { prenom: string }) {
       </div>
 
       {filtre === 'afaire'
-        ? <VueAFaire sessions={aFaire} ouverteMat={ouverteMat} setOuverteMat={setOuverteMat} />
-        : <VueValide  sessions={valide} ouverteMat={ouverteMat} setOuverteMat={setOuverteMat} />
+        ? <VueAFaire sessions={aFaire} classe={classe} ouverteMat={ouverteMat} setOuverteMat={setOuverteMat} />
+        : <VueValide  sessions={valide} classe={classe} ouverteMat={ouverteMat} setOuverteMat={setOuverteMat} />
       }
     </div>
   )
@@ -290,9 +378,10 @@ function TabRevisions({ prenom }: { prenom: string }) {
 // ─── Vue « À faire » ───────────────────────────────────────────────────────────
 
 function VueAFaire({
-  sessions, ouverteMat, setOuverteMat,
+  sessions, classe, ouverteMat, setOuverteMat,
 }: {
   sessions: SessionAvecStats[]
+  classe: string
   ouverteMat: string | null
   setOuverteMat: (m: string | null) => void
 }) {
@@ -364,41 +453,15 @@ function VueAFaire({
               </button>
 
               {ouvert && (
-                <div className="px-4 pb-4 border-t space-y-2.5" style={{ borderColor: '#DCE8E4' }}>
-                  <div className="pt-3 space-y-2.5">
-                    {sessMat.map(s => {
-                      const estFait = s.statut === 'fait'
-                      return (
-                        <Link
-                          key={s.id}
-                          href={`/session/${s.id}`}
-                          className="flex items-center justify-between p-4 rounded-xl transition-opacity active:opacity-70"
-                          style={{
-                            background: estFait ? '#FDF8EA' : '#F7F8FA',
-                            border: `1.5px solid ${estFait ? '#E8B53A' : '#DCE8E4'}`,
-                          }}
-                        >
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold truncate" style={{ color: '#1E2A26' }}>{s.chapitre}</p>
-                            <p className="text-xs mt-0.5" style={{ color: '#6E827B' }}>
-                              {s.type_evaluation === 'ds' && '📝 DS · '}
-                              {s.type_evaluation === 'brevet_blanc' && '🏆 Brevet Blanc · '}
-                              {new Date(s.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
-                            </p>
-                          </div>
-                          <span
-                            className="text-xs px-3 py-1.5 rounded-xl font-bold ml-3 shrink-0"
-                            style={{
-                              background: estFait ? '#E8B53A' : '#2E7D6B',
-                              color: '#fff',
-                            }}
-                          >
-                            {estFait ? 'Reprendre' : 'Commencer →'}
-                          </span>
-                        </Link>
-                      )
-                    })}
-                  </div>
+                <div className="px-4 pb-4 border-t" style={{ borderColor: '#DCE8E4' }}>
+                  {grouperParType(sessMat, classe).map(({ cat, items }) => (
+                    <div key={cat.id}>
+                      <SousTitre emoji={cat.emoji} label={cat.label} count={items.length} />
+                      <div className="space-y-2.5">
+                        {items.map(s => <CarteAFaire key={s.id} s={s} />)}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
@@ -412,9 +475,10 @@ function VueAFaire({
 // ─── Vue « Validé » ────────────────────────────────────────────────────────────
 
 function VueValide({
-  sessions, ouverteMat, setOuverteMat,
+  sessions, classe, ouverteMat, setOuverteMat,
 }: {
   sessions: SessionAvecStats[]
+  classe: string
   ouverteMat: string | null
   setOuverteMat: (m: string | null) => void
 }) {
@@ -501,28 +565,14 @@ function VueValide({
 
                 {ouvert && (
                   <div className="px-4 pb-3 border-t" style={{ borderColor: '#DCE8E4' }}>
-                    <div className="space-y-2 mt-3">
-                      {sessMat.map(s => {
-                        const date  = new Date(s.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
-                        const score = s.qcm_total > 0 ? `${s.qcm_juste}/${s.qcm_total}` : null
-                        return (
-                          <Link
-                            key={s.id}
-                            href={`/session/${s.id}`}
-                            className="flex items-center justify-between py-2.5 transition-opacity hover:opacity-70"
-                            style={{ borderBottom: '1px solid #DCE8E4' }}
-                          >
-                            <div>
-                              <p className="text-xs font-semibold" style={{ color: '#1E2A26' }}>{s.chapitre}</p>
-                              <p className="text-xs" style={{ color: '#6E827B' }}>{date}</p>
-                            </div>
-                            {score && (
-                              <span className="text-xs font-bold" style={{ color: '#1F5A4D' }}>✅ {score}</span>
-                            )}
-                          </Link>
-                        )
-                      })}
-                    </div>
+                    {grouperParType(sessMat, classe).map(({ cat, items }) => (
+                      <div key={cat.id}>
+                        <SousTitre emoji={cat.emoji} label={cat.label} count={items.length} />
+                        <div className="space-y-1">
+                          {items.map(s => <LigneValide key={s.id} s={s} />)}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
