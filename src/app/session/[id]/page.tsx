@@ -64,12 +64,22 @@ export default function SessionPage() {
 
   function retour() {
     const prenom = session?.enfant
+    // Reconstruit le contexte (filtre / matière / sous-catégorie) pour rouvrir au bon endroit
+    const qs = new URLSearchParams()
+    const filtre = searchParams.get('filtre')
+    const mat    = searchParams.get('mat')
+    const cat    = searchParams.get('cat')
+    if (filtre) qs.set('filtre', filtre)
+    if (mat)    qs.set('mat', mat)
+    if (cat)    qs.set('cat', cat)
+    const suffix = qs.toString() ? `?${qs.toString()}` : ''
+
     if (fromEnfant && prenom) {
       // L'enfant revient sur SA page (jamais l'espace parent)
-      router.push(`/enfant/${encodeURIComponent(prenom)}`)
+      router.push(`/enfant/${encodeURIComponent(prenom)}${suffix}`)
     } else {
       // Le parent revient sur le suivi de l'enfant
-      router.push(prenom ? `/espace/${encodeURIComponent(prenom)}` : '/')
+      router.push(prenom ? `/espace/${encodeURIComponent(prenom)}${suffix}` : '/')
     }
   }
 

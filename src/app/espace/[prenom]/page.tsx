@@ -145,7 +145,7 @@ export default function EspaceEnfant() {
 
 // ─── Tab Suivi ────────────────────────────────────────────────────────────────
 
-function LigneSuivi({ s }: { s: SessionAvecStats }) {
+function LigneSuivi({ s, retourQuery }: { s: SessionAvecStats; retourQuery: string }) {
   const score = s.qcm_total > 0 ? `${s.qcm_juste}/${s.qcm_total}` : null
   const date  = new Date(s.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
 
@@ -167,7 +167,7 @@ function LigneSuivi({ s }: { s: SessionAvecStats }) {
       <div className="flex gap-1.5 shrink-0">
         {(s.statut === 'fait' || s.statut === 'validé') && (
           <Link
-            href={`/session/${s.id}`}
+            href={`/session/${s.id}?${retourQuery}`}
             className="text-xs px-2.5 py-1.5 rounded-lg font-semibold"
             style={{ background: '#2E7D6B', color: '#fff' }}
           >
@@ -175,7 +175,7 @@ function LigneSuivi({ s }: { s: SessionAvecStats }) {
           </Link>
         )}
         <Link
-          href={`/session/${s.id}?mode=parent`}
+          href={`/session/${s.id}?mode=parent&${retourQuery}`}
           className="text-xs px-2.5 py-1.5 rounded-lg font-semibold"
           style={{ background: '#E3F0EC', color: '#1F5A4D' }}
         >
@@ -187,10 +187,15 @@ function LigneSuivi({ s }: { s: SessionAvecStats }) {
 }
 
 function TabSuivi({ prenom, classe }: { prenom: string; classe: string }) {
+  const searchParams = useSearchParams()
+  const matInit = searchParams.get('mat')
+  const catInit = searchParams.get('cat')
+  const cleInit = matInit && catInit ? `${matInit}::${catInit}` : undefined
+
   const [sessions, setSessions] = useState<SessionAvecStats[]>([])
   const [loading, setLoading]   = useState(true)
-  const [ouverteMat, setOuverteMat] = useState<string | null>(null)
-  const sous = useSousOuvertes()
+  const [ouverteMat, setOuverteMat] = useState<string | null>(matInit)
+  const sous = useSousOuvertes(cleInit ? [cleInit] : [])
 
   useEffect(() => {
     async function charger() {
@@ -321,6 +326,7 @@ function TabSuivi({ prenom, classe }: { prenom: string; classe: string }) {
                 <div className="px-4 pb-3 border-t" style={{ borderColor: '#DCE8E4' }}>
                   {grouperParType(sessMat, classe).map(({ cat, items }) => {
                     const cle = `${matiere}::${cat.id}`
+                    const retourQuery = `mat=${encodeURIComponent(matiere)}&cat=${cat.id}`
                     return (
                       <SousCategorieAccordeon
                         key={cat.id}
@@ -328,7 +334,7 @@ function TabSuivi({ prenom, classe }: { prenom: string; classe: string }) {
                         ouvert={sous.estOuverte(cle)} onToggle={() => sous.basculer(cle)}
                       >
                         <div className="space-y-2">
-                          {items.map(s => <LigneSuivi key={s.id} s={s} />)}
+                          {items.map(s => <LigneSuivi key={s.id} s={s} retourQuery={retourQuery} />)}
                         </div>
                       </SousCategorieAccordeon>
                     )

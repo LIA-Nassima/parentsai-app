@@ -30,8 +30,8 @@ export function grouperParType(sessions: SessionAvecStats[], classe: string) {
 }
 
 // Gère l'état ouvert/fermé de plusieurs sous-catégories (clé = `${matiere}::${catId}`)
-export function useSousOuvertes() {
-  const [ouvertes, setOuvertes] = useState<Set<string>>(new Set())
+export function useSousOuvertes(initial?: string[]) {
+  const [ouvertes, setOuvertes] = useState<Set<string>>(new Set(initial ?? []))
   return {
     estOuverte: (cle: string) => ouvertes.has(cle),
     basculer: (cle: string) =>

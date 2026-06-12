@@ -33,11 +33,11 @@ function normaliserMatiere(m: string): string {
   return map[m] ?? m
 }
 
-function CarteAFaire({ s }: { s: SessionAvecStats }) {
+function CarteAFaire({ s, retourQuery }: { s: SessionAvecStats; retourQuery: string }) {
   const estFait = s.statut === 'fait'
   return (
     <Link
-      href={`/session/${s.id}?from=enfant`}
+      href={`/session/${s.id}?${retourQuery}`}
       className="flex items-center justify-between p-4 rounded-xl transition-opacity active:opacity-70"
       style={{
         background: estFait ? '#FDF8EA' : '#F7F8FA',
@@ -60,12 +60,12 @@ function CarteAFaire({ s }: { s: SessionAvecStats }) {
   )
 }
 
-function LigneValide({ s }: { s: SessionAvecStats }) {
+function LigneValide({ s, retourQuery }: { s: SessionAvecStats; retourQuery: string }) {
   const date  = new Date(s.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
   const score = s.qcm_total > 0 ? `${s.qcm_juste}/${s.qcm_total}` : null
   return (
     <Link
-      href={`/session/${s.id}?from=enfant`}
+      href={`/session/${s.id}?${retourQuery}`}
       className="flex items-center justify-between py-2.5 transition-opacity hover:opacity-70"
       style={{ borderBottom: '1px solid #DCE8E4' }}
     >
@@ -237,10 +237,15 @@ export default function EspaceEnfant() {
 // ─── Tab Révisions (À faire + Validé fusionnés) ────────────────────────────────
 
 function TabRevisions({ prenom, classe }: { prenom: string; classe: string }) {
+  const searchParams = useSearchParams()
+  const matInit = searchParams.get('mat')
+  const catInit = searchParams.get('cat')
+  const cleInit = matInit && catInit ? `${matInit}::${catInit}` : undefined
+
   const [sessions, setSessions]     = useState<SessionAvecStats[]>([])
   const [loading, setLoading]       = useState(true)
-  const [filtre, setFiltre]         = useState<Filtre>('afaire')
-  const [ouverteMat, setOuverteMat] = useState<string | null>(null)
+  const [filtre, setFiltre]         = useState<Filtre>((searchParams.get('filtre') as Filtre) || 'afaire')
+  const [ouverteMat, setOuverteMat] = useState<string | null>(matInit)
 
   useEffect(() => {
     async function charger() {
@@ -328,8 +333,8 @@ function TabRevisions({ prenom, classe }: { prenom: string; classe: string }) {
       </div>
 
       {filtre === 'afaire'
-        ? <VueAFaire sessions={aFaire} classe={classe} ouverteMat={ouverteMat} setOuverteMat={setOuverteMat} />
-        : <VueValide  sessions={valide} classe={classe} ouverteMat={ouverteMat} setOuverteMat={setOuverteMat} />
+        ? <VueAFaire sessions={aFaire} classe={classe} ouverteMat={ouverteMat} setOuverteMat={setOuverteMat} ouvertureInitiale={cleInit} />
+        : <VueValide  sessions={valide} classe={classe} ouverteMat={ouverteMat} setOuverteMat={setOuverteMat} ouvertureInitiale={cleInit} />
       }
     </div>
   )
@@ -338,14 +343,15 @@ function TabRevisions({ prenom, classe }: { prenom: string; classe: string }) {
 // ─── Vue « À faire » ───────────────────────────────────────────────────────────
 
 function VueAFaire({
-  sessions, classe, ouverteMat, setOuverteMat,
+  sessions, classe, ouverteMat, setOuverteMat, ouvertureInitiale,
 }: {
   sessions: SessionAvecStats[]
   classe: string
   ouverteMat: string | null
   setOuverteMat: (m: string | null) => void
+  ouvertureInitiale?: string
 }) {
-  const sous = useSousOuvertes()
+  const sous = useSousOuvertes(ouvertureInitiale ? [ouvertureInitiale] : [])
 
   if (sessions.length === 0) return (
     <div className="text-center py-16">
@@ -418,6 +424,7 @@ function VueAFaire({
                 <div className="px-4 pb-4 border-t" style={{ borderColor: '#DCE8E4' }}>
                   {grouperParType(sessMat, classe).map(({ cat, items }) => {
                     const cle = `${matiere}::${cat.id}`
+                    const retourQuery = `from=enfant&filtre=afaire&mat=${encodeURIComponent(matiere)}&cat=${cat.id}`
                     return (
                       <SousCategorieAccordeon
                         key={cat.id}
@@ -425,7 +432,7 @@ function VueAFaire({
                         ouvert={sous.estOuverte(cle)} onToggle={() => sous.basculer(cle)}
                       >
                         <div className="space-y-2.5">
-                          {items.map(s => <CarteAFaire key={s.id} s={s} />)}
+                          {items.map(s => <CarteAFaire key={s.id} s={s} retourQuery={retourQuery} />)}
                         </div>
                       </SousCategorieAccordeon>
                     )
@@ -443,14 +450,15 @@ function VueAFaire({
 // ─── Vue « Validé » ────────────────────────────────────────────────────────────
 
 function VueValide({
-  sessions, classe, ouverteMat, setOuverteMat,
+  sessions, classe, ouverteMat, setOuverteMat, ouvertureInitiale,
 }: {
   sessions: SessionAvecStats[]
   classe: string
   ouverteMat: string | null
   setOuverteMat: (m: string | null) => void
+  ouvertureInitiale?: string
 }) {
-  const sous = useSousOuvertes()
+  const sous = useSousOuvertes(ouvertureInitiale ? [ouvertureInitiale] : [])
   const totalValides = sessions.length
   const totalQcm     = sessions.reduce((a, s) => a + s.qcm_total, 0)
   const totalJuste   = sessions.reduce((a, s) => a + s.qcm_juste, 0)
@@ -536,6 +544,7 @@ function VueValide({
                   <div className="px-4 pb-3 border-t" style={{ borderColor: '#DCE8E4' }}>
                     {grouperParType(sessMat, classe).map(({ cat, items }) => {
                       const cle = `${matiere}::${cat.id}`
+                      const retourQuery = `from=enfant&filtre=valide&mat=${encodeURIComponent(matiere)}&cat=${cat.id}`
                       return (
                         <SousCategorieAccordeon
                           key={cat.id}
@@ -543,7 +552,7 @@ function VueValide({
                           ouvert={sous.estOuverte(cle)} onToggle={() => sous.basculer(cle)}
                         >
                           <div className="space-y-1">
-                            {items.map(s => <LigneValide key={s.id} s={s} />)}
+                            {items.map(s => <LigneValide key={s.id} s={s} retourQuery={retourQuery} />)}
                           </div>
                         </SousCategorieAccordeon>
                       )
