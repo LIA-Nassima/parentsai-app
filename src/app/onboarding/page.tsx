@@ -93,7 +93,7 @@ export default function Onboarding() {
   const nbCopies = Object.values(copiesPermanents).filter(Boolean).length
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: '#F2F8F6' }}>
+    <div className="min-h-screen flex flex-col" style={{ background: '#F7F8FA' }}>
 
       {/* ── En-tête vert ── */}
       <div
@@ -149,7 +149,7 @@ export default function Onboarding() {
                   onKeyDown={e => e.key === 'Enter' && configurerFamille()}
                   placeholder="ex : Assia"
                   className="w-full px-4 py-3 rounded-xl text-sm outline-none"
-                  style={{ border: '1.5px solid #DCE8E4', background: '#F2F8F6', color: '#1E2A26' }}
+                  style={{ border: '1.5px solid #DCE8E4', background: '#F7F8FA', color: '#1E2A26' }}
                   autoFocus
                 />
               </div>
@@ -159,7 +159,7 @@ export default function Onboarding() {
                   value={classe}
                   onChange={e => setClasse(e.target.value)}
                   className="w-full px-4 py-3 rounded-xl text-sm outline-none"
-                  style={{ border: '1.5px solid #DCE8E4', background: '#F2F8F6', color: '#1E2A26' }}
+                  style={{ border: '1.5px solid #DCE8E4', background: '#F7F8FA', color: '#1E2A26' }}
                 >
                   {CLASSES.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
@@ -186,7 +186,7 @@ export default function Onboarding() {
               Ajoutez le serveur MCP dans vos paramètres Claude.ai — une seule fois.
             </p>
 
-            <div className="rounded-xl p-4 mb-5" style={{ background: '#F2F8F6', border: '1.5px solid #DCE8E4' }}>
+            <div className="rounded-xl p-4 mb-5" style={{ background: '#F7F8FA', border: '1.5px solid #DCE8E4' }}>
               <p className="text-xs uppercase tracking-wide mb-2" style={{ color: '#6E827B' }}>URL du serveur MCP</p>
               <div className="flex items-center gap-3">
                 <code className="flex-1 text-sm font-mono" style={{ color: '#2E7D6B' }}>{MCP_URL}</code>
@@ -313,7 +313,7 @@ export default function Onboarding() {
                             </p>
                             <pre
                               className="text-xs rounded-xl p-3 overflow-x-auto mb-3"
-                              style={{ background: '#F2F8F6', color: '#6E827B', whiteSpace: 'pre-wrap' }}
+                              style={{ background: '#F7F8FA', color: '#6E827B', whiteSpace: 'pre-wrap' }}
                             >
                               {p.template}
                             </pre>

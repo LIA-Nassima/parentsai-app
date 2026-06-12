@@ -39,7 +39,7 @@ export default function Home() {
   }, [])
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: '#F2F8F6' }}>
+    <div className="min-h-screen flex items-center justify-center" style={{ background: '#F7F8FA' }}>
       <div className="text-center">
         <LogoIAla size={40} dark />
         <p className="mt-4 text-sm" style={{ color: '#6E827B' }}>Chargement...</p>
@@ -48,7 +48,7 @@ export default function Home() {
   )
 
   return (
-    <div className="min-h-screen" style={{ background: '#F2F8F6' }}>
+    <div className="min-h-screen" style={{ background: '#F7F8FA' }}>
 
       {/* ── En-tête vert ── */}
       <div style={{ background: '#2E7D6B' }}>

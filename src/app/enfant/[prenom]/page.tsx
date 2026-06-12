@@ -39,7 +39,7 @@ const TABS: { id: Tab; label: string; Icon: React.ComponentType<{ size?: number;
 
 function EcranAccesRefuse() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-6" style={{ background: '#F2F8F6' }}>
+    <div className="min-h-screen flex flex-col items-center justify-center px-6" style={{ background: '#F7F8FA' }}>
       <div className="text-center max-w-xs">
         <div className="text-6xl mb-5">🔒</div>
         <p className="font-bold text-lg mb-2" style={{ color: '#1E2A26' }}>Accès refusé</p>
@@ -115,7 +115,7 @@ export default function EspaceEnfant() {
   const initiale = prenom.charAt(0).toUpperCase()
 
   return (
-    <div className="min-h-screen pb-20" style={{ background: '#F2F8F6' }}>
+    <div className="min-h-screen pb-20" style={{ background: '#F7F8FA' }}>
 
       {/* ── En-tête vert ── */}
       <header className="sticky top-0 z-50 w-full" style={{ background: '#2E7D6B' }}>
@@ -171,11 +171,11 @@ export default function EspaceEnfant() {
             <button
               key={id}
               onClick={() => setTab(id)}
-              className="flex-1 flex flex-col items-center justify-center py-2.5 gap-1 transition-colors relative"
+              className="flex-1 flex flex-col items-center justify-center py-3 gap-1.5 transition-colors relative"
               style={{ color: actif ? '#2E7D6B' : '#6E827B' }}
             >
-              <Icon size={22} strokeWidth={actif ? 2.5 : 1.8} />
-              <span className="text-xs font-semibold" style={{ fontSize: 10.5 }}>{label}</span>
+              <Icon size={26} strokeWidth={actif ? 2.5 : 1.8} />
+              <span className="font-semibold" style={{ fontSize: 11 }}>{label}</span>
               {actif && (
                 <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full" style={{ background: '#2E7D6B' }} />
               )}
@@ -327,7 +327,7 @@ function TabAFaire({ prenom }: { prenom: string }) {
                           href={`/session/${s.id}`}
                           className="flex items-center justify-between p-4 rounded-xl transition-opacity active:opacity-70"
                           style={{
-                            background: estFait ? '#FDF8EA' : '#F2F8F6',
+                            background: estFait ? '#FDF8EA' : '#F7F8FA',
                             border: `1.5px solid ${estFait ? '#E8B53A' : '#DCE8E4'}`,
                           }}
                         >

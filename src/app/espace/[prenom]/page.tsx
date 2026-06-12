@@ -93,7 +93,7 @@ export default function EspaceEnfant() {
   }
 
   return (
-    <div className="min-h-screen pb-20" style={{ background: '#F2F8F6' }}>
+    <div className="min-h-screen pb-20" style={{ background: '#F7F8FA' }}>
 
       <AppHeader prenom={prenom} classe={classe} />
 
@@ -123,11 +123,11 @@ export default function EspaceEnfant() {
             <button
               key={id}
               onClick={() => setTab(id)}
-              className="flex-1 flex flex-col items-center justify-center py-2.5 gap-1 transition-colors"
+              className="flex-1 flex flex-col items-center justify-center py-3 gap-1.5 transition-colors"
               style={{ color: actif ? '#2E7D6B' : '#6E827B' }}
             >
-              <Icon size={20} strokeWidth={actif ? 2.5 : 1.8} />
-              <span className="text-xs font-semibold" style={{ fontSize: 10.5 }}>{label}</span>
+              <Icon size={24} strokeWidth={actif ? 2.5 : 1.8} />
+              <span className="font-semibold" style={{ fontSize: 11 }}>{label}</span>
               {actif && (
                 <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full" style={{ background: '#2E7D6B' }} />
               )}
@@ -623,7 +623,7 @@ function TabProfs({
                   </p>
                   <pre
                     className="text-xs rounded-xl p-3 overflow-x-auto mb-3"
-                    style={{ background: '#F2F8F6', color: '#6E827B', whiteSpace: 'pre-wrap' }}
+                    style={{ background: '#F7F8FA', color: '#6E827B', whiteSpace: 'pre-wrap' }}
                   >
                     {p.template}
                   </pre>
@@ -643,7 +643,7 @@ function TabProfs({
                       disabled={saving === p.matiere}
                       className="px-3 py-2.5 rounded-xl text-sm font-bold transition-all"
                       style={{
-                        background: configure ? '#E3F0EC' : '#F2F8F6',
+                        background: configure ? '#E3F0EC' : '#F7F8FA',
                         color:      configure ? '#1F5A4D' : '#6E827B',
                         border:     '1.5px solid #DCE8E4',
                       }}

@@ -27,7 +27,7 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: '#F2F8F6' }}>
+    <div className="min-h-screen flex flex-col" style={{ background: '#F7F8FA' }}>
       <div
         className="w-full pt-14 pb-10 px-5 flex flex-col items-center"
         style={{ background: '#2E7D6B', borderBottomLeftRadius: 28, borderBottomRightRadius: 28 }}
@@ -47,7 +47,7 @@ export default function Register() {
               onChange={e => setEmail(e.target.value)}
               placeholder="votre@email.fr"
               className="w-full px-4 py-3 rounded-xl text-sm outline-none"
-              style={{ border: '1.5px solid #DCE8E4', background: '#F2F8F6', color: '#1E2A26' }}
+              style={{ border: '1.5px solid #DCE8E4', background: '#F7F8FA', color: '#1E2A26' }}
               autoFocus
             />
           </div>
@@ -59,7 +59,7 @@ export default function Register() {
               onChange={e => setPassword(e.target.value)}
               placeholder="6 caractères minimum"
               className="w-full px-4 py-3 rounded-xl text-sm outline-none"
-              style={{ border: '1.5px solid #DCE8E4', background: '#F2F8F6', color: '#1E2A26' }}
+              style={{ border: '1.5px solid #DCE8E4', background: '#F7F8FA', color: '#1E2A26' }}
             />
           </div>
           <div>
@@ -71,7 +71,7 @@ export default function Register() {
               onKeyDown={e => e.key === 'Enter' && sInscrire()}
               placeholder="••••••••"
               className="w-full px-4 py-3 rounded-xl text-sm outline-none"
-              style={{ border: '1.5px solid #DCE8E4', background: '#F2F8F6', color: '#1E2A26' }}
+              style={{ border: '1.5px solid #DCE8E4', background: '#F7F8FA', color: '#1E2A26' }}
             />
           </div>
           {erreur && <p className="text-sm font-medium" style={{ color: '#D9483B' }}>{erreur}</p>}

@@ -62,7 +62,7 @@ export default function SessionPage() {
   }
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: '#F2F8F6' }}>
+    <div className="min-h-screen flex items-center justify-center" style={{ background: '#F7F8FA' }}>
       <div className="text-center">
         <LogoIAla size={36} dark />
         <p className="mt-4 text-sm" style={{ color: '#6E827B' }}>Chargement des exercices...</p>
@@ -71,7 +71,7 @@ export default function SessionPage() {
   )
 
   if (!session?.exercices_json) return (
-    <div className="min-h-screen flex items-center justify-center px-4" style={{ background: '#F2F8F6' }}>
+    <div className="min-h-screen flex items-center justify-center px-4" style={{ background: '#F7F8FA' }}>
       <div className="text-center max-w-sm">
         <div className="text-4xl mb-4">📄</div>
         <p className="font-bold mb-2" style={{ color: '#1E2A26' }}>Exercices non disponibles</p>
@@ -110,7 +110,7 @@ export default function SessionPage() {
   const evalLabel  = isDS ? 'DEVOIR SURVEILLÉ' : 'BREVET BLANC'
 
   return (
-    <div className="min-h-screen" style={{ background: '#F2F8F6' }}>
+    <div className="min-h-screen" style={{ background: '#F7F8FA' }}>
 
       {/* ── En-tête vert ── */}
       <header className="sticky top-0 z-50 w-full" style={{ background: '#2E7D6B' }}>

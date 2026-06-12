@@ -6,7 +6,7 @@
 
 /* ── Palette IAlla (valeurs fixes → génère les utilitaires Tailwind) ── */
 @theme {
-  --color-sapin-50:  #F2F8F6;
+  --color-sapin-50:  #F7F8FA;
   --color-sapin-100: #E3F0EC;
   --color-sapin-200: #C2DED6;
   --color-sapin-300: #92C4B7;
@@ -38,7 +38,7 @@
   --color-ardoise: #6E827B;
   --color-bordure: #DCE8E4;
   --color-surface: #FFFFFF;
-  --color-fond:    #F2F8F6;
+  --color-fond:    #F7F8FA;
 
   --font-script: var(--font-dancing), cursive;
 
@@ -79,7 +79,7 @@
 }
 
 :root {
-  --background:          #F2F8F6;
+  --background:          #F7F8FA;
   --foreground:          #1E2A26;
   --card:                #FFFFFF;
   --card-foreground:     #1E2A26;
@@ -89,7 +89,7 @@
   --primary-foreground:  #FFFFFF;
   --secondary:           #E3F0EC;
   --secondary-foreground:#1F5A4D;
-  --muted:               #F2F8F6;
+  --muted:               #F7F8FA;
   --muted-foreground:    #6E827B;
   --accent:              #E8B53A;
   --accent-foreground:   #7a5910;
