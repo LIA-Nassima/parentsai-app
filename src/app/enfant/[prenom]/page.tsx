@@ -3,13 +3,14 @@
 import { useEffect, useState } from 'react'
 import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { BookOpen, Trophy, CalendarDays, ChevronDown, ChevronUp } from 'lucide-react'
+import { BookOpen, CalendarDays, ChevronDown, ChevronUp } from 'lucide-react'
 import { LogoIAla } from '@/components/brand/LogoIAla'
 import { supabase } from '@/lib/supabase'
 import { Session, Reponse, SessionAvecStats } from '@/types'
 import { normaliserPrenom } from '@/lib/normaliser'
 
-type Tab = 'afaire' | 'progres' | 'planning'
+type Tab = 'revisions' | 'planning'
+type Filtre = 'afaire' | 'valide'
 
 const ICONES_MATIERE: Record<string, string> = {
   'Mathématiques': '🔢', 'Français': '📖', 'Physique-Chimie': '🧪',
@@ -32,9 +33,8 @@ function normaliserMatiere(m: string): string {
 }
 
 const TABS: { id: Tab; label: string; Icon: React.ComponentType<{ size?: number; strokeWidth?: number }> }[] = [
-  { id: 'afaire',   label: 'À faire',  Icon: BookOpen },
-  { id: 'progres',  label: 'Progrès',  Icon: Trophy },
-  { id: 'planning', label: 'Planning', Icon: CalendarDays },
+  { id: 'revisions', label: 'Révisions', Icon: BookOpen },
+  { id: 'planning',  label: 'Planning',  Icon: CalendarDays },
 ]
 
 function EcranAccesRefuse() {
@@ -56,7 +56,7 @@ export default function EspaceEnfant() {
   const searchParams = useSearchParams()
   const router       = useRouter()
   const prenom       = normaliserPrenom(decodeURIComponent(params.prenom as string))
-  const activeTab    = (searchParams.get('tab') as Tab) || 'afaire'
+  const activeTab    = (searchParams.get('tab') as Tab) || 'revisions'
 
   const [classe, setClasse]             = useState('')
   const [tokenVerifie, setTokenVerifie] = useState<boolean | null>(null)
@@ -155,9 +155,8 @@ export default function EspaceEnfant() {
 
       {/* ── Contenu ── */}
       <div className="max-w-app mx-auto px-4 py-5">
-        {activeTab === 'afaire'   && <TabAFaire prenom={prenom} />}
-        {activeTab === 'progres'  && <TabProgres prenom={prenom} />}
-        {activeTab === 'planning' && <TabPlanning prenom={prenom} />}
+        {activeTab === 'revisions' && <TabRevisions prenom={prenom} />}
+        {activeTab === 'planning'  && <TabPlanning prenom={prenom} />}
       </div>
 
       {/* ── Barre de navigation basse ── */}
@@ -187,26 +186,20 @@ export default function EspaceEnfant() {
   )
 }
 
-// ─── Tab À faire ──────────────────────────────────────────────────────────────
+// ─── Tab Révisions (À faire + Validé fusionnés) ────────────────────────────────
 
-function TabAFaire({ prenom }: { prenom: string }) {
-  const [sessions, setSessions]   = useState<SessionAvecStats[]>([])
-  const [totalSessions, setTotal] = useState(0)
-  const [loading, setLoading]     = useState(true)
+function TabRevisions({ prenom }: { prenom: string }) {
+  const [sessions, setSessions]     = useState<SessionAvecStats[]>([])
+  const [loading, setLoading]       = useState(true)
+  const [filtre, setFiltre]         = useState<Filtre>('afaire')
   const [ouverteMat, setOuverteMat] = useState<string | null>(null)
 
   useEffect(() => {
     async function charger() {
       setLoading(true)
-      const { count } = await supabase
-        .from('sessions').select('*', { count: 'exact', head: true })
-        .ilike('enfant', prenom)
-      setTotal(count ?? 0)
-
       const { data } = await supabase
         .from('sessions').select('*')
         .ilike('enfant', prenom)
-        .in('statut', ['en_attente', 'fait'])
         .order('created_at', { ascending: false })
 
       if (!data) { setLoading(false); return }
@@ -231,28 +224,85 @@ function TabAFaire({ prenom }: { prenom: string }) {
     charger()
   }, [prenom])
 
+  const aFaire = sessions.filter(s => s.statut === 'en_attente' || s.statut === 'fait')
+  const valide = sessions.filter(s => s.statut === 'validé')
+
   if (loading) return (
     <div className="text-center py-16">
       <p className="text-sm" style={{ color: '#6E827B' }}>Chargement...</p>
     </div>
   )
 
-  if (sessions.length === 0) {
-    if (totalSessions === 0) return (
-      <div className="text-center py-16">
-        <div className="text-5xl mb-4">📖</div>
-        <p className="font-bold" style={{ color: '#1E2A26' }}>Pas encore de session.</p>
-        <p className="text-sm mt-2" style={{ color: '#6E827B' }}>Demande à tes parents de lancer une session !</p>
+  if (sessions.length === 0) return (
+    <div className="text-center py-16">
+      <div className="text-5xl mb-4">📖</div>
+      <p className="font-bold" style={{ color: '#1E2A26' }}>Pas encore de session.</p>
+      <p className="text-sm mt-2" style={{ color: '#6E827B' }}>Demande à tes parents de lancer une session !</p>
+    </div>
+  )
+
+  return (
+    <div>
+      {/* Sélecteur segmenté À faire / Validé */}
+      <div
+        className="flex gap-1 p-1 rounded-full mb-5"
+        style={{ background: '#EAEDF0' }}
+      >
+        {([
+          { id: 'afaire' as Filtre, label: 'À faire', count: aFaire.length },
+          { id: 'valide' as Filtre, label: 'Validé',  count: valide.length },
+        ]).map(seg => {
+          const actif = filtre === seg.id
+          return (
+            <button
+              key={seg.id}
+              onClick={() => { setFiltre(seg.id); setOuverteMat(null) }}
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-full text-sm font-bold transition-all"
+              style={{
+                background: actif ? '#fff' : 'transparent',
+                color: actif ? '#1E2A26' : '#6E827B',
+                boxShadow: actif ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
+              }}
+            >
+              {seg.label}
+              <span
+                className="text-xs px-2 py-0.5 rounded-full font-bold"
+                style={{
+                  background: actif ? (seg.id === 'valide' ? '#E3F0EC' : '#FBE6E3') : 'rgba(0,0,0,0.06)',
+                  color: actif ? (seg.id === 'valide' ? '#1F5A4D' : '#D9483B') : '#6E827B',
+                }}
+              >
+                {seg.count}
+              </span>
+            </button>
+          )
+        })}
       </div>
-    )
-    return (
-      <div className="text-center py-16">
-        <div className="text-5xl mb-4">🎉</div>
-        <p className="font-bold text-lg" style={{ color: '#1E2A26' }}>Tout est fait !</p>
-        <p className="text-sm mt-2" style={{ color: '#6E827B' }}>Toutes tes sessions sont validées. Bravo !</p>
-      </div>
-    )
-  }
+
+      {filtre === 'afaire'
+        ? <VueAFaire sessions={aFaire} ouverteMat={ouverteMat} setOuverteMat={setOuverteMat} />
+        : <VueValide  sessions={valide} ouverteMat={ouverteMat} setOuverteMat={setOuverteMat} />
+      }
+    </div>
+  )
+}
+
+// ─── Vue « À faire » ───────────────────────────────────────────────────────────
+
+function VueAFaire({
+  sessions, ouverteMat, setOuverteMat,
+}: {
+  sessions: SessionAvecStats[]
+  ouverteMat: string | null
+  setOuverteMat: (m: string | null) => void
+}) {
+  if (sessions.length === 0) return (
+    <div className="text-center py-16">
+      <div className="text-5xl mb-4">🎉</div>
+      <p className="font-bold text-lg" style={{ color: '#1E2A26' }}>Tout est fait !</p>
+      <p className="text-sm mt-2" style={{ color: '#6E827B' }}>Toutes tes sessions sont validées. Bravo !</p>
+    </div>
+  )
 
   const parMatiere = sessions.reduce<Record<string, SessionAvecStats[]>>((acc, s) => {
     if (!acc[s.matiere]) acc[s.matiere] = []
@@ -262,7 +312,6 @@ function TabAFaire({ prenom }: { prenom: string }) {
 
   return (
     <div>
-      {/* Message */}
       <div
         className="rounded-2xl p-4 mb-5 text-center"
         style={{ background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
@@ -273,10 +322,8 @@ function TabAFaire({ prenom }: { prenom: string }) {
         </p>
       </div>
 
-      {/* Accordéon par matière */}
       <div className="space-y-3">
         {Object.entries(parMatiere).map(([matiere, sessMat]) => {
-          const icone  = ICONES_MATIERE[matiere] || '📚'
           const couleur = COULEURS_MATIERE[matiere] || '#2E7D6B'
           const ouvert  = ouverteMat === matiere
           const nbFait  = sessMat.filter(s => s.statut === 'fait').length
@@ -362,62 +409,21 @@ function TabAFaire({ prenom }: { prenom: string }) {
   )
 }
 
-// ─── Tab Progrès ──────────────────────────────────────────────────────────────
+// ─── Vue « Validé » ────────────────────────────────────────────────────────────
 
-function TabProgres({ prenom }: { prenom: string }) {
-  const [sessions, setSessions] = useState<SessionAvecStats[]>([])
-  const [loading, setLoading]   = useState(true)
-  const [ouverteMat, setOuverteMat] = useState<string | null>(null)
-
-  useEffect(() => {
-    async function charger() {
-      setLoading(true)
-      const { data } = await supabase
-        .from('sessions').select('*')
-        .ilike('enfant', prenom)
-        .order('created_at', { ascending: false })
-      if (!data) { setLoading(false); return }
-      const avecStats: SessionAvecStats[] = await Promise.all(
-        data.map(async (s: Session) => {
-          const { data: rep } = await supabase
-            .from('reponses').select('*').eq('session_id', s.id)
-          const r = (rep || []) as Reponse[]
-          return {
-            ...s,
-            matiere:    normaliserMatiere(s.matiere),
-            qcm_total:  r.filter(x => x.type === 'qcm').length,
-            qcm_juste:  r.filter(x => x.type === 'qcm' && x.est_correct).length,
-            pb_termine: r.filter(x => x.type === 'probleme' && x.est_termine).length,
-          }
-        })
-      )
-      setSessions(avecStats)
-      setLoading(false)
-    }
-    charger()
-  }, [prenom])
-
-  if (loading) return (
-    <div className="text-center py-16">
-      <p className="text-sm" style={{ color: '#6E827B' }}>Chargement...</p>
-    </div>
-  )
-
-  if (sessions.length === 0) return (
-    <div className="text-center py-16">
-      <div className="text-4xl mb-3">📖</div>
-      <p className="font-semibold" style={{ color: '#1E2A26' }}>Pas encore de sessions.</p>
-      <p className="text-sm mt-2" style={{ color: '#6E827B' }}>Commence ta première session dans "À faire" !</p>
-    </div>
-  )
-
-  const totalValides = sessions.filter(s => s.statut === 'validé').length
+function VueValide({
+  sessions, ouverteMat, setOuverteMat,
+}: {
+  sessions: SessionAvecStats[]
+  ouverteMat: string | null
+  setOuverteMat: (m: string | null) => void
+}) {
+  const totalValides = sessions.length
   const totalQcm     = sessions.reduce((a, s) => a + s.qcm_total, 0)
   const totalJuste   = sessions.reduce((a, s) => a + s.qcm_juste, 0)
   const pctReussite  = totalQcm > 0 ? Math.round(totalJuste / totalQcm * 100) : null
 
-  const sessionsFaites = sessions.filter(s => s.statut === 'validé')
-  const parMatiere = sessionsFaites.reduce<Record<string, SessionAvecStats[]>>((acc, s) => {
+  const parMatiere = sessions.reduce<Record<string, SessionAvecStats[]>>((acc, s) => {
     if (!acc[s.matiere]) acc[s.matiere] = []
     acc[s.matiere].push(s)
     return acc
@@ -447,6 +453,7 @@ function TabProgres({ prenom }: { prenom: string }) {
 
       {Object.keys(parMatiere).length === 0 ? (
         <div className="text-center py-8">
+          <div className="text-4xl mb-3">🌱</div>
           <p className="text-sm font-semibold" style={{ color: '#6E827B' }}>Aucune session validée encore.</p>
           <p className="text-sm mt-1" style={{ color: '#6E827B' }}>Tes progrès apparaîtront ici !</p>
         </div>
