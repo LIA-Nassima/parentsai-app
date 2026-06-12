@@ -5,6 +5,7 @@ import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { BookOpen, CalendarDays, ChevronDown, ChevronUp } from 'lucide-react'
 import { LogoIAla } from '@/components/brand/LogoIAla'
+import { grouperParType, useSousOuvertes, SousCategorieAccordeon } from '@/components/ui/SousCategorie'
 import { supabase } from '@/lib/supabase'
 import { Session, Reponse, SessionAvecStats } from '@/types'
 import { normaliserPrenom } from '@/lib/normaliser'
@@ -30,47 +31,6 @@ function normaliserMatiere(m: string): string {
     'maths': 'Mathématiques', 'math': 'Mathématiques',
   }
   return map[m] ?? m
-}
-
-function est3eme(classe: string): boolean {
-  return classe.trim().toLowerCase().startsWith('3')
-}
-
-// Sous-catégories par type d'évaluation
-const SOUS_CATEGORIES: {
-  id: string
-  label: string
-  emoji: string
-  match: (s: SessionAvecStats) => boolean
-  seulement3eme?: boolean
-}[] = [
-  { id: 'exo', label: 'Exercices',        emoji: '📚', match: s => s.type_evaluation !== 'ds' && s.type_evaluation !== 'brevet_blanc' },
-  { id: 'ds',  label: 'Devoir surveillé', emoji: '📝', match: s => s.type_evaluation === 'ds' },
-  { id: 'bb',  label: 'Brevet Blanc',     emoji: '🏆', match: s => s.type_evaluation === 'brevet_blanc', seulement3eme: true },
-]
-
-function SousTitre({ emoji, label, count }: { emoji: string; label: string; count: number }) {
-  return (
-    <div className="flex items-center gap-2 mt-4 mb-2">
-      <span className="text-xs font-bold uppercase tracking-wide" style={{ color: '#6E827B' }}>
-        {emoji} {label}
-      </span>
-      <span
-        className="text-xs px-1.5 py-0.5 rounded-full font-semibold"
-        style={{ background: '#F0F1F3', color: '#6E827B' }}
-      >
-        {count}
-      </span>
-    </div>
-  )
-}
-
-// Découpe une liste de sessions en groupes (Exercices / DS / Brevet Blanc)
-function grouperParType(sessions: SessionAvecStats[], classe: string) {
-  return SOUS_CATEGORIES
-    .filter(cat => !(cat.seulement3eme && !est3eme(classe)))
-    .map(cat => ({ cat, items: sessions.filter(cat.match) }))
-    .filter(g => g.items.length > 0)
 }
 
 function CarteAFaire({ s }: { s: SessionAvecStats }) {
@@ -385,6 +345,8 @@ function VueAFaire({
   ouverteMat: string | null
   setOuverteMat: (m: string | null) => void
 }) {
+  const sous = useSousOuvertes()
+
   if (sessions.length === 0) return (
     <div className="text-center py-16">
       <div className="text-5xl mb-4">🎉</div>
@@ -454,14 +416,20 @@ function VueAFaire({
 
               {ouvert && (
                 <div className="px-4 pb-4 border-t" style={{ borderColor: '#DCE8E4' }}>
-                  {grouperParType(sessMat, classe).map(({ cat, items }) => (
-                    <div key={cat.id}>
-                      <SousTitre emoji={cat.emoji} label={cat.label} count={items.length} />
-                      <div className="space-y-2.5">
-                        {items.map(s => <CarteAFaire key={s.id} s={s} />)}
-                      </div>
-                    </div>
-                  ))}
+                  {grouperParType(sessMat, classe).map(({ cat, items }) => {
+                    const cle = `${matiere}::${cat.id}`
+                    return (
+                      <SousCategorieAccordeon
+                        key={cat.id}
+                        emoji={cat.emoji} label={cat.label} count={items.length}
+                        ouvert={sous.estOuverte(cle)} onToggle={() => sous.basculer(cle)}
+                      >
+                        <div className="space-y-2.5">
+                          {items.map(s => <CarteAFaire key={s.id} s={s} />)}
+                        </div>
+                      </SousCategorieAccordeon>
+                    )
+                  })}
                 </div>
               )}
             </div>
@@ -482,6 +450,7 @@ function VueValide({
   ouverteMat: string | null
   setOuverteMat: (m: string | null) => void
 }) {
+  const sous = useSousOuvertes()
   const totalValides = sessions.length
   const totalQcm     = sessions.reduce((a, s) => a + s.qcm_total, 0)
   const totalJuste   = sessions.reduce((a, s) => a + s.qcm_juste, 0)
@@ -565,14 +534,20 @@ function VueValide({
 
                 {ouvert && (
                   <div className="px-4 pb-3 border-t" style={{ borderColor: '#DCE8E4' }}>
-                    {grouperParType(sessMat, classe).map(({ cat, items }) => (
-                      <div key={cat.id}>
-                        <SousTitre emoji={cat.emoji} label={cat.label} count={items.length} />
-                        <div className="space-y-1">
-                          {items.map(s => <LigneValide key={s.id} s={s} />)}
-                        </div>
-                      </div>
-                    ))}
+                    {grouperParType(sessMat, classe).map(({ cat, items }) => {
+                      const cle = `${matiere}::${cat.id}`
+                      return (
+                        <SousCategorieAccordeon
+                          key={cat.id}
+                          emoji={cat.emoji} label={cat.label} count={items.length}
+                          ouvert={sous.estOuverte(cle)} onToggle={() => sous.basculer(cle)}
+                        >
+                          <div className="space-y-1">
+                            {items.map(s => <LigneValide key={s.id} s={s} />)}
+                          </div>
+                        </SousCategorieAccordeon>
+                      )
+                    })}
                   </div>
                 )}
               </div>

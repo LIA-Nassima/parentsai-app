@@ -9,6 +9,7 @@ import { normaliserPrenom } from '@/lib/normaliser'
 import { supabase } from '@/lib/supabase'
 import { AppHeader } from '@/components/ui/AppHeader'
 import { StatusBadge } from '@/components/ui/StatusBadge'
+import { grouperParType, useSousOuvertes, SousCategorieAccordeon } from '@/components/ui/SousCategorie'
 import { Session, Reponse, SessionAvecStats } from '@/types'
 
 // ─── Types locaux ──────────────────────────────────────────────────────────────
@@ -102,7 +103,7 @@ export default function EspaceEnfant() {
 
       {/* ── Contenu ── */}
       <div className="max-w-app mx-auto px-4 py-5">
-        {activeTab === 'suivi'     && <TabSuivi prenom={prenom} />}
+        {activeTab === 'suivi'     && <TabSuivi prenom={prenom} classe={classe} />}
         {activeTab === 'exercices' && <TabExercices prenom={prenom} />}
         {activeTab === 'planning'  && <TabPlanning prenom={prenom} />}
         {activeTab === 'profs'     && (
@@ -144,10 +145,52 @@ export default function EspaceEnfant() {
 
 // ─── Tab Suivi ────────────────────────────────────────────────────────────────
 
-function TabSuivi({ prenom }: { prenom: string }) {
+function LigneSuivi({ s }: { s: SessionAvecStats }) {
+  const score = s.qcm_total > 0 ? `${s.qcm_juste}/${s.qcm_total}` : null
+  const date  = new Date(s.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
+
+  return (
+    <div
+      className="flex items-center justify-between gap-3 py-2.5"
+      style={{ borderBottom: '1px solid #F0F1F3' }}
+    >
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs" style={{ color: '#6E827B' }}>{date}</span>
+          <StatusBadge variant={statutToVariant(s.statut)} />
+        </div>
+        <p className="text-xs mt-0.5 truncate" style={{ color: '#6E827B' }}>
+          {s.chapitre}
+          {score && <span className="ml-2 font-semibold" style={{ color: '#1F5A4D' }}>· {score} QCM</span>}
+        </p>
+      </div>
+      <div className="flex gap-1.5 shrink-0">
+        {(s.statut === 'fait' || s.statut === 'validé') && (
+          <Link
+            href={`/session/${s.id}`}
+            className="text-xs px-2.5 py-1.5 rounded-lg font-semibold"
+            style={{ background: '#2E7D6B', color: '#fff' }}
+          >
+            Voir
+          </Link>
+        )}
+        <Link
+          href={`/session/${s.id}?mode=parent`}
+          className="text-xs px-2.5 py-1.5 rounded-lg font-semibold"
+          style={{ background: '#E3F0EC', color: '#1F5A4D' }}
+        >
+          📋
+        </Link>
+      </div>
+    </div>
+  )
+}
+
+function TabSuivi({ prenom, classe }: { prenom: string; classe: string }) {
   const [sessions, setSessions] = useState<SessionAvecStats[]>([])
   const [loading, setLoading]   = useState(true)
   const [ouverteMat, setOuverteMat] = useState<string | null>(null)
+  const sous = useSousOuvertes()
 
   useEffect(() => {
     async function charger() {
@@ -276,64 +319,20 @@ function TabSuivi({ prenom }: { prenom: string }) {
 
               {ouvert && (
                 <div className="px-4 pb-3 border-t" style={{ borderColor: '#DCE8E4' }}>
-                  <div className="space-y-2 mt-3">
-                    {sessMat.map(s => {
-                      const score     = s.qcm_total > 0 ? `${s.qcm_juste}/${s.qcm_total}` : null
-                      const date      = new Date(s.created_at).toLocaleDateString('fr-FR', {
-                        day: 'numeric', month: 'short',
-                      })
-                      const typeLabel = s.type_evaluation === 'ds'
-                        ? '📝 DS'
-                        : s.type_evaluation === 'brevet_blanc'
-                          ? '🏆 BB'
-                          : null
-
-                      return (
-                        <div
-                          key={s.id}
-                          className="flex items-center justify-between gap-3 py-2.5"
-                          style={{ borderBottom: '1px solid #DCE8E4' }}
-                        >
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="text-xs" style={{ color: '#6E827B' }}>{date}</span>
-                              <StatusBadge variant={statutToVariant(s.statut)} />
-                              {typeLabel && (
-                                <span
-                                  className="text-xs px-1.5 py-0.5 rounded-full"
-                                  style={{ background: '#E3F0EC', color: '#1F5A4D' }}
-                                >
-                                  {typeLabel}
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-xs mt-0.5 truncate" style={{ color: '#6E827B' }}>
-                              {s.chapitre}
-                              {score && <span className="ml-2 font-semibold" style={{ color: '#1F5A4D' }}>· {score} QCM</span>}
-                            </p>
-                          </div>
-                          <div className="flex gap-1.5 shrink-0">
-                            {(s.statut === 'fait' || s.statut === 'validé') && (
-                              <Link
-                                href={`/session/${s.id}`}
-                                className="text-xs px-2.5 py-1.5 rounded-lg font-semibold"
-                                style={{ background: '#2E7D6B', color: '#fff' }}
-                              >
-                                Voir
-                              </Link>
-                            )}
-                            <Link
-                              href={`/session/${s.id}?mode=parent`}
-                              className="text-xs px-2.5 py-1.5 rounded-lg font-semibold"
-                              style={{ background: '#E3F0EC', color: '#1F5A4D' }}
-                            >
-                              📋
-                            </Link>
-                          </div>
+                  {grouperParType(sessMat, classe).map(({ cat, items }) => {
+                    const cle = `${matiere}::${cat.id}`
+                    return (
+                      <SousCategorieAccordeon
+                        key={cat.id}
+                        emoji={cat.emoji} label={cat.label} count={items.length}
+                        ouvert={sous.estOuverte(cle)} onToggle={() => sous.basculer(cle)}
+                      >
+                        <div className="space-y-2">
+                          {items.map(s => <LigneSuivi key={s.id} s={s} />)}
                         </div>
-                      )
-                    })}
-                  </div>
+                      </SousCategorieAccordeon>
+                    )
+                  })}
                 </div>
               )}
             </div>
