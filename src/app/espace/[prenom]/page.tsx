@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import QRCode from 'react-qr-code'
-import { BarChart2, BookOpen, CalendarDays, Settings, ChevronDown, ChevronUp, Copy, Check, ExternalLink } from 'lucide-react'
+import { BarChart2, QrCode, CalendarDays, Settings, ChevronDown, ChevronUp, Copy, Check, ExternalLink } from 'lucide-react'
 import { normaliserPrenom } from '@/lib/normaliser'
 import { supabase } from '@/lib/supabase'
 import { AppHeader } from '@/components/ui/AppHeader'
@@ -52,10 +52,10 @@ function statutToVariant(statut: string): 'nonfait' | 'fait' | 'valide' | 'enatt
 // ─── Tab Bar ──────────────────────────────────────────────────────────────────
 
 const TABS: { id: Tab; label: string; Icon: React.ComponentType<{ size?: number; strokeWidth?: number }> }[] = [
-  { id: 'suivi',     label: 'Suivi',     Icon: BarChart2 },
-  { id: 'exercices', label: 'Exercices', Icon: BookOpen },
-  { id: 'planning',  label: 'Planning',  Icon: CalendarDays },
-  { id: 'profs',     label: 'Profs',     Icon: Settings },
+  { id: 'suivi',     label: 'Suivi',      Icon: BarChart2 },
+  { id: 'exercices', label: 'Vue enfant', Icon: QrCode },
+  { id: 'planning',  label: 'Planning',   Icon: CalendarDays },
+  { id: 'profs',     label: 'Profs',      Icon: Settings },
 ]
 
 // ─── Composant principal ───────────────────────────────────────────────────────

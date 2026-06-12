@@ -65,38 +65,39 @@ export function AppHeader({ prenom, classe, titrePage, familles = [] }: Props) {
         </svg>
       </div>
 
-      <div className="relative max-w-app mx-auto px-4 pt-3.5 pb-4">
+      <div className="relative max-w-app mx-auto px-4 pt-3.5 pb-5">
 
-        {/* Ligne 1 : logo IAla + accroches | déconnexion */}
-        <div className="flex items-start justify-between">
+        {/* Déconnexion — coin haut droit */}
+        <button
+          onClick={deconnexion}
+          className="absolute top-3 right-4 w-9 h-9 flex items-center justify-center rounded-full transition-opacity hover:opacity-80"
+          style={{ background: 'rgba(255,255,255,0.15)', color: '#fff' }}
+          aria-label="Déconnexion"
+        >
+          <LogOut size={17} strokeWidth={2} />
+        </button>
+
+        {/* Bloc centré : logo + accroches */}
+        <div className="flex flex-col items-center text-center">
           <button
             onClick={() => router.push('/')}
-            className="text-left transition-opacity hover:opacity-80"
+            className="transition-opacity hover:opacity-80"
           >
-            <LogoIAla size={40} dark={false} />
-            <p
-              className="mt-1.5 uppercase"
-              style={{ color: 'rgba(255,255,255,0.65)', fontSize: 10, letterSpacing: '0.16em' }}
-            >
-              le professeur particulier IA
-            </p>
-            <p className="italic" style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12 }}>
-              allez, on révise
-            </p>
+            <LogoIAla size={46} dark={false} />
           </button>
-
-          <button
-            onClick={deconnexion}
-            className="w-9 h-9 flex items-center justify-center rounded-full shrink-0 transition-opacity hover:opacity-80"
-            style={{ background: 'rgba(255,255,255,0.15)', color: '#fff' }}
-            aria-label="Déconnexion"
+          <p
+            className="mt-2 uppercase"
+            style={{ color: 'rgba(255,255,255,0.65)', fontSize: 10, letterSpacing: '0.18em' }}
           >
-            <LogOut size={17} strokeWidth={2} />
-          </button>
+            le professeur particulier IA
+          </p>
+          <p className="italic mt-0.5" style={{ color: 'rgba(255,255,255,0.85)', fontSize: 16 }}>
+            allez, on révise
+          </p>
         </div>
 
-        {/* Ligne 2 : pilule sélecteur enfant — centrée et premium */}
-        <div className="flex justify-center mt-3">
+        {/* Pilule sélecteur enfant — centrée et premium */}
+        <div className="flex justify-center mt-4">
           <div className="relative">
             <button
               onClick={() => aDropdown && setOuvert(v => !v)}
