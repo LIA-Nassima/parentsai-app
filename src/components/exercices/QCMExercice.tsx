@@ -109,12 +109,12 @@ export default function QCMExercice({ exercice, sessionId, reponseInitiale, mode
 
       {/* Correction */}
       {(revealed || modeParent) && (
-        <div className="mt-4 p-4 rounded-r-xl text-sm leading-relaxed"
-          style={{ borderLeft: `3px solid ${OR}`, background: '#FDF8EA', color: ENCRE }}>
-          <strong style={{ color: OR }}>Correction : </strong>
+        <div className="mt-4 p-4 rounded-xl text-sm leading-relaxed"
+          style={{ borderLeft: `4px solid ${OR}`, border: '1px solid #EAD8A0', background: '#FAF1D0', color: ENCRE }}>
+          <strong style={{ color: '#7a5910' }}>Correction : </strong>
           {exercice.correction}
           {exercice.piege && (
-            <p className="mt-2 italic" style={{ color: '#6E827B' }}>
+            <p className="mt-2 italic font-medium" style={{ color: '#7a5910' }}>
               💡 {exercice.piege}
             </p>
           )}

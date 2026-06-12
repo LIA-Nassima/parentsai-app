@@ -17,6 +17,7 @@ export default function SessionPage() {
   const router       = useRouter()
   const sessionId    = params.id as string
   const modeParent   = searchParams.get('mode') === 'parent'
+  const fromEnfant   = searchParams.get('from') === 'enfant'
 
   const [session,    setSession]    = useState<Session | null>(null)
   const [reponses,   setReponses]   = useState<Reponse[]>([])
@@ -62,10 +63,13 @@ export default function SessionPage() {
   }
 
   function retour() {
-    if (typeof window !== 'undefined' && window.history.length > 1) {
-      router.back()
+    const prenom = session?.enfant
+    if (fromEnfant && prenom) {
+      // L'enfant revient sur SA page (jamais l'espace parent)
+      router.push(`/enfant/${encodeURIComponent(prenom)}`)
     } else {
-      router.push(session?.enfant ? `/espace/${encodeURIComponent(session.enfant)}` : '/')
+      // Le parent revient sur le suivi de l'enfant
+      router.push(prenom ? `/espace/${encodeURIComponent(prenom)}` : '/')
     }
   }
 
@@ -159,7 +163,7 @@ export default function SessionPage() {
             <LogoIAla size={26} dark={false} />
 
             <Link
-              href="/"
+              href={fromEnfant && session.enfant ? `/enfant/${encodeURIComponent(session.enfant)}` : '/'}
               className="w-8 h-8 flex items-center justify-center rounded-full"
               style={{ background: 'rgba(255,255,255,0.15)', color: '#fff' }}
               aria-label="Accueil"

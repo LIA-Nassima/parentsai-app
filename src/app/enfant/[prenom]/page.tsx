@@ -37,7 +37,7 @@ function CarteAFaire({ s }: { s: SessionAvecStats }) {
   const estFait = s.statut === 'fait'
   return (
     <Link
-      href={`/session/${s.id}`}
+      href={`/session/${s.id}?from=enfant`}
       className="flex items-center justify-between p-4 rounded-xl transition-opacity active:opacity-70"
       style={{
         background: estFait ? '#FDF8EA' : '#F7F8FA',
@@ -65,7 +65,7 @@ function LigneValide({ s }: { s: SessionAvecStats }) {
   const score = s.qcm_total > 0 ? `${s.qcm_juste}/${s.qcm_total}` : null
   return (
     <Link
-      href={`/session/${s.id}`}
+      href={`/session/${s.id}?from=enfant`}
       className="flex items-center justify-between py-2.5 transition-opacity hover:opacity-70"
       style={{ borderBottom: '1px solid #DCE8E4' }}
     >
