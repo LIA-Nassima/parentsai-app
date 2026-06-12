@@ -15,6 +15,15 @@ interface Props {
 
 const LETTRES = ['A', 'B', 'C', 'D', 'E']
 
+// Palette IAla
+const ENCRE    = '#1E2A26'  // texte principal foncé
+const OR       = '#B8881F'  // doré foncé (titres / correction)
+const VERT      = '#2E7D6B' // vert de l'app (bonne réponse)
+const VERT_BG   = '#E3F0EC'
+const ROUGE     = '#D9483B' // rouge (faux)
+const ROUGE_BG  = '#FBE6E3'
+const BORDURE   = '#DCE8E4'
+
 export default function QCMExercice({ exercice, sessionId, reponseInitiale, modeParent = false, estBloque = false, onReponse }: Props) {
   const [reponseChoisie, setReponseChoisie] = useState<number | null>(reponseInitiale ?? null)
   const [revealed, setRevealed] = useState(reponseInitiale !== null && reponseInitiale !== undefined)
@@ -48,7 +57,7 @@ export default function QCMExercice({ exercice, sessionId, reponseInitiale, mode
     <div className="rounded-2xl border p-6 mb-5" style={{ background: 'white', borderColor: '#EEF0F2', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
       {/* Header */}
       <div className="flex items-center gap-3 mb-4 flex-wrap">
-        <span className="font-light text-lg" style={{ fontFamily: 'Georgia, serif', color: 'var(--accent)', fontStyle: 'italic' }}>
+        <span className="text-lg font-bold" style={{ color: OR }}>
           Exercice {exercice.num}
         </span>
         <span className="text-xs px-3 py-1 rounded-full font-mono uppercase tracking-wider"
@@ -58,32 +67,32 @@ export default function QCMExercice({ exercice, sessionId, reponseInitiale, mode
       </div>
 
       {/* Énoncé */}
-      <p className="text-sm leading-relaxed mb-5" style={{ color: 'var(--foreground)' }}>
+      <p className="mb-5" style={{ color: ENCRE, fontSize: '1.0625rem', fontWeight: 500, lineHeight: 1.6 }}>
         {exercice.enonce}
       </p>
 
       {/* Choix */}
-      <div className="space-y-2">
+      <div className="space-y-2.5">
         {exercice.reponses.map((rep, idx) => {
           let style: React.CSSProperties = {
-            width: '100%', textAlign: 'left', padding: '12px 16px',
-            border: '1.5px solid var(--border)', borderRadius: '8px',
-            background: 'var(--background)', cursor: revealed || modeParent ? 'default' : 'pointer',
-            fontFamily: 'inherit', fontSize: '0.95rem', transition: 'all 0.15s',
+            width: '100%', textAlign: 'left', padding: '14px 16px',
+            border: `1.5px solid ${BORDURE}`, borderRadius: '10px',
+            background: '#fff', cursor: revealed || modeParent ? 'default' : 'pointer',
+            fontFamily: 'inherit', fontSize: '1rem', color: ENCRE, transition: 'all 0.15s',
             display: 'block',
           }
 
           if (revealed || modeParent) {
             if (idx === exercice.correct) {
-              style = { ...style, background: '#edf7f1', borderColor: '#2d7a4f', color: '#2d7a4f', fontWeight: 600 }
+              style = { ...style, background: VERT_BG, borderColor: VERT, color: VERT, fontWeight: 700 }
             } else if (idx === reponseChoisie && idx !== exercice.correct) {
-              style = { ...style, background: '#fdf1ee', borderColor: 'var(--accent)', color: 'var(--accent)', textDecoration: 'line-through' }
+              style = { ...style, background: ROUGE_BG, borderColor: ROUGE, color: ROUGE, textDecoration: 'line-through' }
             }
           }
 
           return (
             <button key={idx} style={style} onClick={() => choisir(idx)}>
-              <span style={{ fontWeight: 600, marginRight: '10px' }}>{LETTRES[idx]})</span>
+              <span style={{ fontWeight: 700, marginRight: '10px' }}>{LETTRES[idx]})</span>
               {rep}
             </button>
           )
@@ -92,20 +101,20 @@ export default function QCMExercice({ exercice, sessionId, reponseInitiale, mode
 
       {/* Feedback */}
       {revealed && (
-        <div className="mt-4 p-3 rounded-lg text-sm"
-          style={{ background: isCorrect ? '#edf7f1' : '#fdf1ee', color: isCorrect ? '#2d7a4f' : 'var(--accent)' }}>
+        <div className="mt-4 p-3.5 rounded-xl text-sm font-bold flex items-center gap-2"
+          style={{ background: isCorrect ? VERT_BG : ROUGE_BG, color: isCorrect ? VERT : ROUGE }}>
           {isCorrect ? '✓ Bonne réponse !' : '✗ Faux !'}
         </div>
       )}
 
       {/* Correction */}
       {(revealed || modeParent) && (
-        <div className="mt-4 p-4 rounded-r-lg text-sm leading-relaxed"
-          style={{ borderLeft: '3px solid var(--accent)', background: 'var(--background)' }}>
-          <strong style={{ color: 'var(--accent)' }}>Correction : </strong>
+        <div className="mt-4 p-4 rounded-r-xl text-sm leading-relaxed"
+          style={{ borderLeft: `3px solid ${OR}`, background: '#FDF8EA', color: ENCRE }}>
+          <strong style={{ color: OR }}>Correction : </strong>
           {exercice.correction}
           {exercice.piege && (
-            <p className="mt-2 italic" style={{ color: 'var(--muted-foreground)' }}>
+            <p className="mt-2 italic" style={{ color: '#6E827B' }}>
               💡 {exercice.piege}
             </p>
           )}
@@ -114,7 +123,7 @@ export default function QCMExercice({ exercice, sessionId, reponseInitiale, mode
 
       {/* Métacognition */}
       {(revealed || modeParent) && exercice.metacog && (
-        <div className="mt-3 p-3 rounded-lg text-sm italic"
+        <div className="mt-3 p-3 rounded-xl text-sm italic"
           style={{ background: '#eef1f5', color: '#2e3b4e', borderLeft: '3px solid #2e3b4e' }}>
           🤔 {exercice.metacog}
         </div>

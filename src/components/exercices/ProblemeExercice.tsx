@@ -13,6 +13,14 @@ interface Props {
   estBloque?: boolean
 }
 
+// Palette IAla
+const ENCRE   = '#1E2A26'
+const OR      = '#B8881F'  // doré foncé
+const VERT     = '#2E7D6B' // vert de l'app
+const VERT_BG  = '#E3F0EC'
+const BORDURE  = '#DCE8E4'
+const MUTED    = '#6E827B'
+
 export default function ProblemeExercice({ exercice, sessionId, estTermineInitial, photoUrlInitiale, modeParent = false, estBloque = false }: Props) {
   const [estTermine, setEstTermine] = useState(estTermineInitial ?? false)
   const [photoUrl, setPhotoUrl]     = useState<string | null>(photoUrlInitiale ?? null)
@@ -21,7 +29,7 @@ export default function ProblemeExercice({ exercice, sessionId, estTermineInitia
   const inputRef = useRef<HTMLInputElement>(null)
 
   const BADGE_COLORS: Record<string, { bg: string; color: string }> = {
-    probleme: { bg: '#fdf1ee', color: 'var(--accent)' },
+    probleme: { bg: '#FDF8EA', color: OR },
     dnb:      { bg: '#eef1f5', color: '#2e3b4e' },
   }
   const badge = BADGE_COLORS[exercice.badge_type] || BADGE_COLORS.probleme
@@ -63,7 +71,7 @@ export default function ProblemeExercice({ exercice, sessionId, estTermineInitia
     <div className="rounded-2xl border p-6 mb-5" style={{ background: 'white', borderColor: '#EEF0F2', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
       {/* Header */}
       <div className="flex items-center gap-3 mb-4 flex-wrap">
-        <span className="font-light text-lg" style={{ fontFamily: 'Georgia, serif', color: 'var(--accent)', fontStyle: 'italic' }}>
+        <span className="text-lg font-bold" style={{ color: OR }}>
           Exercice {exercice.num}
         </span>
         <span className="text-xs px-3 py-1 rounded-full font-mono uppercase tracking-wider"
@@ -73,18 +81,18 @@ export default function ProblemeExercice({ exercice, sessionId, estTermineInitia
       </div>
 
       {/* Contexte */}
-      <p className="text-sm leading-relaxed mb-5" style={{ color: 'var(--foreground)' }}>
+      <p className="mb-5" style={{ color: ENCRE, fontSize: '1.0625rem', fontWeight: 500, lineHeight: 1.6 }}>
         {exercice.contexte}
       </p>
 
       {/* Questions */}
       <div className="space-y-3 mb-5">
         {exercice.questions.map((q, i) => (
-          <div key={i} className="p-3 rounded-lg" style={{ background: 'var(--background)', border: '1px solid var(--border)' }}>
-            <span className="font-semibold text-sm" style={{ color: 'var(--accent)' }}>{q.lettre})</span>
-            <span className="text-sm ml-2">{q.enonce}</span>
+          <div key={i} className="p-4 rounded-xl" style={{ background: '#fff', border: `1.5px solid ${BORDURE}` }}>
+            <span className="font-bold" style={{ color: OR, fontSize: '1rem' }}>{q.lettre})</span>
+            <span className="ml-2" style={{ color: ENCRE, fontSize: '1rem', fontWeight: 500 }}>{q.enonce}</span>
             {(modeParent || showCorrection) && (
-              <div className="mt-2 text-sm pl-4" style={{ borderLeft: '2px solid var(--accent)', color: 'var(--muted-foreground)' }}>
+              <div className="mt-2 text-sm pl-4" style={{ borderLeft: `2px solid ${OR}`, color: MUTED }}>
                 {q.correction}
               </div>
             )}
@@ -96,24 +104,24 @@ export default function ProblemeExercice({ exercice, sessionId, estTermineInitia
         <>
           {/* Zone photo */}
           <div className="rounded-xl p-5 text-center mb-4"
-            style={{ border: '2px dashed var(--border)', background: 'var(--background)' }}>
+            style={{ border: `2px dashed ${BORDURE}`, background: '#F7F8FA' }}>
             {photoUrl ? (
               <div>
                 <img src={photoUrl} alt="Ma réponse" className="max-w-full rounded-lg mx-auto mb-3" style={{ maxHeight: '300px' }} />
                 <button onClick={() => inputRef.current?.click()}
-                  className="text-sm underline" style={{ color: 'var(--muted-foreground)' }}>
+                  className="text-sm underline" style={{ color: MUTED }}>
                   Changer la photo
                 </button>
               </div>
             ) : (
               <div>
                 <div className="text-3xl mb-2">📸</div>
-                <p className="text-sm mb-3" style={{ color: 'var(--muted-foreground)' }}>
+                <p className="text-sm mb-3" style={{ color: MUTED }}>
                   Prends en photo ta réponse sur papier
                 </p>
                 <button onClick={() => inputRef.current?.click()}
-                  className="px-5 py-2 rounded-lg text-sm font-medium text-white"
-                  style={{ background: 'var(--accent)' }}>
+                  className="px-5 py-2.5 rounded-xl text-sm font-bold text-white"
+                  style={{ background: VERT }}>
                   {uploading ? 'Envoi...' : '📷 Prendre une photo'}
                 </button>
               </div>
@@ -123,11 +131,11 @@ export default function ProblemeExercice({ exercice, sessionId, estTermineInitia
           </div>
 
           {/* Checkbox terminé */}
-          <label className="flex items-center gap-3 p-3 rounded-lg cursor-pointer"
-            style={{ background: estTermine ? '#edf7f1' : 'var(--background)', border: '1px solid var(--border)' }}>
+          <label className="flex items-center gap-3 p-3.5 rounded-xl cursor-pointer"
+            style={{ background: estTermine ? VERT_BG : '#fff', border: `1.5px solid ${estTermine ? VERT : BORDURE}` }}>
             <input type="checkbox" checked={estTermine} onChange={toggleTermine}
-              className="w-4 h-4 accent-green-600" />
-            <span className="text-sm font-medium" style={{ color: estTermine ? '#2d7a4f' : 'var(--foreground)' }}>
+              className="w-4 h-4" style={{ accentColor: VERT }} />
+            <span className="text-sm font-bold" style={{ color: estTermine ? VERT : ENCRE }}>
               {estTermine ? '✅ Exercice terminé' : 'Marquer comme terminé'}
             </span>
           </label>
@@ -136,15 +144,15 @@ export default function ProblemeExercice({ exercice, sessionId, estTermineInitia
 
       {/* Photo visible côté enfant en mode bloqué (déjà soumis) */}
       {!modeParent && estBloque && photoUrl && (
-        <div className="mt-4 rounded-xl p-4" style={{ background: 'var(--background)', border: '1px solid var(--border)' }}>
-          <p className="text-xs uppercase tracking-wide mb-2" style={{ color: 'var(--muted-foreground)' }}>Ta réponse envoyée</p>
+        <div className="mt-4 rounded-xl p-4" style={{ background: '#F7F8FA', border: `1px solid ${BORDURE}` }}>
+          <p className="text-xs uppercase tracking-wide mb-2" style={{ color: MUTED }}>Ta réponse envoyée</p>
           <img src={photoUrl} alt="Ma réponse" className="max-w-full rounded-lg mx-auto" style={{ maxHeight: '300px' }} />
         </div>
       )}
 
       {/* Correction mode parent */}
       {modeParent && exercice.metacog && (
-        <div className="mt-3 p-3 rounded-lg text-sm italic"
+        <div className="mt-3 p-3 rounded-xl text-sm italic"
           style={{ background: '#eef1f5', color: '#2e3b4e', borderLeft: '3px solid #2e3b4e' }}>
           🤔 {exercice.metacog}
         </div>
@@ -153,7 +161,7 @@ export default function ProblemeExercice({ exercice, sessionId, estTermineInitia
       {/* Photo visible côté parent */}
       {modeParent && photoUrl && (
         <div className="mt-4">
-          <p className="text-xs uppercase tracking-wide mb-2" style={{ color: 'var(--muted-foreground)' }}>Réponse de l'élève</p>
+          <p className="text-xs uppercase tracking-wide mb-2" style={{ color: MUTED }}>Réponse de l'élève</p>
           <img src={photoUrl} alt="Réponse élève" className="max-w-full rounded-lg" style={{ maxHeight: '400px' }} />
         </div>
       )}
