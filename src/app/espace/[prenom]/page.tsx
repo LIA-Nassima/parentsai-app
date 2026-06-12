@@ -69,13 +69,16 @@ export default function EspaceEnfant() {
 
   const [classe, setClasse] = useState('')
   const [profsConfigures, setProfsConfigures] = useState<string[]>([])
+  const [toutes, setToutes] = useState<{ enfant: string; classe?: string }[]>([])
 
   useEffect(() => {
     async function chargerFamille() {
       try {
         const res  = await fetch('https://mcp.parentsai.eu/api/familles')
         const json = await res.json()
-        const famille = (json.familles || []).find(
+        const familles = json.familles || []
+        setToutes(familles)
+        const famille = familles.find(
           (f: { enfant: string; classe: string; profs_configures: string[] }) =>
             f.enfant.toLowerCase() === prenom.toLowerCase()
         )
@@ -95,7 +98,7 @@ export default function EspaceEnfant() {
   return (
     <div className="min-h-screen pb-20" style={{ background: '#F7F8FA' }}>
 
-      <AppHeader prenom={prenom} classe={classe} />
+      <AppHeader prenom={prenom} classe={classe} familles={toutes} />
 
       {/* ── Contenu ── */}
       <div className="max-w-app mx-auto px-4 py-5">
