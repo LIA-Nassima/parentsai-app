@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ChevronRight, Plus, ExternalLink, LogOut } from 'lucide-react'
+import { ChevronRight, Plus, ExternalLink, LogOut, AlertCircle, CheckCircle2 } from 'lucide-react'
 import { LogoIAla } from '@/components/brand/LogoIAla'
 import { supabase } from '@/lib/supabase'
 import { Famille } from '@/types'
@@ -39,49 +39,55 @@ export default function Home() {
   }, [])
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: '#F7F8FA' }}>
+    <div className="min-h-screen flex items-center justify-center" style={{ background: '#fff' }}>
       <div className="text-center">
-        <LogoIAla size={40} dark />
+        <LogoIAla size={48} dark />
         <p className="mt-4 text-sm" style={{ color: '#6E827B' }}>Chargement...</p>
       </div>
     </div>
   )
 
   return (
-    <div className="min-h-screen" style={{ background: '#F7F8FA' }}>
+    <div className="min-h-screen" style={{ background: '#FFFFFF' }}>
 
       {/* ── En-tête vert ── */}
-      <div style={{ background: '#2E7D6B' }}>
-        <div
-          className="max-w-app mx-auto px-5 pt-8 pb-6"
-          style={{ borderBottomLeftRadius: 24, borderBottomRightRadius: 24, background: '#2E7D6B' }}
-        >
-          <div className="flex items-start justify-between">
-            <div>
-              <LogoIAla size={34} dark={false} />
-              <p className="text-white/70 text-xs mt-1 tracking-wide">allez, on révise</p>
-            </div>
-            <button
-              onClick={async () => {
-                await supabase.auth.signOut()
-                window.location.href = '/login'
-              }}
-              className="flex items-center gap-1.5 text-white/60 text-xs hover:text-white/90 transition-colors mt-1"
-            >
-              <LogOut size={14} />
-              Déconnexion
-            </button>
-          </div>
+      <div
+        className="w-full"
+        style={{ background: '#2E7D6B', borderBottomLeftRadius: 32, borderBottomRightRadius: 32 }}
+      >
+        {/* Déconnexion en haut à droite */}
+        <div className="flex justify-end px-5 pt-5">
+          <button
+            onClick={async () => {
+              await supabase.auth.signOut()
+              window.location.href = '/login'
+            }}
+            className="flex items-center gap-1.5 text-white/50 text-xs hover:text-white/80 transition-colors"
+          >
+            <LogOut size={13} />
+            Déconnexion
+          </button>
+        </div>
 
-          {/* Titre section */}
-          <p className="text-white font-semibold text-lg mt-5">
-            Mes enfants
+        {/* Logo centré */}
+        <div className="flex flex-col items-center text-center px-5 pt-4 pb-10">
+          <LogoIAla size={52} dark={false} />
+          <p
+            className="text-white/60 mt-2 uppercase tracking-widest"
+            style={{ fontSize: 10, letterSpacing: '0.18em' }}
+          >
+            le professeur particulier IA
           </p>
+          <p className="text-white/80 text-sm mt-1 italic">allez, on révise</p>
         </div>
       </div>
 
       {/* ── Contenu ── */}
-      <div className="max-w-app mx-auto px-4 py-5 space-y-3">
+      <div className="max-w-app mx-auto px-4 pt-6 pb-10 space-y-3">
+
+        <p className="text-xs uppercase tracking-widest font-semibold px-1 mb-4" style={{ color: '#6E827B' }}>
+          Mes enfants
+        </p>
 
         {/* Cartes enfants */}
         {familles.map((f, idx) => {
@@ -94,13 +100,13 @@ export default function Home() {
             <a
               key={f.enfant}
               href={`/espace/${encodeURIComponent(f.enfant)}`}
-              className="block rounded-2xl overflow-hidden transition-transform active:scale-[0.99]"
-              style={{ background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}
+              className="block rounded-2xl overflow-hidden transition-all active:scale-[0.99]"
+              style={{ background: '#fff', boxShadow: '0 2px 12px rgba(0,0,0,0.08)', border: '1px solid #F0F0F2' }}
             >
               <div className="flex items-center gap-4 px-4 py-4">
                 {/* Avatar */}
                 <div
-                  className="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold text-white shrink-0"
+                  className="w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-bold text-white shrink-0"
                   style={{ background: couleurBg }}
                 >
                   {f.enfant.charAt(0).toUpperCase()}
@@ -108,33 +114,38 @@ export default function Home() {
 
                 {/* Infos */}
                 <div className="flex-1 min-w-0">
-                  <p className="font-bold text-base" style={{ color: '#1E2A26' }}>
+                  <p className="font-bold text-lg leading-tight" style={{ color: '#1E2A26' }}>
                     {f.enfant}
                   </p>
-                  <div className="flex items-center gap-2 mt-0.5">
+                  <div className="flex items-center gap-2 mt-1">
                     <span
-                      className="text-xs font-semibold px-2 py-0.5 rounded-full"
-                      style={{ background: couleurClasse + '1a', color: couleurClasse }}
+                      className="text-xs font-bold px-2.5 py-1 rounded-full"
+                      style={{ background: couleurClasse + '20', color: couleurClasse }}
                     >
                       {f.classe}
                     </span>
-                    <span className="text-xs" style={{ color: '#6E827B' }}>
-                      {nbProfs === 0
-                        ? 'Profs à configurer'
-                        : tousConfigures
-                          ? `${nbProfs} profs ✓`
-                          : `${nbProfs} profs`}
-                    </span>
+                    {/* Indicateur profs — icône seulement, pas de texte */}
+                    {!tousConfigures && nbProfs === 0 && (
+                      <AlertCircle size={15} style={{ color: '#E8B53A' }} />
+                    )}
+                    {tousConfigures && (
+                      <CheckCircle2 size={15} style={{ color: '#2E7D6B' }} />
+                    )}
+                    {nbProfs > 0 && !tousConfigures && (
+                      <span className="text-xs font-semibold" style={{ color: '#B8881F' }}>
+                        {nbProfs}/8 profs
+                      </span>
+                    )}
                   </div>
                 </div>
 
-                <ChevronRight size={18} style={{ color: '#6E827B' }} />
+                <ChevronRight size={20} style={{ color: '#C0C4CC' }} />
               </div>
 
               {/* Barre de progression profs */}
               {nbProfs > 0 && !tousConfigures && (
-                <div className="px-4 pb-3">
-                  <div className="h-1 rounded-full overflow-hidden" style={{ background: '#E3F0EC' }}>
+                <div className="px-4 pb-3.5">
+                  <div className="h-1.5 rounded-full overflow-hidden" style={{ background: '#F0F1F3' }}>
                     <div
                       className="h-full rounded-full transition-all"
                       style={{ width: `${(nbProfs / 8) * 100}%`, background: '#2E7D6B' }}
@@ -146,13 +157,23 @@ export default function Home() {
           )
         })}
 
+        {/* Ajouter un enfant */}
+        <a
+          href="/onboarding"
+          className="flex items-center justify-center gap-2 w-full rounded-2xl py-4 text-sm font-semibold transition-opacity hover:opacity-80"
+          style={{ border: '1.5px dashed #DCE8E4', color: '#6E827B' }}
+        >
+          <Plus size={17} />
+          Ajouter un enfant
+        </a>
+
         {/* Lien Claude.ai */}
         <a
           href="https://claude.ai/projects"
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center justify-between w-full rounded-2xl px-4 py-3.5 transition-opacity hover:opacity-80"
-          style={{ background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}
+          style={{ background: '#F7F8FA', border: '1px solid #EBEBED' }}
         >
           <div className="flex items-center gap-3">
             <div
@@ -169,18 +190,8 @@ export default function Home() {
           <ExternalLink size={16} style={{ color: '#6E827B' }} />
         </a>
 
-        {/* Ajouter un enfant */}
-        <a
-          href="/onboarding"
-          className="flex items-center justify-center gap-2 w-full rounded-2xl py-3.5 text-sm font-medium transition-opacity hover:opacity-80"
-          style={{ border: '1.5px dashed #DCE8E4', color: '#6E827B' }}
-        >
-          <Plus size={16} />
-          Ajouter un enfant
-        </a>
-
-        <p className="text-center text-xs pt-2 pb-6" style={{ color: '#6E827B' }}>
-          IAlla · propulsé par Claude + MCP
+        <p className="text-center text-xs pt-2" style={{ color: '#C0C4CC' }}>
+          IAla · propulsé par Claude + MCP
         </p>
       </div>
     </div>
