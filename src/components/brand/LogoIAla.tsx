@@ -26,10 +26,10 @@ export function LogoIAla({ size = 32, dark = false }: Props) {
         la
         {/* étoile rouge — remplace l'accent sur le à */}
         <svg
-          width={size * 0.28}
-          height={size * 0.28}
+          width={size * 0.4}
+          height={size * 0.4}
           viewBox="-12 -12 24 24"
-          style={{ position: 'absolute', top: -size * 0.08, right: -size * 0.08 }}
+          style={{ position: 'absolute', top: -size * 0.04, right: -size * 0.12 }}
         >
           <path
             d="M0 -9.5 L2.3 -2.9 L9.2 -2.9 L3.6 1.3 L5.7 8 L0 3.8 L-5.7 8 L-3.6 1.3 L-9.2 -2.9 L-2.3 -2.9 Z"

@@ -40,7 +40,7 @@ export function AppHeader({ prenom, classe, titrePage, familles = [] }: Props) {
 
   return (
     <header
-      className="sticky top-0 z-50 w-full overflow-hidden"
+      className="sticky top-0 z-50 w-full"
       style={{
         background: 'linear-gradient(155deg, #35907B 0%, #2E7D6B 45%, #1F5A4D 100%)',
         borderBottomLeftRadius: 26,
@@ -48,42 +48,52 @@ export function AppHeader({ prenom, classe, titrePage, familles = [] }: Props) {
         boxShadow: '0 4px 20px rgba(31,90,77,0.25)',
       }}
     >
-      {/* Étoile filigrane décorative — rappel du logo */}
-      <svg
-        width={180} height={180} viewBox="-12 -12 24 24"
+      {/* Calque décoratif clippé — n'affecte pas le dropdown */}
+      <div
+        className="absolute inset-0 overflow-hidden pointer-events-none"
+        style={{ borderBottomLeftRadius: 26, borderBottomRightRadius: 26 }}
         aria-hidden="true"
-        style={{ position: 'absolute', top: -54, right: -40, opacity: 0.07, pointerEvents: 'none' }}
       >
-        <path
-          d="M0 -9.5 L2.3 -2.9 L9.2 -2.9 L3.6 1.3 L5.7 8 L0 3.8 L-5.7 8 L-3.6 1.3 L-9.2 -2.9 L-2.3 -2.9 Z"
-          fill="#fff"
-        />
-      </svg>
+        <svg
+          width={200} height={200} viewBox="-12 -12 24 24"
+          style={{ position: 'absolute', top: -56, right: -44, opacity: 0.08 }}
+        >
+          <path
+            d="M0 -9.5 L2.3 -2.9 L9.2 -2.9 L3.6 1.3 L5.7 8 L0 3.8 L-5.7 8 L-3.6 1.3 L-9.2 -2.9 L-2.3 -2.9 Z"
+            fill="#fff"
+          />
+        </svg>
+      </div>
+
       <div className="relative max-w-app mx-auto px-4 pt-3.5 pb-4">
 
-        {/* Ligne 1 : logo IAla | déconnexion */}
-        <div className="flex items-center justify-between">
-          <button onClick={() => router.push('/')} className="transition-opacity hover:opacity-80">
-            <LogoIAla size={26} dark={false} />
+        {/* Ligne 1 : logo IAla + accroches | déconnexion */}
+        <div className="flex items-start justify-between">
+          <button
+            onClick={() => router.push('/')}
+            className="text-left transition-opacity hover:opacity-80"
+          >
+            <LogoIAla size={40} dark={false} />
+            <p
+              className="mt-1.5 uppercase"
+              style={{ color: 'rgba(255,255,255,0.65)', fontSize: 10, letterSpacing: '0.16em' }}
+            >
+              le professeur particulier IA
+            </p>
+            <p className="italic" style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12 }}>
+              allez, on révise
+            </p>
           </button>
 
           <button
             onClick={deconnexion}
-            className="w-9 h-9 flex items-center justify-center rounded-full transition-opacity hover:opacity-80"
+            className="w-9 h-9 flex items-center justify-center rounded-full shrink-0 transition-opacity hover:opacity-80"
             style={{ background: 'rgba(255,255,255,0.15)', color: '#fff' }}
             aria-label="Déconnexion"
           >
             <LogOut size={17} strokeWidth={2} />
           </button>
         </div>
-
-        {/* Accroche */}
-        <p
-          className="mt-1 ml-1 italic"
-          style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12 }}
-        >
-          allez, on révise
-        </p>
 
         {/* Ligne 2 : pilule sélecteur enfant — centrée et premium */}
         <div className="flex justify-center mt-3">
