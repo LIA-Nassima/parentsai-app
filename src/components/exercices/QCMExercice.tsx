@@ -45,7 +45,7 @@ export default function QCMExercice({ exercice, sessionId, reponseInitiale, mode
   const isCorrect = reponseChoisie === exercice.correct
 
   return (
-    <div className="rounded-2xl border p-6 mb-5" style={{ background: 'white', borderColor: 'var(--border)' }}>
+    <div className="rounded-2xl border p-6 mb-5" style={{ background: 'white', borderColor: '#EEF0F2', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
       {/* Header */}
       <div className="flex items-center gap-3 mb-4 flex-wrap">
         <span className="font-light text-lg" style={{ fontFamily: 'Georgia, serif', color: 'var(--accent)', fontStyle: 'italic' }}>

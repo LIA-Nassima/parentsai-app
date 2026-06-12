@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Home } from 'lucide-react'
+import { Home, ArrowLeft } from 'lucide-react'
 import { LogoIAla } from '@/components/brand/LogoIAla'
 import QCMExercice from '@/components/exercices/QCMExercice'
 import ProblemeExercice from '@/components/exercices/ProblemeExercice'
@@ -61,6 +61,14 @@ export default function SessionPage() {
     router.push(`/espace/${session.enfant}`)
   }
 
+  function retour() {
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      router.back()
+    } else {
+      router.push(session?.enfant ? `/espace/${encodeURIComponent(session.enfant)}` : '/')
+    }
+  }
+
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: '#F7F8FA' }}>
       <div className="text-center">
@@ -110,33 +118,60 @@ export default function SessionPage() {
   const evalLabel  = isDS ? 'DEVOIR SURVEILLÉ' : 'BREVET BLANC'
 
   return (
-    <div className="min-h-screen" style={{ background: '#F7F8FA' }}>
+    <div className="min-h-screen" style={{ background: '#FFFFFF' }}>
 
       {/* ── En-tête vert ── */}
-      <header className="sticky top-0 z-50 w-full" style={{ background: '#2E7D6B' }}>
+      <header
+        className="sticky top-0 z-50 w-full"
+        style={{
+          background: 'linear-gradient(155deg, #35907B 0%, #2E7D6B 45%, #1F5A4D 100%)',
+          borderBottomLeftRadius: 22,
+          borderBottomRightRadius: 22,
+          boxShadow: '0 4px 20px rgba(31,90,77,0.25)',
+        }}
+      >
+        {/* Étoile filigrane décorative */}
         <div
-          className="max-w-app mx-auto px-4 pt-3 pb-4 flex items-center justify-between"
-          style={{ borderBottomLeftRadius: 20, borderBottomRightRadius: 20 }}
+          className="absolute inset-0 overflow-hidden pointer-events-none"
+          style={{ borderBottomLeftRadius: 22, borderBottomRightRadius: 22 }}
+          aria-hidden="true"
         >
-          <Link
-            href={session.enfant ? `/espace/${encodeURIComponent(session.enfant)}` : '/'}
-            className="flex items-center gap-1.5 text-white/70 text-xs hover:text-white transition-colors"
+          <svg
+            width={170} height={170} viewBox="-12 -12 24 24"
+            style={{ position: 'absolute', top: -48, right: -38, opacity: 0.08 }}
           >
-            ← {session.enfant || 'Retour'}
-          </Link>
+            <path
+              d="M0 -9.5 L2.3 -2.9 L9.2 -2.9 L3.6 1.3 L5.7 8 L0 3.8 L-5.7 8 L-3.6 1.3 L-9.2 -2.9 L-2.3 -2.9 Z"
+              fill="#fff"
+            />
+          </svg>
+        </div>
 
-          <div className="text-center">
-            <p className="text-white font-bold text-sm">{session.matiere}</p>
-            <p className="text-white/70 text-xs truncate max-w-[150px]">{session.chapitre}</p>
+        <div className="relative max-w-app mx-auto px-4 pt-3 pb-4">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={retour}
+              className="flex items-center gap-1 text-white/85 text-sm font-medium hover:text-white transition-colors"
+            >
+              <ArrowLeft size={18} strokeWidth={2.2} /> Retour
+            </button>
+
+            <LogoIAla size={26} dark={false} />
+
+            <Link
+              href="/"
+              className="w-8 h-8 flex items-center justify-center rounded-full"
+              style={{ background: 'rgba(255,255,255,0.15)', color: '#fff' }}
+              aria-label="Accueil"
+            >
+              <Home size={16} />
+            </Link>
           </div>
 
-          <Link
-            href="/"
-            className="w-8 h-8 flex items-center justify-center rounded-full"
-            style={{ background: 'rgba(255,255,255,0.15)', color: '#fff' }}
-          >
-            <Home size={16} />
-          </Link>
+          <div className="text-center mt-2.5">
+            <p className="text-white font-bold text-sm">{session.matiere}</p>
+            <p className="text-white/70 text-xs">{session.chapitre}</p>
+          </div>
         </div>
       </header>
 
@@ -191,13 +226,13 @@ export default function SessionPage() {
         {/* Stats */}
         {(qcmTotal > 0 || pbTermines > 0) && (
           <div className="grid grid-cols-2 gap-3 mb-5">
-            <div className="rounded-2xl p-4 text-center" style={{ background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+            <div className="rounded-2xl p-4 text-center" style={{ background: '#fff', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
               <div className="text-2xl font-bold mb-0.5" style={{ color: '#1F5A4D' }}>
                 {qcmTotal > 0 ? `${qcmJuste}/${qcmTotal}` : '—'}
               </div>
               <div className="text-xs uppercase tracking-wide" style={{ color: '#6E827B', fontSize: 10 }}>Score QCM</div>
             </div>
-            <div className="rounded-2xl p-4 text-center" style={{ background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+            <div className="rounded-2xl p-4 text-center" style={{ background: '#fff', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
               <div className="text-2xl font-bold mb-0.5" style={{ color: '#E8B53A' }}>
                 {pbTermines}/{pbExos.length}
               </div>
