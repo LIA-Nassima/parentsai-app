@@ -54,17 +54,9 @@ export default function SessionPage() {
     setSubmitting(false)
   }
 
-  async function validerSession() {
-    if (!session) return
-    setValidating(true)
-    await supabase.from('sessions').update({ statut: 'validé' }).eq('id', sessionId)
-    setValidating(false)
-    router.push(`/espace/${session.enfant}`)
-  }
-
-  function retour() {
+  // Construit l'URL de retour en conservant le contexte (filtre / matière / sous-catégorie)
+  function urlRetour(): string {
     const prenom = session?.enfant
-    // Reconstruit le contexte (filtre / matière / sous-catégorie) pour rouvrir au bon endroit
     const qs = new URLSearchParams()
     const filtre = searchParams.get('filtre')
     const mat    = searchParams.get('mat')
@@ -76,11 +68,22 @@ export default function SessionPage() {
 
     if (fromEnfant && prenom) {
       // L'enfant revient sur SA page (jamais l'espace parent)
-      router.push(`/enfant/${encodeURIComponent(prenom)}${suffix}`)
-    } else {
-      // Le parent revient sur le suivi de l'enfant
-      router.push(prenom ? `/espace/${encodeURIComponent(prenom)}${suffix}` : '/')
+      return `/enfant/${encodeURIComponent(prenom)}${suffix}`
     }
+    // Le parent revient sur le suivi de l'enfant
+    return prenom ? `/espace/${encodeURIComponent(prenom)}${suffix}` : '/'
+  }
+
+  async function validerSession() {
+    if (!session) return
+    setValidating(true)
+    await supabase.from('sessions').update({ statut: 'validé' }).eq('id', sessionId)
+    setValidating(false)
+    router.push(urlRetour())
+  }
+
+  function retour() {
+    router.push(urlRetour())
   }
 
   if (loading) return (
