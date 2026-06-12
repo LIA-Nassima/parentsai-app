@@ -54,7 +54,7 @@ function CarteAFaire({ s }: { s: SessionAvecStats }) {
         className="text-xs px-3 py-1.5 rounded-xl font-bold ml-3 shrink-0"
         style={{ background: estFait ? '#E8B53A' : '#2E7D6B', color: '#fff' }}
       >
-        {estFait ? 'Reprendre' : 'Commencer →'}
+        {estFait ? 'À corriger' : 'Commencer →'}
       </span>
     </Link>
   )
