@@ -5,7 +5,8 @@ export default function manifest(): MetadataRoute.Manifest {
     name: 'IAla',
     short_name: 'IAla',
     description: 'allez, on révise — le prof IA pour vos enfants',
-    start_url: '/',
+    // Pas de start_url fixe : l'icône réouvre l'URL depuis laquelle elle a été ajoutée
+    // (lien personnel de l'enfant avec son jeton), au lieu de forcer "/" → login.
     scope: '/',
     display: 'standalone',
     orientation: 'portrait',

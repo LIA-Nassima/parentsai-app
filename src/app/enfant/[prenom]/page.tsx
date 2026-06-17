@@ -171,15 +171,8 @@ export default function EspaceEnfant() {
           className="max-w-app mx-auto px-4 pt-4 pb-5"
           style={{ borderBottomLeftRadius: 24, borderBottomRightRadius: 24 }}
         >
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center mb-3">
             <LogoIAla size={28} dark={false} />
-            <Link
-              href={`/espace/${encodeURIComponent(prenom)}`}
-              className="text-xs px-3 py-1.5 rounded-full font-semibold"
-              style={{ background: 'rgba(255,255,255,0.2)', color: '#fff' }}
-            >
-              Vue parent
-            </Link>
           </div>
 
           <div className="flex items-center gap-3">
