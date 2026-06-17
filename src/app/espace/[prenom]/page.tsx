@@ -74,20 +74,21 @@ export default function EspaceEnfant() {
 
   useEffect(() => {
     async function chargerFamille() {
-      try {
-        const res  = await fetch('https://mcp.parentsai.eu/api/familles')
-        const json = await res.json()
-        const familles = json.familles || []
-        setToutes(familles)
-        const famille = familles.find(
-          (f: { enfant: string; classe: string; profs_configures: string[] }) =>
-            f.enfant.toLowerCase() === prenom.toLowerCase()
-        )
-        if (famille) {
-          setClasse(famille.classe || '')
-          setProfsConfigures(famille.profs_configures || [])
-        }
-      } catch { /* silencieux */ }
+      // Lecture directe : la RLS Supabase ne renvoie que les familles du parent connecté
+      const { data } = await supabase
+        .from('familles')
+        .select('enfant, classe, profs_configures')
+        .order('enfant')
+      const familles = data || []
+      setToutes(familles)
+      const famille = familles.find(
+        (f: { enfant: string; classe: string; profs_configures: string[] }) =>
+          f.enfant.toLowerCase() === prenom.toLowerCase()
+      )
+      if (famille) {
+        setClasse(famille.classe || '')
+        setProfsConfigures(famille.profs_configures || [])
+      }
     }
     chargerFamille()
   }, [prenom])

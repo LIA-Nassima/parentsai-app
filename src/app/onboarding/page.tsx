@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { ChevronDown, ChevronUp, Copy, Check } from 'lucide-react'
 import { LogoIAla } from '@/components/brand/LogoIAla'
 import { normaliserPrenom } from '@/lib/normaliser'
+import { supabase } from '@/lib/supabase'
 
 const CLASSES = ['6ème', '5ème', '4ème', '3ème', '2nde', '1ère', 'Terminale']
 const MCP_URL = 'mcp.parentsai.eu'
@@ -59,13 +60,20 @@ export default function Onboarding() {
     setLoading(true)
     setErreur('')
     try {
-      const res = await fetch('https://mcp.parentsai.eu/api/famille', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ enfant: enfantNorm, classe }),
-      })
-      const data = await res.json()
-      if (!data.succes) throw new Error(data.message)
+      // Crée/maj la famille en l'attachant au compte parent connecté (RLS)
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Session expirée — reconnectez-vous.')
+
+      // Conserve le jeton QR existant si l'enfant existe déjà chez ce parent
+      const { data: existant } = await supabase
+        .from('familles').select('access_token').eq('enfant', enfantNorm).maybeSingle()
+      const access_token = existant?.access_token || crypto.randomUUID()
+
+      const { error: errUpsert } = await supabase.from('familles').upsert(
+        { enfant: enfantNorm, classe, access_token, parent_id: user.id },
+        { onConflict: 'enfant' },
+      )
+      if (errUpsert) throw new Error(errUpsert.message)
       setEnfant(enfantNorm)
       const resPofs = await fetch(
         `https://mcp.parentsai.eu/api/professeurs?enfant=${encodeURIComponent(enfantNorm)}&classe=${encodeURIComponent(classe)}`

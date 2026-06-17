@@ -3,24 +3,23 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { LogoIAla } from '@/components/brand/LogoIAla'
-import { Famille } from '@/types'
+import { supabase } from '@/lib/supabase'
 
 export default function Home() {
   const router = useRouter()
 
   useEffect(() => {
     async function rediriger() {
-      try {
-        const res     = await fetch('https://mcp.parentsai.eu/api/familles')
-        const json    = await res.json()
-        const familles: Famille[] = json.familles || []
-        if (familles.length === 0) {
-          router.replace('/onboarding')
-        } else {
-          router.replace(`/espace/${encodeURIComponent(familles[0].enfant)}`)
-        }
-      } catch {
+      // Lecture directe : la RLS Supabase ne renvoie que les familles du parent connecté
+      const { data, error } = await supabase
+        .from('familles')
+        .select('enfant')
+        .order('enfant')
+
+      if (error || !data || data.length === 0) {
         router.replace('/onboarding')
+      } else {
+        router.replace(`/espace/${encodeURIComponent(data[0].enfant)}`)
       }
     }
     rediriger()
