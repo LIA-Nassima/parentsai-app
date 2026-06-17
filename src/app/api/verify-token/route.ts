@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
 
   const { data } = await supabase
     .from('familles')
-    .select('access_token')
+    .select('access_token, classe')
     .ilike('enfant', enfant)
     .single()
 
@@ -23,5 +23,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false }, { status: 401 })
   }
 
-  return NextResponse.json({ ok: true })
+  // On renvoie la classe ici (source sûre, vérifiée par le jeton) pour que la
+  // page enfant n'ait plus besoin d'appeler /api/familles (qui listait tout).
+  return NextResponse.json({ ok: true, classe: data.classe ?? '' })
 }

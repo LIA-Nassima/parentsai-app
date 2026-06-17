@@ -110,14 +110,31 @@ export default function EspaceEnfant() {
   const [tokenVerifie, setTokenVerifie] = useState<boolean | null>(null)
 
   useEffect(() => {
-    async function verifierToken() {
-      if (localStorage.getItem(`qr_ok_${prenom}`) === '1') {
+    async function init() {
+      const cachedClasse = localStorage.getItem(`classe_${prenom}`)
+      const dejaVerifie  = localStorage.getItem(`qr_ok_${prenom}`) === '1'
+
+      // Raccourci : déjà vérifié et classe en cache
+      if (dejaVerifie && cachedClasse !== null) {
+        setClasse(cachedClasse)
         setTokenVerifie(true)
         return
       }
-      const p = new URLSearchParams(window.location.search)
-      const token = p.get('t')
-      if (!token) { setTokenVerifie(false); return }
+
+      const token = new URLSearchParams(window.location.search).get('t')
+
+      // Pas de jeton dans l'URL : on s'appuie sur le cache si possible
+      if (!token) {
+        if (dejaVerifie) {
+          setClasse(cachedClasse ?? '')
+          setTokenVerifie(true)
+        } else {
+          setTokenVerifie(false)
+        }
+        return
+      }
+
+      // Jeton présent : on vérifie et on récupère la classe (source sûre, scellée par le jeton)
       try {
         const res = await fetch('/api/verify-token', {
           method: 'POST',
@@ -125,7 +142,11 @@ export default function EspaceEnfant() {
           body: JSON.stringify({ enfant: prenom, token }),
         })
         if (res.ok) {
+          const data = await res.json()
+          const classeVal = data.classe ?? ''
           localStorage.setItem(`qr_ok_${prenom}`, '1')
+          localStorage.setItem(`classe_${prenom}`, classeVal)
+          setClasse(classeVal)
           window.history.replaceState({}, '', `/enfant/${encodeURIComponent(prenom)}`)
           setTokenVerifie(true)
         } else {
@@ -135,22 +156,7 @@ export default function EspaceEnfant() {
         setTokenVerifie(false)
       }
     }
-    verifierToken()
-  }, [prenom])
-
-  useEffect(() => {
-    async function chargerFamille() {
-      try {
-        const res  = await fetch('https://mcp.parentsai.eu/api/familles')
-        const json = await res.json()
-        const famille = (json.familles || []).find(
-          (f: { enfant: string; classe: string }) =>
-            f.enfant.toLowerCase() === prenom.toLowerCase()
-        )
-        if (famille) setClasse(famille.classe || '')
-      } catch { /* silencieux */ }
-    }
-    chargerFamille()
+    init()
   }, [prenom])
 
   function setTab(tab: Tab) {
