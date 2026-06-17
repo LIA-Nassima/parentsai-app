@@ -4,17 +4,19 @@ import { useEffect, useState, useCallback } from 'react'
 import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import QRCode from 'react-qr-code'
-import { BarChart2, QrCode, CalendarDays, Settings, ChevronDown, ChevronUp, Copy, Check, ExternalLink } from 'lucide-react'
+import { BarChart2, QrCode, Settings, ChevronDown, ChevronUp, Copy, Check, ExternalLink } from 'lucide-react'
 import { normaliserPrenom } from '@/lib/normaliser'
 import { supabase } from '@/lib/supabase'
 import { AppHeader } from '@/components/ui/AppHeader'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { grouperParType, useSousOuvertes, SousCategorieAccordeon } from '@/components/ui/SousCategorie'
+import { SelecteurSemaine } from '@/components/ui/SelecteurSemaine'
+import { lundiCourant, dansLaSemaine } from '@/lib/semaine'
 import { Session, Reponse, SessionAvecStats } from '@/types'
 
 // ─── Types locaux ──────────────────────────────────────────────────────────────
 
-type Tab = 'suivi' | 'exercices' | 'planning' | 'profs'
+type Tab = 'suivi' | 'exercices' | 'profs'
 
 interface Professeur {
   matiere: string
@@ -55,7 +57,6 @@ function statutToVariant(statut: string): 'nonfait' | 'fait' | 'valide' | 'enatt
 const TABS: { id: Tab; label: string; Icon: React.ComponentType<{ size?: number; strokeWidth?: number }> }[] = [
   { id: 'suivi',     label: 'Suivi',      Icon: BarChart2 },
   { id: 'exercices', label: 'Vue enfant', Icon: QrCode },
-  { id: 'planning',  label: 'Planning',   Icon: CalendarDays },
   { id: 'profs',     label: 'Profs',      Icon: Settings },
 ]
 
@@ -106,7 +107,6 @@ export default function EspaceEnfant() {
       <div className="max-w-app mx-auto px-4 py-5">
         {activeTab === 'suivi'     && <TabSuivi prenom={prenom} classe={classe} />}
         {activeTab === 'exercices' && <TabExercices prenom={prenom} />}
-        {activeTab === 'planning'  && <TabPlanning prenom={prenom} />}
         {activeTab === 'profs'     && (
           <TabProfs
             prenom={prenom}
@@ -193,6 +193,7 @@ function TabSuivi({ prenom, classe }: { prenom: string; classe: string }) {
   const catInit = searchParams.get('cat')
   const cleInit = matInit && catInit ? `${matInit}::${catInit}` : undefined
 
+  const [semaineDebut, setSemaineDebut] = useState<string>(searchParams.get('sem') || lundiCourant())
   const [sessions, setSessions] = useState<SessionAvecStats[]>([])
   const [loading, setLoading]   = useState(true)
   const [ouverteMat, setOuverteMat] = useState<string | null>(matInit)
@@ -242,19 +243,34 @@ function TabSuivi({ prenom, classe }: { prenom: string; classe: string }) {
     </div>
   )
 
-  const parMatiere = sessions.reduce<Record<string, SessionAvecStats[]>>((acc, s) => {
+  const sessionsSemaine = sessions.filter(s => dansLaSemaine(s.created_at, semaineDebut))
+
+  const parMatiere = sessionsSemaine.reduce<Record<string, SessionAvecStats[]>>((acc, s) => {
     if (!acc[s.matiere]) acc[s.matiere] = []
     acc[s.matiere].push(s)
     return acc
   }, {})
 
-  const totalValides = sessions.filter(s => s.statut === 'validé').length
-  const totalQcm     = sessions.reduce((a, s) => a + s.qcm_total, 0)
-  const totalJuste   = sessions.reduce((a, s) => a + s.qcm_juste, 0)
+  const totalValides = sessionsSemaine.filter(s => s.statut === 'validé').length
+  const totalQcm     = sessionsSemaine.reduce((a, s) => a + s.qcm_total, 0)
+  const totalJuste   = sessionsSemaine.reduce((a, s) => a + s.qcm_juste, 0)
   const pctReussite  = totalQcm > 0 ? Math.round(totalJuste / totalQcm * 100) : null
 
   return (
     <div>
+      <SelecteurSemaine
+        semaineDebut={semaineDebut}
+        onChange={s => { setSemaineDebut(s); setOuverteMat(null) }}
+      />
+
+      {sessionsSemaine.length === 0 ? (
+        <div className="text-center py-14">
+          <div className="text-5xl mb-4">🗓️</div>
+          <p className="font-semibold" style={{ color: '#1E2A26' }}>Aucune session cette semaine</p>
+          <p className="text-sm mt-1" style={{ color: '#6E827B' }}>Utilise les flèches pour voir les autres semaines.</p>
+        </div>
+      ) : (
+      <>
       {/* Stat trio */}
       <div className="grid grid-cols-3 gap-3 mb-5">
         {[
@@ -346,6 +362,8 @@ function TabSuivi({ prenom, classe }: { prenom: string; classe: string }) {
           )
         })}
       </div>
+      </>
+      )}
     </div>
   )
 }
@@ -452,29 +470,6 @@ function TabExercices({ prenom }: { prenom: string }) {
   )
 }
 
-// ─── Tab Planning ─────────────────────────────────────────────────────────────
-
-function TabPlanning({ prenom }: { prenom: string }) {
-  return (
-    <div
-      className="rounded-2xl p-6 text-center"
-      style={{ background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
-    >
-      <div className="text-5xl mb-4">📅</div>
-      <p className="font-bold text-base mb-2" style={{ color: '#1E2A26' }}>Planning de {prenom}</p>
-      <p className="text-sm mb-6" style={{ color: '#6E827B' }}>
-        Le planning de révision hebdomadaire généré par le Coach IA.
-      </p>
-      <a
-        href={`/planning/${encodeURIComponent(prenom)}`}
-        className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-white text-sm transition-opacity hover:opacity-90"
-        style={{ background: '#2E7D6B' }}
-      >
-        Voir le planning
-      </a>
-    </div>
-  )
-}
 
 // ─── Tab Profs ────────────────────────────────────────────────────────────────
 

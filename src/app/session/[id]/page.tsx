@@ -5,6 +5,7 @@ import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Home, ArrowLeft } from 'lucide-react'
 import { LogoIAla } from '@/components/brand/LogoIAla'
+import { lundiDeLaDate } from '@/lib/semaine'
 import QCMExercice from '@/components/exercices/QCMExercice'
 import ProblemeExercice from '@/components/exercices/ProblemeExercice'
 import { StatusBadge } from '@/components/ui/StatusBadge'
@@ -64,6 +65,8 @@ export default function SessionPage() {
     if (filtre) qs.set('filtre', filtre)
     if (mat)    qs.set('mat', mat)
     if (cat)    qs.set('cat', cat)
+    // Rouvre la semaine de la session (vue semaine par semaine)
+    if (session?.created_at) qs.set('sem', lundiDeLaDate(session.created_at))
     const suffix = qs.toString() ? `?${qs.toString()}` : ''
 
     if (fromEnfant && prenom) {

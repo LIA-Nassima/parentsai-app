@@ -1,16 +1,17 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useParams, useSearchParams, useRouter } from 'next/navigation'
+import { useParams, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { BookOpen, CalendarDays, ChevronDown, ChevronUp } from 'lucide-react'
+import { ChevronDown, ChevronUp } from 'lucide-react'
 import { LogoIAla } from '@/components/brand/LogoIAla'
 import { grouperParType, useSousOuvertes, SousCategorieAccordeon } from '@/components/ui/SousCategorie'
+import { SelecteurSemaine } from '@/components/ui/SelecteurSemaine'
 import { supabase } from '@/lib/supabase'
 import { Session, Reponse, SessionAvecStats } from '@/types'
 import { normaliserPrenom } from '@/lib/normaliser'
+import { lundiCourant, dansLaSemaine } from '@/lib/semaine'
 
-type Tab = 'revisions' | 'planning'
 type Filtre = 'afaire' | 'valide'
 
 const ICONES_MATIERE: Record<string, string> = {
@@ -80,11 +81,6 @@ function LigneValide({ s, retourQuery }: { s: SessionAvecStats; retourQuery: str
   )
 }
 
-const TABS: { id: Tab; label: string; Icon: React.ComponentType<{ size?: number; strokeWidth?: number }> }[] = [
-  { id: 'revisions', label: 'Révisions', Icon: BookOpen },
-  { id: 'planning',  label: 'Planning',  Icon: CalendarDays },
-]
-
 function EcranAccesRefuse() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-6" style={{ background: '#F7F8FA' }}>
@@ -101,10 +97,7 @@ function EcranAccesRefuse() {
 
 export default function EspaceEnfant() {
   const params       = useParams()
-  const searchParams = useSearchParams()
-  const router       = useRouter()
   const prenom       = normaliserPrenom(decodeURIComponent(params.prenom as string))
-  const activeTab    = (searchParams.get('tab') as Tab) || 'revisions'
 
   const [classe, setClasse]             = useState('')
   const [tokenVerifie, setTokenVerifie] = useState<boolean | null>(null)
@@ -159,17 +152,13 @@ export default function EspaceEnfant() {
     init()
   }, [prenom])
 
-  function setTab(tab: Tab) {
-    router.push(`/enfant/${encodeURIComponent(prenom)}?tab=${tab}`)
-  }
-
   if (tokenVerifie === null) return null
   if (!tokenVerifie) return <EcranAccesRefuse />
 
   const initiale = prenom.charAt(0).toUpperCase()
 
   return (
-    <div className="min-h-screen pb-20" style={{ background: '#F7F8FA' }}>
+    <div className="min-h-screen pb-8" style={{ background: '#F7F8FA' }}>
 
       {/* ── En-tête vert ── */}
       <header className="sticky top-0 z-50 w-full" style={{ background: '#2E7D6B' }}>
@@ -200,35 +189,10 @@ export default function EspaceEnfant() {
         </div>
       </header>
 
-      {/* ── Contenu ── */}
+      {/* ── Contenu : révisions semaine par semaine ── */}
       <div className="max-w-app mx-auto px-4 py-5">
-        {activeTab === 'revisions' && <TabRevisions prenom={prenom} classe={classe} />}
-        {activeTab === 'planning'  && <TabPlanning prenom={prenom} />}
+        <TabRevisions prenom={prenom} classe={classe} />
       </div>
-
-      {/* ── Barre de navigation basse ── */}
-      <nav
-        className="fixed bottom-0 left-0 right-0 z-50 flex"
-        style={{ background: '#fff', borderTop: '1px solid #DCE8E4' }}
-      >
-        {TABS.map(({ id, label, Icon }) => {
-          const actif = activeTab === id
-          return (
-            <button
-              key={id}
-              onClick={() => setTab(id)}
-              className="flex-1 flex flex-col items-center justify-center py-3 gap-1.5 transition-colors relative"
-              style={{ color: actif ? '#2E7D6B' : '#6E827B' }}
-            >
-              <Icon size={26} strokeWidth={actif ? 2.5 : 1.8} />
-              <span className="font-semibold" style={{ fontSize: 11 }}>{label}</span>
-              {actif && (
-                <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full" style={{ background: '#2E7D6B' }} />
-              )}
-            </button>
-          )
-        })}
-      </nav>
     </div>
   )
 }
@@ -241,6 +205,7 @@ function TabRevisions({ prenom, classe }: { prenom: string; classe: string }) {
   const catInit = searchParams.get('cat')
   const cleInit = matInit && catInit ? `${matInit}::${catInit}` : undefined
 
+  const [semaineDebut, setSemaineDebut] = useState<string>(searchParams.get('sem') || lundiCourant())
   const [sessions, setSessions]     = useState<SessionAvecStats[]>([])
   const [loading, setLoading]       = useState(true)
   const [filtre, setFiltre]         = useState<Filtre>((searchParams.get('filtre') as Filtre) || 'afaire')
@@ -276,8 +241,9 @@ function TabRevisions({ prenom, classe }: { prenom: string; classe: string }) {
     charger()
   }, [prenom])
 
-  const aFaire = sessions.filter(s => s.statut === 'en_attente' || s.statut === 'fait')
-  const valide = sessions.filter(s => s.statut === 'validé')
+  const sessionsSemaine = sessions.filter(s => dansLaSemaine(s.created_at, semaineDebut))
+  const aFaire = sessionsSemaine.filter(s => s.statut === 'en_attente' || s.statut === 'fait')
+  const valide = sessionsSemaine.filter(s => s.statut === 'validé')
 
   if (loading) return (
     <div className="text-center py-16">
@@ -295,6 +261,19 @@ function TabRevisions({ prenom, classe }: { prenom: string; classe: string }) {
 
   return (
     <div>
+      <SelecteurSemaine
+        semaineDebut={semaineDebut}
+        onChange={s => { setSemaineDebut(s); setOuverteMat(null) }}
+      />
+
+      {sessionsSemaine.length === 0 ? (
+        <div className="text-center py-14">
+          <div className="text-5xl mb-4">🗓️</div>
+          <p className="font-bold" style={{ color: '#1E2A26' }}>Rien cette semaine</p>
+          <p className="text-sm mt-2" style={{ color: '#6E827B' }}>Utilise les flèches pour voir les autres semaines.</p>
+        </div>
+      ) : (
+      <>
       {/* Sélecteur segmenté À faire / Validé */}
       <div
         className="flex gap-1 p-1 rounded-full mb-5"
@@ -335,6 +314,8 @@ function TabRevisions({ prenom, classe }: { prenom: string; classe: string }) {
         ? <VueAFaire sessions={aFaire} classe={classe} ouverteMat={ouverteMat} setOuverteMat={setOuverteMat} ouvertureInitiale={cleInit} />
         : <VueValide  sessions={valide} classe={classe} ouverteMat={ouverteMat} setOuverteMat={setOuverteMat} ouvertureInitiale={cleInit} />
       }
+      </>
+      )}
     </div>
   )
 }
@@ -567,26 +548,3 @@ function VueValide({
   )
 }
 
-// ─── Tab Planning ─────────────────────────────────────────────────────────────
-
-function TabPlanning({ prenom }: { prenom: string }) {
-  return (
-    <div
-      className="rounded-2xl p-6 text-center"
-      style={{ background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
-    >
-      <div className="text-5xl mb-4">📅</div>
-      <p className="font-bold text-base mb-2" style={{ color: '#1E2A26' }}>Mon planning</p>
-      <p className="text-sm mb-6" style={{ color: '#6E827B' }}>
-        Consulte ton planning de révision de la semaine.
-      </p>
-      <a
-        href={`/planning/${encodeURIComponent(prenom)}`}
-        className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl font-bold text-white text-sm transition-opacity hover:opacity-90"
-        style={{ background: '#2E7D6B' }}
-      >
-        Voir mon planning
-      </a>
-    </div>
-  )
-}
