@@ -65,21 +65,21 @@ export default function Home() {
           <path d="M0 -9.5 L2.3 -2.9 L9.2 -2.9 L3.6 1.3 L5.7 8 L0 3.8 L-5.7 8 L-3.6 1.3 L-9.2 -2.9 L-2.3 -2.9 Z" fill="#fff" />
         </svg>
 
-        <div className="relative max-w-3xl mx-auto px-5 pt-12 pb-14 text-center">
-          <LogoIAla size={64} dark={false} />
-          <p className="text-white/65 mt-3 uppercase tracking-widest" style={{ fontSize: 11, letterSpacing: '0.18em' }}>
+        <div className="relative max-w-3xl mx-auto px-5 pt-7 pb-9 text-center">
+          <LogoIAla size={46} dark={false} />
+          <p className="text-white/65 mt-2 uppercase tracking-widest" style={{ fontSize: 10, letterSpacing: '0.18em' }}>
             le professeur particulier IA
           </p>
 
-          <h1 className="text-white font-extrabold mt-6 leading-tight" style={{ fontSize: 30 }}>
+          <h1 className="text-white font-extrabold mt-4 leading-tight" style={{ fontSize: 24 }}>
             Un prof particulier par IA pour chaque matière de votre collégien.
           </h1>
-          <p className="text-white/85 mt-4 text-base leading-relaxed max-w-xl mx-auto">
+          <p className="text-white/85 mt-3 text-sm leading-relaxed max-w-xl mx-auto">
             Exercices, devoirs surveillés et brevets blancs calés sur son vrai programme.
             Votre enfant révise sur son téléphone, vous suivez ses progrès.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-3 justify-center mt-8">
+          <div className="flex flex-col sm:flex-row gap-3 justify-center mt-6">
             <Link href="/register"
               className="px-7 py-3.5 rounded-xl font-bold text-sm transition-transform active:scale-[0.98]"
               style={{ background: '#E8B53A', color: '#7a5910' }}>
@@ -95,9 +95,9 @@ export default function Home() {
       </section>
 
       {/* ── Le concept ── */}
-      <section className="max-w-3xl mx-auto px-5 py-12 text-center">
+      <section className="max-w-3xl mx-auto px-5 py-9 text-center">
         <p className="text-xs uppercase tracking-widest font-semibold mb-2" style={{ color: '#6E827B' }}>Le concept</p>
-        <h2 className="font-bold text-2xl mb-4" style={{ color: '#1E2A26' }}>
+        <h2 className="font-bold text-xl mb-3" style={{ color: '#1E2A26' }}>
           L&apos;IA devient le prof particulier de votre enfant
         </h2>
         <p className="text-base leading-relaxed max-w-xl mx-auto" style={{ color: '#6E827B' }}>
@@ -112,9 +112,9 @@ export default function Home() {
             { t: 'Illimité', d: 'Autant d’exercices que nécessaire, quand il veut.' },
             { t: 'Calé sur le réel', d: 'DS et brevets blancs à l’image de ceux du collège.' },
           ].map(c => (
-            <div key={c.t} className="rounded-2xl p-4" style={{ background: '#F7F8FA', border: '1px solid #EEF0F2' }}>
-              <p className="font-bold text-sm mb-1" style={{ color: '#2E7D6B' }}>{c.t}</p>
-              <p className="text-sm" style={{ color: '#6E827B' }}>{c.d}</p>
+            <div key={c.t} className="rounded-2xl p-4" style={{ background: '#FDF8EA', border: '1px solid #EAD8A0' }}>
+              <p className="font-bold text-sm mb-1" style={{ color: '#B8881F' }}>{c.t}</p>
+              <p className="text-sm" style={{ color: '#7a5910' }}>{c.d}</p>
             </div>
           ))}
         </div>
@@ -122,11 +122,11 @@ export default function Home() {
 
       {/* ── Comment ça marche ── */}
       <section style={{ background: '#F7F8FA' }}>
-        <div className="max-w-3xl mx-auto px-5 py-12">
+        <div className="max-w-3xl mx-auto px-5 py-9">
           <p className="text-xs uppercase tracking-widest font-semibold mb-2 text-center" style={{ color: '#6E827B' }}>
             Comment ça marche
           </p>
-          <h2 className="font-bold text-2xl mb-8 text-center" style={{ color: '#1E2A26' }}>
+          <h2 className="font-bold text-xl mb-6 text-center" style={{ color: '#1E2A26' }}>
             5 étapes, une seule installation
           </h2>
 
@@ -151,9 +151,9 @@ export default function Home() {
       </section>
 
       {/* ── Ce qu'il vous faut ── */}
-      <section className="max-w-3xl mx-auto px-5 py-12">
-        <div className="rounded-2xl p-6" style={{ background: '#FDF8EA', border: '1px solid #EAD8A0' }}>
-          <p className="font-bold text-base mb-3" style={{ color: '#7a5910' }}>Ce qu&apos;il vous faut</p>
+      <section className="max-w-3xl mx-auto px-5 py-9">
+        <div className="rounded-2xl p-6" style={{ background: '#E3F0EC', border: '1px solid #C2DED6' }}>
+          <p className="font-bold text-base mb-3" style={{ color: '#1F5A4D' }}>Ce qu&apos;il vous faut</p>
           {[
             'Un compte IAla (gratuit) — vous y êtes presque !',
             'Un compte Claude.ai (l’IA qui joue le rôle du prof).',
@@ -169,9 +169,9 @@ export default function Home() {
 
       {/* ── CTA final ── */}
       <section style={{ background: '#2E7D6B' }}>
-        <div className="max-w-3xl mx-auto px-5 py-14 text-center">
+        <div className="max-w-3xl mx-auto px-5 py-11 text-center">
           <p className="text-white font-extrabold text-2xl mb-3">Allez, on révise ✦</p>
-          <p className="text-white/80 mb-7 max-w-md mx-auto">
+          <p className="text-white/80 mb-6 max-w-md mx-auto">
             Créez votre compte et configurez le premier prof de votre enfant en quelques minutes.
           </p>
           <Link href="/register"
