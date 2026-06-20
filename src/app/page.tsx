@@ -41,6 +41,14 @@ export default function Home() {
     { Icon: BarChart3,         titre: 'Vous suivez ses progrès',         texte: 'Semaine après semaine, matière par matière, ce qui est fait et à corriger.' },
   ]
 
+  const COULEURS_ETAPE = [
+    { bg: '#E3F0EC', fg: '#2E7D6B' },
+    { bg: '#FDF8EA', fg: '#B8881F' },
+    { bg: '#E2ECFB', fg: '#3B7DD9' },
+    { bg: '#FBE6E3', fg: '#D9483B' },
+    { bg: '#E3F0EC', fg: '#2E7D6B' },
+  ]
+
   return (
     <div className="min-h-screen" style={{ background: '#fff' }}>
 
@@ -77,6 +85,11 @@ export default function Home() {
           <p className="text-white/85 mt-3 text-sm leading-relaxed max-w-xl mx-auto">
             Exercices, devoirs surveillés et brevets blancs calés sur son vrai programme.
             Votre enfant révise sur son téléphone, vous suivez ses progrès.
+          </p>
+
+          <p className="inline-block mt-4 text-white text-sm font-semibold px-4 py-2 rounded-full"
+            style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.22)' }}>
+            😏 Les enfants croient tricher avec l&apos;IA… les parents s&apos;en servent comme prof.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center mt-6">
@@ -121,31 +134,34 @@ export default function Home() {
       </section>
 
       {/* ── Comment ça marche ── */}
-      <section style={{ background: '#F7F8FA' }}>
-        <div className="max-w-3xl mx-auto px-5 py-9">
+      <section style={{ background: '#fff' }}>
+        <div className="max-w-3xl mx-auto px-5 pb-9">
           <p className="text-xs uppercase tracking-widest font-semibold mb-2 text-center" style={{ color: '#6E827B' }}>
             Comment ça marche
           </p>
-          <h2 className="font-bold text-xl mb-6 text-center" style={{ color: '#1E2A26' }}>
+          <h2 className="font-bold text-xl mb-5 text-center" style={{ color: '#1E2A26' }}>
             5 étapes, une seule installation
           </h2>
 
-          <div className="space-y-3">
-            {ETAPES.map((e, i) => (
-              <div key={i} className="flex items-start gap-4 rounded-2xl p-4"
-                style={{ background: '#fff', boxShadow: '0 2px 12px rgba(0,0,0,0.05)' }}>
-                <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 relative"
-                  style={{ background: '#E3F0EC', color: '#2E7D6B' }}>
-                  <e.Icon size={20} />
-                  <span className="absolute -top-1.5 -left-1.5 w-5 h-5 rounded-full flex items-center justify-center text-white font-bold"
-                    style={{ background: '#2E7D6B', fontSize: 11 }}>{i + 1}</span>
+          <div className="grid sm:grid-cols-2 gap-3">
+            {ETAPES.map((e, i) => {
+              const c = COULEURS_ETAPE[i % COULEURS_ETAPE.length]
+              return (
+                <div key={i} className="flex items-start gap-3 rounded-2xl p-3.5"
+                  style={{ background: c.bg, border: `1px solid ${c.fg}33` }}>
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 relative"
+                    style={{ background: c.fg, color: '#fff' }}>
+                    <e.Icon size={19} />
+                    <span className="absolute -top-1.5 -left-1.5 w-5 h-5 rounded-full flex items-center justify-center text-white font-bold"
+                      style={{ background: '#1E2A26', fontSize: 10 }}>{i + 1}</span>
+                  </div>
+                  <div>
+                    <p className="font-bold text-sm" style={{ color: '#1E2A26' }}>{e.titre}</p>
+                    <p className="text-xs mt-0.5 leading-snug" style={{ color: '#6E827B' }}>{e.texte}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-bold text-sm" style={{ color: '#1E2A26' }}>{e.titre}</p>
-                  <p className="text-sm mt-0.5" style={{ color: '#6E827B' }}>{e.texte}</p>
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       </section>
@@ -167,23 +183,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── CTA final ── */}
-      <section style={{ background: '#2E7D6B' }}>
-        <div className="max-w-3xl mx-auto px-5 py-11 text-center">
-          <p className="text-white font-extrabold text-2xl mb-3">Allez, on révise ✦</p>
-          <p className="text-white/80 mb-6 max-w-md mx-auto">
-            Créez votre compte et configurez le premier prof de votre enfant en quelques minutes.
-          </p>
-          <Link href="/register"
-            className="inline-block px-8 py-3.5 rounded-xl font-bold text-sm transition-transform active:scale-[0.98]"
-            style={{ background: '#E8B53A', color: '#7a5910' }}>
-            Créer un compte gratuitement
-          </Link>
-        </div>
-      </section>
-
       {/* ── Pied ── */}
-      <footer className="text-center py-6" style={{ background: '#1F5A4D' }}>
+      <footer className="text-center py-5" style={{ background: '#1F5A4D' }}>
         <p className="text-white/50 text-xs">IAla · le professeur particulier IA · propulsé par l&apos;IA Claude</p>
       </footer>
     </div>
