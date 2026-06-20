@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-const PROTECTED = ['/espace', '/parent', '/planning', '/onboarding']
+const PROTECTED = ['/espace', '/parent', '/onboarding']
 const AUTH_PAGES = ['/login', '/register', '/forgot-password', '/update-password']
 
 export async function proxy(request: NextRequest) {
@@ -28,8 +28,8 @@ export async function proxy(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   const { pathname } = request.nextUrl
 
+  // La page d'accueil "/" est publique (landing). Seules les zones connectées sont protégées.
   const isProtected =
-    pathname === '/' ||
     PROTECTED.some(r => pathname === r || pathname.startsWith(r + '/'))
 
   if (isProtected && !user) {

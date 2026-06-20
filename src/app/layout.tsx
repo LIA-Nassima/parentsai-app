@@ -18,15 +18,26 @@ const dancingScript = Dancing_Script({
 })
 
 export const metadata: Metadata = {
-  title: "IAlla",
-  description: "allez, on révise — le prof IA pour vos enfants",
+  metadataBase: new URL("https://app.parentsai.eu"),
+  title: "IAla — le professeur particulier IA pour le collège",
+  description:
+    "IAla transforme l'IA en professeur particulier pour votre collégien : exercices, devoirs surveillés et brevets blancs calés sur son programme. Votre enfant révise sur son téléphone, vous suivez ses progrès.",
+  keywords: ["soutien scolaire", "collège", "révisions", "brevet", "devoir surveillé", "IA", "professeur particulier"],
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "IAlla",
+    title: "IAla",
   },
   formatDetection: {
     telephone: false,
+  },
+  openGraph: {
+    title: "IAla — le professeur particulier IA",
+    description: "Un prof IA par matière pour réviser, s'entraîner et préparer ses contrôles. Allez, on révise !",
+    url: "https://app.parentsai.eu",
+    siteName: "IAla",
+    locale: "fr_FR",
+    type: "website",
   },
 }
 
