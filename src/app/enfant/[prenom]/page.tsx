@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { ChevronDown, ChevronUp } from 'lucide-react'
+import { ChevronDown, ChevronUp, ArrowLeft } from 'lucide-react'
 import { LogoIAla } from '@/components/brand/LogoIAla'
 import { grouperParType, useSousOuvertes, SousCategorieAccordeon } from '@/components/ui/SousCategorie'
 import { SelecteurSemaine } from '@/components/ui/SelecteurSemaine'
@@ -101,6 +101,13 @@ export default function EspaceEnfant() {
 
   const [classe, setClasse]             = useState('')
   const [tokenVerifie, setTokenVerifie] = useState<boolean | null>(null)
+  const [estParent, setEstParent]       = useState(false)
+
+  // Un parent connecté qui consulte l'aperçu → on lui propose un retour vers son espace.
+  // L'enfant qui arrive par QR n'a pas de session Supabase : il ne verra rien.
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => setEstParent(!!user))
+  }, [])
 
   useEffect(() => {
     async function init() {
@@ -166,8 +173,18 @@ export default function EspaceEnfant() {
           className="max-w-app mx-auto px-4 pt-4 pb-5"
           style={{ borderBottomLeftRadius: 24, borderBottomRightRadius: 24 }}
         >
-          <div className="flex items-center mb-3">
+          <div className="flex items-center justify-between mb-3">
             <LogoIAla size={28} dark={false} />
+            {estParent && (
+              <Link
+                href={`/espace/${encodeURIComponent(prenom)}`}
+                className="flex items-center gap-1.5 text-white/90 text-xs font-semibold px-3 py-1.5 rounded-full transition-opacity hover:opacity-80"
+                style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)' }}
+              >
+                <ArrowLeft size={14} />
+                Espace parent
+              </Link>
+            )}
           </div>
 
           <div className="flex items-center gap-3">
