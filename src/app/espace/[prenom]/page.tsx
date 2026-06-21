@@ -601,7 +601,6 @@ function TabProfs({
             <li>① Choisissez une matière ci-dessous → <strong>Copier les instructions</strong></li>
             <li>② Sur Claude.ai → Mes projets → <strong>Nouveau projet</strong></li>
             <li>③ Collez les instructions dans « Instructions du projet »</li>
-            <li>④ Vérifiez que le connecteur IAla est activé dans le projet</li>
           </ol>
         </div>
       </div>
