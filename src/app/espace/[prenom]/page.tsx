@@ -487,6 +487,7 @@ function TabProfs({
   const [expanded, setExpanded]           = useState<string | null>(null)
   const [copie, setCopie]                 = useState<string | null>(null)
   const [saving, setSaving]               = useState<string | null>(null)
+  const [matieresAvecSession, setMatieresAvecSession] = useState<Set<string>>(new Set())
 
   const chargerProfs = useCallback(async () => {
     if (!classe) return
@@ -503,6 +504,17 @@ function TabProfs({
   }, [prenom, classe])
 
   useEffect(() => { chargerProfs() }, [chargerProfs])
+
+  // Une session existante prouve que le prof + le connecteur fonctionnent → configuré d'office
+  useEffect(() => {
+    supabase
+      .from('sessions').select('matiere').ilike('enfant', prenom)
+      .then(({ data }) => {
+        if (data) setMatieresAvecSession(
+          new Set(data.map((s: { matiere: string }) => normaliserMatiere(s.matiere)))
+        )
+      })
+  }, [prenom])
 
   async function marquerConfigure(matiere: string) {
     const dejaConfigures = profsConfigures.includes(matiere)
@@ -523,7 +535,6 @@ function TabProfs({
   function copierTemplate(template: string, matiere: string) {
     navigator.clipboard.writeText(template)
     setCopie(matiere)
-    if (!profsConfigures.includes(matiere)) marquerConfigure(matiere)
     setTimeout(() => setCopie(null), 2000)
   }
 
@@ -540,8 +551,12 @@ function TabProfs({
     </div>
   )
 
-  const nbConfigures = profsConfigures.length
+  // Configuré = le parent l'a coché manuellement OU une session existe déjà dans la matière
+  const estConfigure = (matiere: string) =>
+    profsConfigures.includes(matiere) || matieresAvecSession.has(matiere)
+
   const nbTotal      = professeurs.length
+  const nbConfigures = professeurs.filter(p => estConfigure(p.matiere)).length
 
   return (
     <div>
@@ -630,7 +645,8 @@ function TabProfs({
       {/* Liste professeurs */}
       <div className="space-y-2">
         {professeurs.map(p => {
-          const configure = profsConfigures.includes(p.matiere)
+          const aSession  = matieresAvecSession.has(p.matiere)
+          const configure = estConfigure(p.matiere)
           const ouvert    = expanded === p.matiere
           const icone     = ICONES_MATIERE[p.matiere] || '📚'
           const couleur   = COULEURS_MATIERE[p.matiere] || '#2E7D6B'
@@ -656,7 +672,7 @@ function TabProfs({
                       {icone} {p.matiere}
                     </div>
                     <div className="text-xs mt-0.5" style={{ color: '#6E827B' }}>
-                      {p.niveau}{configure && ' · ✅ Configuré'}
+                      {p.niveau}{aSession ? ' · ✅ Actif' : (configure ? ' · ✅ Configuré' : '')}
                     </div>
                   </div>
                 </div>
@@ -688,20 +704,35 @@ function TabProfs({
                     >
                       {copie === p.matiere ? <><Check size={14} /> Copié !</> : <><Copy size={14} /> Copier les instructions</>}
                     </button>
-                    <button
-                      onClick={() => marquerConfigure(p.matiere)}
-                      disabled={saving === p.matiere}
-                      className="px-3 py-2.5 rounded-xl text-sm font-bold transition-all"
-                      style={{
-                        background: configure ? '#E3F0EC' : '#F7F8FA',
-                        color:      configure ? '#1F5A4D' : '#6E827B',
-                        border:     '1.5px solid #DCE8E4',
-                      }}
-                      title={configure ? 'Marquer comme non configuré' : 'Marquer comme configuré'}
-                    >
-                      {saving === p.matiere ? '…' : configure ? '✅' : '○'}
-                    </button>
+                    {aSession ? (
+                      <span
+                        className="px-3 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5"
+                        style={{ background: '#E3F0EC', color: '#1F5A4D', border: '1.5px solid #C2DED6' }}
+                        title="Une session a déjà été lancée dans cette matière"
+                      >
+                        ✅ Actif
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => marquerConfigure(p.matiere)}
+                        disabled={saving === p.matiere}
+                        className="px-3 py-2.5 rounded-xl text-sm font-bold transition-all"
+                        style={{
+                          background: configure ? '#E3F0EC' : '#F7F8FA',
+                          color:      configure ? '#1F5A4D' : '#6E827B',
+                          border:     '1.5px solid #DCE8E4',
+                        }}
+                        title={configure ? 'Marquer comme non configuré' : 'Marquer comme déjà configuré'}
+                      >
+                        {saving === p.matiere ? '…' : configure ? '✅' : '○'}
+                      </button>
+                    )}
                   </div>
+                  {!aSession && (
+                    <p className="text-xs mt-2" style={{ color: '#6E827B' }}>
+                      ○ → ✅ si tu l&apos;as déjà configuré. Sinon, ça se fera tout seul dès la première session.
+                    </p>
+                  )}
                 </div>
               )}
             </div>
