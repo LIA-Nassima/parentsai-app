@@ -55,9 +55,9 @@ function statutToVariant(statut: string): 'nonfait' | 'fait' | 'valide' | 'enatt
 // ─── Tab Bar ──────────────────────────────────────────────────────────────────
 
 const TABS: { id: Tab; label: string; Icon: React.ComponentType<{ size?: number; strokeWidth?: number }> }[] = [
+  { id: 'profs',     label: 'Profs',      Icon: Settings },
   { id: 'suivi',     label: 'Suivi',      Icon: BarChart2 },
   { id: 'exercices', label: 'Vue enfant', Icon: QrCode },
-  { id: 'profs',     label: 'Profs',      Icon: Settings },
 ]
 
 // ─── Composant principal ───────────────────────────────────────────────────────
