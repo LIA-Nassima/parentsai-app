@@ -527,6 +527,13 @@ function TabProfs({
     setTimeout(() => setCopie(null), 2000)
   }
 
+  const MCP_URL = 'mcp.parentsai.eu'
+  function copierConnecteur() {
+    navigator.clipboard.writeText(MCP_URL)
+    setCopie('__mcp')
+    setTimeout(() => setCopie(null), 2000)
+  }
+
   if (loading) return (
     <div className="text-center py-16">
       <p className="text-sm" style={{ color: '#6E827B' }}>Chargement...</p>
@@ -557,6 +564,46 @@ function TabProfs({
             </span>
           </div>
         )}
+      </div>
+
+      {/* Mode d'emploi en 2 étapes — tout en haut */}
+      <div className="rounded-2xl p-4 mb-4" style={{ background: '#E3F0EC', border: '1px solid #C2DED6' }}>
+        <p className="font-bold text-sm mb-3" style={{ color: '#1F5A4D' }}>Comment installer vos profs</p>
+
+        {/* Étape 1 : le connecteur */}
+        <div className="mb-4">
+          <p className="text-sm font-bold mb-1" style={{ color: '#1F5A4D' }}>
+            1. Branchez le connecteur IAla <span className="font-normal">(une seule fois)</span>
+          </p>
+          <p className="text-xs mb-2 leading-relaxed" style={{ color: '#1F5A4D' }}>
+            Dans <strong>claude.ai</strong> → Paramètres → Connecteurs → « Ajouter un connecteur »,
+            collez cette adresse et nommez-le <strong>IAla</strong> :
+          </p>
+          <div className="flex items-center gap-2 rounded-xl px-3 py-2" style={{ background: '#fff', border: '1px solid #C2DED6' }}>
+            <code className="flex-1 text-xs font-mono break-all" style={{ color: '#2E7D6B' }}>{MCP_URL}</code>
+            <button
+              onClick={copierConnecteur}
+              className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all"
+              style={{
+                background: copie === '__mcp' ? '#C2DED6' : '#2E7D6B',
+                color:      copie === '__mcp' ? '#1F5A4D' : '#fff',
+              }}
+            >
+              {copie === '__mcp' ? <><Check size={13} /> Copié</> : <><Copy size={13} /> Copier</>}
+            </button>
+          </div>
+        </div>
+
+        {/* Étape 2 : les profs */}
+        <div>
+          <p className="text-sm font-bold mb-1" style={{ color: '#1F5A4D' }}>2. Créez un prof par matière</p>
+          <ol className="space-y-1 text-xs leading-relaxed" style={{ color: '#1F5A4D' }}>
+            <li>① Choisissez une matière ci-dessous → <strong>Copier les instructions</strong></li>
+            <li>② Sur Claude.ai → Mes projets → <strong>Nouveau projet</strong></li>
+            <li>③ Collez les instructions dans « Instructions du projet »</li>
+            <li>④ Vérifiez que le connecteur IAla est activé dans le projet</li>
+          </ol>
+        </div>
       </div>
 
       {/* Avertissement */}
@@ -663,17 +710,6 @@ function TabProfs({
         })}
       </div>
 
-      {/* Instructions */}
-      <div className="mt-6 rounded-2xl p-4 text-sm" style={{ background: '#E3F0EC' }}>
-        <p className="font-bold mb-2" style={{ color: '#1F5A4D' }}>Comment faire :</p>
-        <ol className="space-y-1 text-xs" style={{ color: '#1F5A4D' }}>
-          <li>1. Clique sur une matière → Copier les instructions</li>
-          <li>2. Ouvre Claude.ai → Mes projets → Nouveau projet</li>
-          <li>3. Nomme-le (ex : <em>Prof Maths 3ème — Assia</em>)</li>
-          <li>4. Colle les instructions dans "Instructions du projet"</li>
-          <li>5. Connecte le MCP IAlla au projet</li>
-        </ol>
-      </div>
     </div>
   )
 }
