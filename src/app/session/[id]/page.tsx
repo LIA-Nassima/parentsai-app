@@ -8,6 +8,7 @@ import { LogoIAla } from '@/components/brand/LogoIAla'
 import { lundiDeLaDate } from '@/lib/semaine'
 import QCMExercice from '@/components/exercices/QCMExercice'
 import ProblemeExercice from '@/components/exercices/ProblemeExercice'
+import FicheView from '@/components/fiche/FicheView'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { supabase } from '@/lib/supabase'
 import { Session, Reponse, ExerciceQCM, ExerciceProbleme } from '@/types'
@@ -118,6 +119,11 @@ export default function SessionPage() {
       </div>
     </div>
   )
+
+  // Une fiche de révision n'a pas d'exercices : rendu et impression dédiés.
+  if (session.type_evaluation === 'fiche') {
+    return <FicheView session={session} onRetour={retour} fromEnfant={fromEnfant} />
+  }
 
   const { exercices, niveau, duree_estimee, encouragement, competences, titre, bareme_total, calculatrice } = session.exercices_json
   const typeEval   = session.type_evaluation ?? 'session'

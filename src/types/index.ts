@@ -38,6 +38,41 @@ export interface ExercicesData {
   calculatrice?: boolean
 }
 
+// ─── Fiche de révision (type_evaluation === 'fiche') ───────────────────────────
+// Une fiche = un titre + une liste de blocs typés (le bloc "plan" est obligatoire).
+
+export interface FicheItem {
+  date?: string
+  evenement?: string
+  terme?: string
+  definition?: string
+  nom?: string
+  role?: string
+  formule?: string
+  usage?: string
+  enonce?: string
+}
+
+export interface FicheBloc {
+  type: 'plan' | 'reperes' | 'vocabulaire' | 'personnages' | 'methode'
+      | 'astuce' | 'erreurs' | 'a_retenir' | 'schema' | 'formule' | 'propriete' | 'exemple'
+  titre?: string
+  texte?: string
+  description?: string
+  note?: string
+  etapes?: string[]
+  parties?: { titre: string; points: string[] }[]
+  items?: (string | FicheItem)[]
+}
+
+export interface FicheData {
+  type_evaluation: 'fiche'
+  titre: string
+  niveau?: string
+  problematique?: string
+  blocs: FicheBloc[]
+}
+
 export interface Session {
   id: string
   enfant: string
@@ -48,8 +83,8 @@ export interface Session {
   nb_problemes: number
   html_enfant_url: string
   html_parent_url: string
-  statut: 'en_attente' | 'fait' | 'validé'
-  type_evaluation?: 'session' | 'ds' | 'brevet_blanc'
+  statut: 'en_attente' | 'fait' | 'validé' | 'fiche'
+  type_evaluation?: 'session' | 'ds' | 'brevet_blanc' | 'fiche'
   created_at: string
   exercices_json?: ExercicesData
 }

@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import QRCode from 'react-qr-code'
-import { BarChart2, QrCode, Settings, ChevronDown, ChevronUp, Copy, Check, ExternalLink } from 'lucide-react'
+import { BarChart2, QrCode, Settings, ChevronDown, ChevronUp, Copy, Check, ExternalLink, FileText } from 'lucide-react'
 import { normaliserPrenom } from '@/lib/normaliser'
 import { supabase } from '@/lib/supabase'
 import { AppHeader } from '@/components/ui/AppHeader'
@@ -16,7 +16,7 @@ import { Session, Reponse, SessionAvecStats } from '@/types'
 
 // ─── Types locaux ──────────────────────────────────────────────────────────────
 
-type Tab = 'suivi' | 'exercices' | 'profs'
+type Tab = 'suivi' | 'exercices' | 'profs' | 'fiches'
 
 interface Professeur {
   matiere: string
@@ -57,6 +57,7 @@ function statutToVariant(statut: string): 'nonfait' | 'fait' | 'valide' | 'enatt
 const TABS: { id: Tab; label: string; Icon: React.ComponentType<{ size?: number; strokeWidth?: number }> }[] = [
   { id: 'profs',     label: 'Profs',      Icon: Settings },
   { id: 'suivi',     label: 'Suivi',      Icon: BarChart2 },
+  { id: 'fiches',    label: 'Fiches',     Icon: FileText },
   { id: 'exercices', label: 'Vue enfant', Icon: QrCode },
 ]
 
@@ -106,6 +107,7 @@ export default function EspaceEnfant() {
       {/* ── Contenu ── */}
       <div className="max-w-app mx-auto px-4 py-5">
         {activeTab === 'suivi'     && <TabSuivi prenom={prenom} classe={classe} />}
+        {activeTab === 'fiches'    && <TabFiches prenom={prenom} />}
         {activeTab === 'exercices' && <TabExercices prenom={prenom} />}
         {activeTab === 'profs'     && (
           <TabProfs
@@ -243,7 +245,7 @@ function TabSuivi({ prenom, classe }: { prenom: string; classe: string }) {
     </div>
   )
 
-  const sessionsSemaine = sessions.filter(s => dansLaSemaine(s.created_at, semaineDebut))
+  const sessionsSemaine = sessions.filter(s => s.type_evaluation !== 'fiche' && dansLaSemaine(s.created_at, semaineDebut))
 
   const parMatiere = sessionsSemaine.reduce<Record<string, SessionAvecStats[]>>((acc, s) => {
     if (!acc[s.matiere]) acc[s.matiere] = []
@@ -740,6 +742,101 @@ function TabProfs({
         })}
       </div>
 
+    </div>
+  )
+}
+
+// ─── Tab Fiches de révision ─────────────────────────────────────────────────────
+
+function TabFiches({ prenom }: { prenom: string }) {
+  const [fiches, setFiches]       = useState<Session[]>([])
+  const [loading, setLoading]     = useState(true)
+  const [ouverteMat, setOuverteMat] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function charger() {
+      setLoading(true)
+      const { data } = await supabase
+        .from('sessions').select('*')
+        .ilike('enfant', prenom)
+        .eq('type_evaluation', 'fiche')
+        .order('created_at', { ascending: false })
+      setFiches(((data || []) as Session[]).map(s => ({ ...s, matiere: normaliserMatiere(s.matiere) })))
+      setLoading(false)
+    }
+    charger()
+  }, [prenom])
+
+  if (loading) return (
+    <div className="text-center py-16"><p className="text-sm" style={{ color: '#6E827B' }}>Chargement...</p></div>
+  )
+
+  if (fiches.length === 0) return (
+    <div className="text-center py-16">
+      <div className="text-5xl mb-4">📒</div>
+      <p className="font-bold" style={{ color: '#1E2A26' }}>Aucune fiche pour le moment.</p>
+      <p className="text-sm mt-2" style={{ color: '#6E827B' }}>Demande une « fiche de révision [chapitre] » à un prof Claude.</p>
+    </div>
+  )
+
+  const parMatiere = fiches.reduce<Record<string, Session[]>>((acc, f) => {
+    if (!acc[f.matiere]) acc[f.matiere] = []
+    acc[f.matiere].push(f)
+    return acc
+  }, {})
+
+  return (
+    <div>
+      <div className="mb-4">
+        <p className="font-bold text-base mb-1" style={{ color: '#1E2A26' }}>Fiches de révision</p>
+        <p className="text-sm" style={{ color: '#6E827B' }}>À lire et imprimer, gardées par matière.</p>
+      </div>
+
+      <div className="space-y-2">
+        {Object.entries(parMatiere).map(([matiere, list]) => {
+          const couleur = COULEURS_MATIERE[matiere] || '#2E7D6B'
+          const icone   = ICONES_MATIERE[matiere] || '📚'
+          const ouvert  = ouverteMat === matiere
+
+          return (
+            <div key={matiere} className="rounded-2xl overflow-hidden" style={{ background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+              <button onClick={() => setOuverteMat(ouvert ? null : matiere)} className="w-full px-4 py-4 flex items-center justify-between text-left">
+                <div className="flex items-center gap-3">
+                  <div className="w-1 h-10 rounded-full shrink-0" style={{ background: couleur }} />
+                  <div>
+                    <div className="font-bold text-sm uppercase tracking-wide" style={{ color: '#1E2A26' }}>{icone} {matiere}</div>
+                    <div className="text-xs mt-0.5" style={{ color: '#6E827B' }}>{list.length} fiche{list.length > 1 ? 's' : ''}</div>
+                  </div>
+                </div>
+                {ouvert ? <ChevronUp size={16} style={{ color: '#6E827B' }} /> : <ChevronDown size={16} style={{ color: '#6E827B' }} />}
+              </button>
+
+              {ouvert && (
+                <div className="px-4 pb-4 border-t" style={{ borderColor: '#DCE8E4' }}>
+                  <div className="space-y-2 pt-3">
+                    {list.map(f => (
+                      <Link
+                        key={f.id}
+                        href={`/session/${f.id}`}
+                        className="flex items-center justify-between p-3 rounded-xl transition-opacity active:opacity-70"
+                        style={{ background: '#F7F8FA', border: '1px solid #DCE8E4' }}
+                      >
+                        <div>
+                          <p className="text-sm font-semibold" style={{ color: '#1E2A26' }}>{f.exercices_json?.titre || f.chapitre}</p>
+                          <p className="text-xs mt-0.5" style={{ color: '#6E827B' }}>
+                            {new Date(f.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                          </p>
+                        </div>
+                        <span className="text-xs px-3 py-1.5 rounded-xl font-bold shrink-0" style={{ background: '#2E7D6B', color: '#fff' }}>Ouvrir →</span>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }

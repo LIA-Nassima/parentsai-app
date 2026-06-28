@@ -258,7 +258,7 @@ function TabRevisions({ prenom, classe }: { prenom: string; classe: string }) {
     charger()
   }, [prenom])
 
-  const sessionsSemaine = sessions.filter(s => dansLaSemaine(s.created_at, semaineDebut))
+  const sessionsSemaine = sessions.filter(s => s.type_evaluation !== 'fiche' && dansLaSemaine(s.created_at, semaineDebut))
   const aFaire = sessionsSemaine.filter(s => s.statut === 'en_attente' || s.statut === 'fait')
   const valide = sessionsSemaine.filter(s => s.statut === 'validé')
 
