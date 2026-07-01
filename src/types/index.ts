@@ -54,9 +54,12 @@ export interface FicheItem {
 }
 
 export interface FicheBloc {
-  type: 'plan' | 'reperes' | 'vocabulaire' | 'personnages' | 'methode'
-      | 'astuce' | 'erreurs' | 'a_retenir' | 'schema' | 'formule' | 'propriete' | 'exemple'
+  type: string          // intro, vocabulaire, seance, schema, recap, plan, methode… (ouvert)
   titre?: string
+  contenu?: string      // texte structuré (retours à la ligne \n, puces) — champ principal
+  piege?: string        // encadré "piège à éviter" (optionnel)
+  metacog?: string      // conseil méthode (optionnel)
+  // Champs structurés hérités (rendus en secours si "contenu" absent)
   texte?: string
   description?: string
   note?: string

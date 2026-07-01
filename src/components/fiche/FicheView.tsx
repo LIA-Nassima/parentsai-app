@@ -1,140 +1,83 @@
 'use client'
 
-import { ArrowLeft, Printer, BookOpen, CalendarDays, BookA, Users, ListChecks, Sparkles, AlertTriangle, Lightbulb } from 'lucide-react'
+import { ArrowLeft, Printer, BookOpen, BookA, CalendarDays, Users, ListChecks, Sparkles, AlertTriangle, Lightbulb, Brain } from 'lucide-react'
 import { LogoIAla } from '@/components/brand/LogoIAla'
 import { Session, FicheData, FicheBloc, FicheItem } from '@/types'
 
-// Couleur + icône par type de bloc
+// Couleur + icône par type de bloc (types ouverts : fallback = "default")
 const STYLE_BLOC: Record<string, { bg: string; border: string; accent: string; Icon: typeof BookOpen }> = {
-  plan:        { bg: '#E3F0EC', border: '#C2DED6', accent: '#1F5A4D', Icon: BookOpen },
-  reperes:     { bg: '#FFFFFF', border: '#DCE8E4', accent: '#B8881F', Icon: CalendarDays },
-  vocabulaire: { bg: '#FFFFFF', border: '#DCE8E4', accent: '#3B7DD9', Icon: BookA },
-  personnages: { bg: '#FFFFFF', border: '#DCE8E4', accent: '#6A4FB3', Icon: Users },
-  methode:     { bg: '#FFFFFF', border: '#DCE8E4', accent: '#6A4FB3', Icon: ListChecks },
-  astuce:      { bg: '#FDF8EA', border: '#EAD8A0', accent: '#B8881F', Icon: Sparkles },
-  erreurs:     { bg: '#FBE6E3', border: '#F2C9C3', accent: '#A32D2D', Icon: AlertTriangle },
-  a_retenir:   { bg: '#E3F0EC', border: '#C2DED6', accent: '#1F5A4D', Icon: Lightbulb },
-  schema:      { bg: '#FFFFFF', border: '#DCE8E4', accent: '#2E7D6B', Icon: ListChecks },
-  formule:     { bg: '#FFFFFF', border: '#DCE8E4', accent: '#3B7DD9', Icon: ListChecks },
-  propriete:   { bg: '#FFFFFF', border: '#DCE8E4', accent: '#3B7DD9', Icon: ListChecks },
-  exemple:     { bg: '#FFFFFF', border: '#DCE8E4', accent: '#2E7D6B', Icon: ListChecks },
+  intro:         { bg: '#F3EFFB', border: '#D9CDF0', accent: '#6A4FB3', Icon: BookOpen },
+  problematique: { bg: '#F3EFFB', border: '#D9CDF0', accent: '#6A4FB3', Icon: BookOpen },
+  plan:          { bg: '#FFFFFF', border: '#DCE8E4', accent: '#1F5A4D', Icon: BookOpen },
+  seance:        { bg: '#FFFFFF', border: '#DCE8E4', accent: '#1F5A4D', Icon: BookOpen },
+  partie:        { bg: '#FFFFFF', border: '#DCE8E4', accent: '#1F5A4D', Icon: BookOpen },
+  vocabulaire:   { bg: '#FFFFFF', border: '#DCE8E4', accent: '#3B7DD9', Icon: BookA },
+  reperes:       { bg: '#FFFFFF', border: '#DCE8E4', accent: '#B8881F', Icon: CalendarDays },
+  personnages:   { bg: '#FFFFFF', border: '#DCE8E4', accent: '#6A4FB3', Icon: Users },
+  methode:       { bg: '#FFFFFF', border: '#DCE8E4', accent: '#6A4FB3', Icon: ListChecks },
+  schema:        { bg: '#FFFFFF', border: '#DCE8E4', accent: '#0F6E56', Icon: Brain },
+  recap:         { bg: '#E3F0EC', border: '#C2DED6', accent: '#1F5A4D', Icon: ListChecks },
+  astuce:        { bg: '#FDF8EA', border: '#EAD8A0', accent: '#B8881F', Icon: Sparkles },
+  erreurs:       { bg: '#FBE6E3', border: '#F2C9C3', accent: '#A32D2D', Icon: AlertTriangle },
+  pieges:        { bg: '#FBE6E3', border: '#F2C9C3', accent: '#A32D2D', Icon: AlertTriangle },
+  a_retenir:     { bg: '#E3F0EC', border: '#C2DED6', accent: '#1F5A4D', Icon: Lightbulb },
+  default:       { bg: '#FFFFFF', border: '#DCE8E4', accent: '#2E7D6B', Icon: BookOpen },
 }
 
 function asObjet(item: string | FicheItem): FicheItem | null {
   return typeof item === 'string' ? null : item
 }
 
-function ContenuBloc({ bloc }: { bloc: FicheBloc }) {
-  const accent = (STYLE_BLOC[bloc.type] ?? STYLE_BLOC.exemple).accent
+// Rendu de secours pour l'ancien schéma structuré (si "contenu" est absent)
+function ContenuStructure({ bloc }: { bloc: FicheBloc }) {
+  const accent = (STYLE_BLOC[bloc.type] ?? STYLE_BLOC.default).accent
 
-  switch (bloc.type) {
-    case 'plan':
-      return (
-        <div className="flex flex-col gap-3.5">
-          {(bloc.parties ?? []).map((p, i) => (
-            <div key={i}>
-              <p className="text-sm font-bold mb-1" style={{ color: accent }}>{p.titre}</p>
-              <ul className="list-disc pl-5 space-y-1">
-                {(p.points ?? []).map((pt, j) => (
-                  <li key={j} className="text-sm leading-relaxed" style={{ color: '#1E2A26' }}>{pt}</li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-      )
-
-    case 'reperes':
-      return (
-        <div className="flex flex-col gap-1.5">
-          {(bloc.items ?? []).map((it, i) => {
-            const o = asObjet(it)
-            return (
-              <div key={i} className="flex gap-3 text-sm">
-                <span className="font-bold shrink-0" style={{ color: accent, minWidth: 80 }}>{o?.date}</span>
-                <span style={{ color: '#1E2A26' }}>{o?.evenement}</span>
-              </div>
-            )
-          })}
-        </div>
-      )
-
-    case 'vocabulaire':
-      return (
-        <div className="flex flex-col gap-1.5">
-          {(bloc.items ?? []).map((it, i) => {
-            const o = asObjet(it)
-            return (
-              <div key={i} className="text-sm leading-snug">
-                <span className="font-bold" style={{ color: '#1E2A26' }}>{o?.terme}</span>
-                <span style={{ color: '#6E827B' }}> — {o?.definition}</span>
-              </div>
-            )
-          })}
-        </div>
-      )
-
-    case 'personnages':
-      return (
-        <div className="flex flex-col gap-1.5">
-          {(bloc.items ?? []).map((it, i) => {
-            const o = asObjet(it)
-            return (
-              <div key={i} className="text-sm leading-snug">
-                <span className="font-bold" style={{ color: '#1E2A26' }}>{o?.nom}</span>
-                <span style={{ color: '#6E827B' }}> — {o?.role}</span>
-              </div>
-            )
-          })}
-        </div>
-      )
-
-    case 'methode':
-      return (
-        <div className="text-sm" style={{ color: '#1E2A26' }}>
-          <p className="font-semibold">{(bloc.etapes ?? []).join('  ·  ')}</p>
-          {bloc.note && <p className="mt-1.5 leading-relaxed" style={{ color: '#6E827B' }}>{bloc.note}</p>}
-        </div>
-      )
-
-    case 'formule':
-    case 'propriete':
-      return (
-        <div className="flex flex-col gap-1.5">
-          {(bloc.items ?? []).map((it, i) => {
-            const o = asObjet(it)
-            return (
-              <div key={i} className="text-sm leading-snug">
-                <span className="font-bold" style={{ color: '#1E2A26' }}>{o?.formule || o?.nom}</span>
-                <span style={{ color: '#6E827B' }}>{(o?.usage || o?.enonce) ? ` — ${o?.usage || o?.enonce}` : ''}</span>
-              </div>
-            )
-          })}
-        </div>
-      )
-
-    case 'erreurs':
-      if (bloc.items && bloc.items.length > 0) {
-        return (
-          <ul className="list-disc pl-5 space-y-1">
-            {bloc.items.map((it, i) => (
-              <li key={i} className="text-sm leading-relaxed" style={{ color: '#A32D2D' }}>
-                {typeof it === 'string' ? it : ''}
-              </li>
-            ))}
-          </ul>
-        )
-      }
-      return <p className="text-sm leading-relaxed" style={{ color: '#A32D2D' }}>{bloc.texte}</p>
-
-    default:
-      // astuce, a_retenir, schema, exemple : texte / description
-      return (
-        <p className="text-sm leading-relaxed" style={{ color: bloc.type === 'astuce' ? '#7a5910' : '#1E2A26' }}>
-          {bloc.texte || bloc.description}
-        </p>
-      )
+  if (bloc.parties && bloc.parties.length > 0) {
+    return (
+      <div className="flex flex-col gap-3.5">
+        {bloc.parties.map((p, i) => (
+          <div key={i}>
+            <p className="text-sm font-bold mb-1" style={{ color: accent }}>{p.titre}</p>
+            <ul className="list-disc pl-5 space-y-1">
+              {(p.points ?? []).map((pt, j) => (
+                <li key={j} className="text-sm leading-relaxed" style={{ color: '#1E2A26' }}>{pt}</li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+    )
   }
+
+  if (bloc.items && bloc.items.length > 0) {
+    return (
+      <div className="flex flex-col gap-1.5">
+        {bloc.items.map((it, i) => {
+          const o = asObjet(it)
+          if (!o) return <div key={i} className="text-sm leading-relaxed" style={{ color: '#1E2A26' }}>• {it as string}</div>
+          const gauche = o.date || o.terme || o.nom || o.formule
+          const droite = o.evenement || o.definition || o.role || o.usage || o.enonce
+          return (
+            <div key={i} className="text-sm leading-snug">
+              <span className="font-bold" style={{ color: '#1E2A26' }}>{gauche}</span>
+              {droite && <span style={{ color: '#6E827B' }}> — {droite}</span>}
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
+
+  if (bloc.etapes && bloc.etapes.length > 0) {
+    return (
+      <div className="text-sm" style={{ color: '#1E2A26' }}>
+        <p className="font-semibold">{bloc.etapes.join('  ·  ')}</p>
+        {bloc.note && <p className="mt-1.5 leading-relaxed" style={{ color: '#6E827B' }}>{bloc.note}</p>}
+      </div>
+    )
+  }
+
+  return <p className="text-sm leading-relaxed" style={{ color: '#1E2A26', whiteSpace: 'pre-line' }}>{bloc.texte || bloc.description}</p>
 }
 
 export default function FicheView({
@@ -198,7 +141,7 @@ export default function FicheView({
           <h1 className="text-xl font-extrabold leading-tight" style={{ color: '#1E2A26' }}>{fiche?.titre || session.chapitre}</h1>
         </div>
 
-        {/* Problématique */}
+        {/* Problématique (champ de haut niveau, si présent) */}
         {fiche?.problematique && (
           <div className="rounded-xl px-4 py-2.5 mb-3" style={{ background: '#F3EFFB', border: '1px solid #D9CDF0' }}>
             <span className="text-sm font-semibold" style={{ color: '#6A4FB3' }}>Problématique — </span>
@@ -209,7 +152,7 @@ export default function FicheView({
         {/* Blocs */}
         <div className="flex flex-col gap-3">
           {blocs.map((bloc, i) => {
-            const st = STYLE_BLOC[bloc.type] ?? STYLE_BLOC.exemple
+            const st = STYLE_BLOC[bloc.type] ?? STYLE_BLOC.default
             return (
               <div key={i} className="rounded-2xl p-4" style={{ background: st.bg, border: `1px solid ${st.border}` }}>
                 <div className="flex items-center gap-2 mb-2.5">
@@ -218,7 +161,26 @@ export default function FicheView({
                   </span>
                   <span className="text-sm font-bold" style={{ color: st.accent }}>{bloc.titre}</span>
                 </div>
-                <ContenuBloc bloc={bloc} />
+
+                {/* Contenu principal : soit le texte formaté, soit le fallback structuré */}
+                {bloc.contenu
+                  ? <p className="text-sm leading-relaxed" style={{ color: '#1E2A26', whiteSpace: 'pre-line' }}>{bloc.contenu}</p>
+                  : <ContenuStructure bloc={bloc} />
+                }
+
+                {/* Encadré piège */}
+                {bloc.piege && (
+                  <div className="mt-3 rounded-xl p-3" style={{ background: '#FBE6E3', border: '1px solid #F2C9C3' }}>
+                    <p className="text-sm leading-relaxed" style={{ color: '#A32D2D', whiteSpace: 'pre-line' }}>{bloc.piege}</p>
+                  </div>
+                )}
+
+                {/* Conseil méthode */}
+                {bloc.metacog && (
+                  <div className="mt-3 rounded-xl p-3" style={{ background: '#E3F0EC', border: '1px solid #C2DED6' }}>
+                    <p className="text-sm leading-relaxed" style={{ color: '#1F5A4D', whiteSpace: 'pre-line' }}>{bloc.metacog}</p>
+                  </div>
+                )}
               </div>
             )
           })}
