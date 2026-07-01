@@ -2,6 +2,7 @@
 
 import { ArrowLeft, Printer, BookOpen, BookA, CalendarDays, Users, ListChecks, Sparkles, AlertTriangle, Lightbulb, Brain } from 'lucide-react'
 import { LogoIAla } from '@/components/brand/LogoIAla'
+import { FigureSVG } from '@/components/ui/FigureSVG'
 import { Session, FicheData, FicheBloc, FicheItem } from '@/types'
 
 // Couleur + icône par type de bloc (types ouverts : fallback = "default")
@@ -167,6 +168,9 @@ export default function FicheView({
                   ? <p className="text-sm leading-relaxed" style={{ color: '#1E2A26', whiteSpace: 'pre-line' }}>{bloc.contenu}</p>
                   : <ContenuStructure bloc={bloc} />
                 }
+
+                {/* Figure (SVG) éventuelle */}
+                <FigureSVG svg={bloc.figure} />
 
                 {/* Encadré piège */}
                 {bloc.piege && (

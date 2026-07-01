@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react'
 import { ExerciceProbleme } from '@/types'
+import { FigureSVG } from '@/components/ui/FigureSVG'
 import { supabase } from '@/lib/supabase'
 
 interface Props {
@@ -84,6 +85,9 @@ export default function ProblemeExercice({ exercice, sessionId, estTermineInitia
       <p className="mb-5" style={{ color: ENCRE, fontSize: '1.0625rem', fontWeight: 500, lineHeight: 1.6 }}>
         {exercice.contexte}
       </p>
+
+      {/* Figure (SVG) éventuelle */}
+      <FigureSVG svg={exercice.figure} />
 
       {/* Questions */}
       <div className="space-y-3 mb-5">

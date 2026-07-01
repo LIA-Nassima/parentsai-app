@@ -4,6 +4,7 @@ export interface ExerciceQCM {
   badge_type: string
   badge_label: string
   enonce: string
+  figure?: string        // SVG optionnel (figure géométrique, graphique, schéma)
   reponses: string[]
   correct: number
   correction: string
@@ -17,6 +18,7 @@ export interface ExerciceProbleme {
   badge_type: string
   badge_label: string
   contexte: string
+  figure?: string        // SVG optionnel (figure géométrique, graphique, schéma)
   points?: number
   questions: { lettre: string; enonce: string; points?: number; correction: string }[]
   metacog: string
@@ -57,6 +59,7 @@ export interface FicheBloc {
   type: string          // intro, vocabulaire, seance, schema, recap, plan, methode… (ouvert)
   titre?: string
   contenu?: string      // texte structuré (retours à la ligne \n, puces) — champ principal
+  figure?: string       // SVG optionnel (schéma, graphique)
   piege?: string        // encadré "piège à éviter" (optionnel)
   metacog?: string      // conseil méthode (optionnel)
   // Champs structurés hérités (rendus en secours si "contenu" absent)

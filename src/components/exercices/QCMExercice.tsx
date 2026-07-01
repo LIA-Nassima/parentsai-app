@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { ExerciceQCM } from '@/types'
+import { FigureSVG } from '@/components/ui/FigureSVG'
 import { supabase } from '@/lib/supabase'
 
 interface Props {
@@ -70,6 +71,9 @@ export default function QCMExercice({ exercice, sessionId, reponseInitiale, mode
       <p className="mb-5" style={{ color: ENCRE, fontSize: '1.0625rem', fontWeight: 500, lineHeight: 1.6 }}>
         {exercice.enonce}
       </p>
+
+      {/* Figure (SVG) éventuelle */}
+      <FigureSVG svg={exercice.figure} />
 
       {/* Choix */}
       <div className="space-y-2.5">
