@@ -9,6 +9,15 @@ function sanitizeSvg(svg: string): string {
     .replace(/\son\w+\s*=\s*'[^']*'/gi, '')
 }
 
+// Extrait un éventuel <svg>…</svg> présent dans un texte (au cas où l'IA l'insère
+// dans l'énoncé plutôt que dans le champ figure dédié). Renvoie le texte nettoyé + le SVG.
+export function extractSvg(texte?: string | null): { texte: string; svg: string | null } {
+  if (!texte) return { texte: '', svg: null }
+  const m = texte.match(/<svg[\s\S]*?<\/svg>/i)
+  if (!m) return { texte, svg: null }
+  return { texte: texte.replace(m[0], '').trim(), svg: m[0] }
+}
+
 export function FigureSVG({ svg }: { svg?: string | null }) {
   if (!svg || !svg.includes('<svg')) return null
   return (

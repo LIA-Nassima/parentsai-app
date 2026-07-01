@@ -2,7 +2,7 @@
 
 import { ArrowLeft, Printer, BookOpen, BookA, CalendarDays, Users, ListChecks, Sparkles, AlertTriangle, Lightbulb, Brain } from 'lucide-react'
 import { LogoIAla } from '@/components/brand/LogoIAla'
-import { FigureSVG } from '@/components/ui/FigureSVG'
+import { FigureSVG, extractSvg } from '@/components/ui/FigureSVG'
 import { Session, FicheData, FicheBloc, FicheItem } from '@/types'
 
 // Couleur + icône par type de bloc (types ouverts : fallback = "default")
@@ -163,14 +163,19 @@ export default function FicheView({
                   <span className="text-sm font-bold" style={{ color: st.accent }}>{bloc.titre}</span>
                 </div>
 
-                {/* Contenu principal : soit le texte formaté, soit le fallback structuré */}
-                {bloc.contenu
-                  ? <p className="text-sm leading-relaxed" style={{ color: '#1E2A26', whiteSpace: 'pre-line' }}>{bloc.contenu}</p>
-                  : <ContenuStructure bloc={bloc} />
-                }
-
-                {/* Figure (SVG) éventuelle */}
-                <FigureSVG svg={bloc.figure} />
+                {/* Contenu principal : texte formaté (SVG extrait si présent) ou fallback structuré */}
+                {(() => {
+                  const { texte, svg } = extractSvg(bloc.contenu)
+                  return (
+                    <>
+                      {bloc.contenu
+                        ? <p className="text-sm leading-relaxed" style={{ color: '#1E2A26', whiteSpace: 'pre-line' }}>{texte}</p>
+                        : <ContenuStructure bloc={bloc} />
+                      }
+                      <FigureSVG svg={bloc.figure || svg} />
+                    </>
+                  )
+                })()}
 
                 {/* Encadré piège */}
                 {bloc.piege && (

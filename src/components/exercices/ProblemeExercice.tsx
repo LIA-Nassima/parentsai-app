@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react'
 import { ExerciceProbleme } from '@/types'
-import { FigureSVG } from '@/components/ui/FigureSVG'
+import { FigureSVG, extractSvg } from '@/components/ui/FigureSVG'
 import { supabase } from '@/lib/supabase'
 
 interface Props {
@@ -81,13 +81,18 @@ export default function ProblemeExercice({ exercice, sessionId, estTermineInitia
         </span>
       </div>
 
-      {/* Contexte */}
-      <p className="mb-5" style={{ color: ENCRE, fontSize: '1.0625rem', fontWeight: 500, lineHeight: 1.6 }}>
-        {exercice.contexte}
-      </p>
-
-      {/* Figure (SVG) éventuelle */}
-      <FigureSVG svg={exercice.figure} />
+      {/* Contexte (SVG éventuel extrait du texte) */}
+      {(() => {
+        const { texte, svg } = extractSvg(exercice.contexte)
+        return (
+          <>
+            <p className="mb-5" style={{ color: ENCRE, fontSize: '1.0625rem', fontWeight: 500, lineHeight: 1.6 }}>
+              {texte}
+            </p>
+            <FigureSVG svg={exercice.figure || svg} />
+          </>
+        )
+      })()}
 
       {/* Questions */}
       <div className="space-y-3 mb-5">
