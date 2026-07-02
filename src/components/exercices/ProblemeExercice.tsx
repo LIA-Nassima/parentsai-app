@@ -112,7 +112,7 @@ export default function ProblemeExercice({ exercice, sessionId, estTermineInitia
       {!modeParent && !estBloque && (
         <>
           {/* Zone photo */}
-          <div className="rounded-xl p-5 text-center mb-4"
+          <div className="session-no-print rounded-xl p-5 text-center mb-4"
             style={{ border: `2px dashed ${BORDURE}`, background: '#F7F8FA' }}>
             {photoUrl ? (
               <div>
@@ -140,7 +140,7 @@ export default function ProblemeExercice({ exercice, sessionId, estTermineInitia
           </div>
 
           {/* Checkbox terminé */}
-          <label className="flex items-center gap-3 p-3.5 rounded-xl cursor-pointer"
+          <label className="session-no-print flex items-center gap-3 p-3.5 rounded-xl cursor-pointer"
             style={{ background: estTermine ? VERT_BG : '#fff', border: `1.5px solid ${estTermine ? VERT : BORDURE}` }}>
             <input type="checkbox" checked={estTermine} onChange={toggleTermine}
               className="w-4 h-4" style={{ accentColor: VERT }} />

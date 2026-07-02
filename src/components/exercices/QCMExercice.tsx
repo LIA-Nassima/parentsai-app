@@ -110,7 +110,7 @@ export default function QCMExercice({ exercice, sessionId, reponseInitiale, mode
 
       {/* Feedback */}
       {revealed && (
-        <div className="mt-4 p-3.5 rounded-xl text-sm font-bold flex items-center gap-2"
+        <div className="session-no-print mt-4 p-3.5 rounded-xl text-sm font-bold flex items-center gap-2"
           style={{ background: isCorrect ? VERT_BG : ROUGE_BG, color: isCorrect ? VERT : ROUGE }}>
           {isCorrect ? '✓ Bonne réponse !' : '✗ Faux !'}
         </div>

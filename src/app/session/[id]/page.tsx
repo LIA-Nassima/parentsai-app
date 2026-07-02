@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Home, ArrowLeft } from 'lucide-react'
+import { Home, ArrowLeft, Printer } from 'lucide-react'
 import { LogoIAla } from '@/components/brand/LogoIAla'
 import { lundiDeLaDate } from '@/lib/semaine'
 import QCMExercice from '@/components/exercices/QCMExercice'
@@ -145,10 +145,18 @@ export default function SessionPage() {
 
   return (
     <div className="min-h-screen" style={{ background: '#FFFFFF' }}>
+      <style>{`
+        @media print {
+          .session-no-print { display: none !important; }
+          body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+        .print-only { display: none; }
+        @media print { .print-only { display: block !important; } }
+      `}</style>
 
       {/* ── En-tête vert ── */}
       <header
-        className="sticky top-0 z-50 w-full"
+        className="session-no-print sticky top-0 z-50 w-full"
         style={{
           background: 'linear-gradient(155deg, #35907B 0%, #2E7D6B 45%, #1F5A4D 100%)',
           borderBottomLeftRadius: 22,
@@ -184,14 +192,23 @@ export default function SessionPage() {
 
             <LogoIAla size={26} dark={false} />
 
-            <Link
-              href={fromEnfant && session.enfant ? `/enfant/${encodeURIComponent(session.enfant)}` : '/'}
-              className="w-8 h-8 flex items-center justify-center rounded-full"
-              style={{ background: 'rgba(255,255,255,0.15)', color: '#fff' }}
-              aria-label="Accueil"
-            >
-              <Home size={16} />
-            </Link>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => window.print()}
+                className="flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-full transition-opacity hover:opacity-90"
+                style={{ background: '#E8B53A', color: '#7a5910' }}
+              >
+                <Printer size={14} /> Imprimer
+              </button>
+              <Link
+                href={fromEnfant && session.enfant ? `/enfant/${encodeURIComponent(session.enfant)}` : '/'}
+                className="w-8 h-8 flex items-center justify-center rounded-full"
+                style={{ background: 'rgba(255,255,255,0.15)', color: '#fff' }}
+                aria-label="Accueil"
+              >
+                <Home size={16} />
+              </Link>
+            </div>
           </div>
 
           <div className="text-center mt-2.5">
@@ -202,6 +219,16 @@ export default function SessionPage() {
       </header>
 
       <div className="max-w-app mx-auto px-4 py-5">
+
+        {/* Titre visible uniquement à l'impression */}
+        <div className="print-only" style={{ marginBottom: 16 }}>
+          <p style={{ fontSize: 18, fontWeight: 700, color: '#1E2A26' }}>
+            {isEval && titre ? titre : `${session.matiere} — ${session.chapitre}`}
+          </p>
+          <p style={{ fontSize: 12, color: '#6E827B' }}>
+            {session.matiere} · {session.chapitre}{isEval && bareme_total ? ` · /${bareme_total} pts` : ''} · {session.enfant}
+          </p>
+        </div>
 
         {/* Bandeau DS / Brevet Blanc */}
         {isEval && (
@@ -242,7 +269,7 @@ export default function SessionPage() {
         {/* Bandeau mode parent */}
         {modeParent && (
           <div
-            className="p-3.5 rounded-xl mb-5 text-sm font-bold text-center"
+            className="session-no-print p-3.5 rounded-xl mb-5 text-sm font-bold text-center"
             style={{ background: isEval ? evalColor : '#2E7D6B', color: '#fff' }}
           >
             📋 MODE CORRIGÉS — {session.enfant} · {session.matiere}
@@ -251,7 +278,7 @@ export default function SessionPage() {
 
         {/* Stats */}
         {(qcmTotal > 0 || pbTermines > 0) && (
-          <div className="grid grid-cols-2 gap-3 mb-5">
+          <div className="session-no-print grid grid-cols-2 gap-3 mb-5">
             <div className="rounded-2xl p-4 text-center" style={{ background: '#fff', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
               <div className="text-2xl font-bold mb-0.5" style={{ color: '#1F5A4D' }}>
                 {qcmTotal > 0 ? `${qcmJuste}/${qcmTotal}` : '—'}
@@ -306,7 +333,7 @@ export default function SessionPage() {
 
         {/* Soumettre au parent — côté enfant */}
         {!modeParent && session.statut === 'en_attente' && (
-          <div className="mt-8 text-center">
+          <div className="session-no-print mt-8 text-center">
             <p className="text-xs mb-3" style={{ color: '#6E827B' }}>
               Quand tu as fini, envoie ton travail au parent.
             </p>
@@ -324,7 +351,7 @@ export default function SessionPage() {
         {/* Déjà soumis — côté enfant */}
         {!modeParent && session.statut === 'fait' && (
           <div
-            className="mt-8 p-4 rounded-xl text-center text-sm font-semibold"
+            className="session-no-print mt-8 p-4 rounded-xl text-center text-sm font-semibold"
             style={{ background: '#FDF8EA', color: '#B8881F', border: '1px solid #E8B53A' }}
           >
             ✉️ Travail envoyé au parent — en attente de correction
@@ -333,7 +360,7 @@ export default function SessionPage() {
 
         {/* Valider — côté parent */}
         {modeParent && session.statut === 'fait' && (
-          <div className="mt-8 text-center">
+          <div className="session-no-print mt-8 text-center">
             <button
               onClick={validerSession}
               disabled={validating}
@@ -348,7 +375,7 @@ export default function SessionPage() {
         {/* Validé */}
         {session.statut === 'validé' && (
           <div
-            className="mt-8 p-4 rounded-xl text-center text-sm font-semibold"
+            className="session-no-print mt-8 p-4 rounded-xl text-center text-sm font-semibold"
             style={{ background: '#E3F0EC', color: '#1F5A4D', border: '1.5px solid #2E7D6B' }}
           >
             ✅ Session validée par le parent
