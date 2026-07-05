@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import QRCode from 'react-qr-code'
-import { BarChart2, QrCode, Settings, ChevronDown, ChevronUp, Copy, Check, ExternalLink, FileText, Trash2 } from 'lucide-react'
+import { BarChart2, QrCode, Settings, ChevronDown, ChevronUp, Copy, Check, ExternalLink, FileText, Trash2, LineChart, TrendingUp, TrendingDown, Minus } from 'lucide-react'
 import { normaliserPrenom } from '@/lib/normaliser'
 import { supabase } from '@/lib/supabase'
 import { AppHeader } from '@/components/ui/AppHeader'
@@ -16,7 +16,7 @@ import { Session, Reponse, SessionAvecStats } from '@/types'
 
 // ─── Types locaux ──────────────────────────────────────────────────────────────
 
-type Tab = 'suivi' | 'exercices' | 'profs' | 'fiches'
+type Tab = 'suivi' | 'exercices' | 'profs' | 'fiches' | 'progression'
 
 interface Professeur {
   matiere: string
@@ -67,10 +67,11 @@ async function supprimerSessionMcp(id: string): Promise<boolean> {
 // ─── Tab Bar ──────────────────────────────────────────────────────────────────
 
 const TABS: { id: Tab; label: string; Icon: React.ComponentType<{ size?: number; strokeWidth?: number }> }[] = [
-  { id: 'profs',     label: 'Profs',      Icon: Settings },
-  { id: 'suivi',     label: 'Suivi',      Icon: BarChart2 },
-  { id: 'fiches',    label: 'Fiches',     Icon: FileText },
-  { id: 'exercices', label: 'Vue enfant', Icon: QrCode },
+  { id: 'profs',       label: 'Profs',       Icon: Settings },
+  { id: 'suivi',       label: 'Suivi',       Icon: BarChart2 },
+  { id: 'progression', label: 'Progression', Icon: LineChart },
+  { id: 'fiches',      label: 'Fiches',      Icon: FileText },
+  { id: 'exercices',   label: 'Vue enfant',  Icon: QrCode },
 ]
 
 // ─── Composant principal ───────────────────────────────────────────────────────
@@ -118,8 +119,9 @@ export default function EspaceEnfant() {
 
       {/* ── Contenu ── */}
       <div className="max-w-app mx-auto px-4 py-5">
-        {activeTab === 'suivi'     && <TabSuivi prenom={prenom} classe={classe} />}
-        {activeTab === 'fiches'    && <TabFiches prenom={prenom} />}
+        {activeTab === 'suivi'       && <TabSuivi prenom={prenom} classe={classe} />}
+        {activeTab === 'progression' && <TabProgression prenom={prenom} />}
+        {activeTab === 'fiches'      && <TabFiches prenom={prenom} />}
         {activeTab === 'exercices' && <TabExercices prenom={prenom} />}
         {activeTab === 'profs'     && (
           <TabProfs
@@ -879,6 +881,162 @@ function TabFiches({ prenom }: { prenom: string }) {
           )
         })}
       </div>
+    </div>
+  )
+}
+
+// ─── Tab Progression (bilan de l'année) ─────────────────────────────────────────
+
+function TabProgression({ prenom }: { prenom: string }) {
+  const [sessions, setSessions] = useState<SessionAvecStats[]>([])
+  const [loading, setLoading]   = useState(true)
+
+  useEffect(() => {
+    async function charger() {
+      setLoading(true)
+      const { data: sess } = await supabase
+        .from('sessions').select('*')
+        .ilike('enfant', prenom)
+        .order('created_at', { ascending: true })
+      const liste = ((sess || []) as Session[]).filter(s => s.type_evaluation !== 'fiche')
+      const ids = liste.map(s => s.id)
+      let reps: Reponse[] = []
+      if (ids.length) {
+        const { data } = await supabase.from('reponses').select('*').in('session_id', ids)
+        reps = (data || []) as Reponse[]
+      }
+      const avec: SessionAvecStats[] = liste.map(s => {
+        const r = reps.filter(x => x.session_id === s.id)
+        return {
+          ...s,
+          matiere: normaliserMatiere(s.matiere),
+          qcm_total: r.filter(x => x.type === 'qcm').length,
+          qcm_juste: r.filter(x => x.type === 'qcm' && x.est_correct).length,
+          pb_termine: r.filter(x => x.type === 'probleme' && x.est_termine).length,
+        }
+      })
+      setSessions(avec)
+      setLoading(false)
+    }
+    charger()
+  }, [prenom])
+
+  if (loading) return (
+    <div className="text-center py-16"><p className="text-sm" style={{ color: '#6E827B' }}>Chargement...</p></div>
+  )
+
+  if (sessions.length === 0) return (
+    <div className="text-center py-16">
+      <div className="text-5xl mb-4">📈</div>
+      <p className="font-bold" style={{ color: '#1E2A26' }}>Pas encore de progression.</p>
+      <p className="text-sm mt-2" style={{ color: '#6E827B' }}>Les sessions et les scores apparaîtront ici au fil de l&apos;année.</p>
+    </div>
+  )
+
+  const total    = sessions.length
+  const validees = sessions.filter(s => s.statut === 'validé').length
+  const qcmT     = sessions.reduce((a, s) => a + s.qcm_total, 0)
+  const qcmJ     = sessions.reduce((a, s) => a + s.qcm_juste, 0)
+  const reussite = qcmT > 0 ? Math.round(qcmJ / qcmT * 100) : null
+  const depuis   = new Date(sessions[0].created_at).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
+
+  // Regroupement par matière + tendance QCM (récent vs ancien)
+  const parMat = Object.entries(
+    sessions.reduce<Record<string, SessionAvecStats[]>>((acc, s) => {
+      if (!acc[s.matiere]) acc[s.matiere] = []
+      acc[s.matiere].push(s)
+      return acc
+    }, {})
+  ).map(([matiere, list]) => {
+    const qt  = list.reduce((a, s) => a + s.qcm_total, 0)
+    const qj  = list.reduce((a, s) => a + s.qcm_juste, 0)
+    const pct = qt > 0 ? Math.round(qj / qt * 100) : null
+    let tendance: 'up' | 'down' | 'flat' | null = null
+    const avecQcm = list.filter(s => s.qcm_total > 0)
+    if (avecQcm.length >= 2) {
+      const m = Math.floor(avecQcm.length / 2)
+      const p = (arr: SessionAvecStats[]) => {
+        const t = arr.reduce((a, s) => a + s.qcm_total, 0)
+        const j = arr.reduce((a, s) => a + s.qcm_juste, 0)
+        return t > 0 ? j / t * 100 : 0
+      }
+      const anc = p(avecQcm.slice(0, m))
+      const rec = p(avecQcm.slice(m))
+      tendance = rec > anc + 5 ? 'up' : rec < anc - 5 ? 'down' : 'flat'
+    }
+    return { matiere, count: list.length, pct, tendance }
+  }).sort((a, b) => b.count - a.count)
+
+  // Sessions par mois (8 derniers présents)
+  const moisMap = sessions.reduce<Record<string, number>>((acc, s) => {
+    const k = s.created_at.slice(0, 7)
+    acc[k] = (acc[k] || 0) + 1
+    return acc
+  }, {})
+  const mois = Object.keys(moisMap).sort().slice(-8).map(k => ({
+    label: new Date(k + '-01').toLocaleDateString('fr-FR', { month: 'short' }),
+    count: moisMap[k],
+  }))
+  const maxMois = Math.max(1, ...mois.map(m => m.count))
+
+  return (
+    <div>
+      <p className="text-sm mb-4" style={{ color: '#6E827B' }}>Depuis {depuis}</p>
+
+      {/* Chiffres clés */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-6">
+        {[
+          { v: String(total),    l: 'Sessions',     c: '#1E2A26', bg: '#F3F6F5' },
+          { v: String(validees), l: 'Validées',     c: '#1F5A4D', bg: '#F3F6F5' },
+          { v: reussite !== null ? `${reussite} %` : '—', l: 'Réussite QCM', c: '#3B7DD9', bg: '#F3F6F5' },
+          { v: '—',              l: 'Moyenne /20',  c: '#B8881F', bg: '#FDF8EA' },
+        ].map(card => (
+          <div key={card.l} className="rounded-xl p-3" style={{ background: card.bg }}>
+            <div className="text-2xl font-bold" style={{ color: card.c }}>{card.v}</div>
+            <div className="uppercase" style={{ color: '#6E827B', fontSize: 10, letterSpacing: '0.03em' }}>{card.l}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Par matière */}
+      <p className="font-bold text-sm mb-2" style={{ color: '#1E2A26' }}>Par matière</p>
+      <div className="space-y-2 mb-6">
+        {parMat.map(m => {
+          const couleur = COULEURS_MATIERE[m.matiere] || '#2E7D6B'
+          return (
+            <div key={m.matiere} className="flex items-center gap-3 rounded-xl p-3" style={{ background: '#fff', border: '1px solid #ECEFED' }}>
+              <div className="w-1 rounded-full shrink-0" style={{ height: 34, background: couleur }} />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold truncate" style={{ color: '#1E2A26' }}>{m.matiere}</p>
+                <p className="text-xs" style={{ color: '#6E827B' }}>
+                  {m.count} session{m.count > 1 ? 's' : ''}{m.pct !== null ? ` · ${m.pct} % QCM` : ''}
+                </p>
+              </div>
+              {m.tendance === 'up'   && <TrendingUp size={18} style={{ color: '#3B6D11' }} />}
+              {m.tendance === 'down' && <TrendingDown size={18} style={{ color: '#A32D2D' }} />}
+              {m.tendance === 'flat' && <Minus size={18} style={{ color: '#888780' }} />}
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Évolution mensuelle */}
+      <p className="font-bold text-sm mb-3" style={{ color: '#1E2A26' }}>Sessions par mois</p>
+      <div className="rounded-xl p-3" style={{ background: '#fff', border: '1px solid #ECEFED' }}>
+        <div className="flex items-end justify-around gap-2" style={{ height: 120 }}>
+          {mois.map((m, i) => (
+            <div key={i} className="flex flex-col items-center gap-1.5 flex-1">
+              <span className="text-xs font-semibold" style={{ color: '#1F5A4D' }}>{m.count}</span>
+              <div className="w-full rounded-t" style={{ height: Math.round(m.count / maxMois * 90), minHeight: 4, background: '#2E7D6B' }} />
+              <span className="text-xs" style={{ color: '#6E827B' }}>{m.label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <p className="text-xs text-center mt-5" style={{ color: '#9aa8a2' }}>
+        La moyenne /20 se remplira avec les corrections notées par Claude (à venir).
+      </p>
     </div>
   )
 }
