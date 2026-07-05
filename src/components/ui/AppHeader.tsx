@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ChevronDown, LogOut } from 'lucide-react'
+import { ChevronDown, LogOut, Settings, Plus } from 'lucide-react'
 import { LogoIAla } from '@/components/brand/LogoIAla'
 import { supabase } from '@/lib/supabase'
 
@@ -26,7 +26,7 @@ export function AppHeader({ prenom, classe, titrePage, familles = [] }: Props) {
   const [ouvert, setOuvert] = useState(false)
 
   const autresEnfants = familles.filter(f => f.enfant.toLowerCase() !== prenom.toLowerCase())
-  const aDropdown = autresEnfants.length > 0
+  const aDropdown = true  // le menu s'ouvre toujours (changer d'enfant + ajouter + configuration)
 
   function allerVers(enfant: string) {
     router.push(`/espace/${encodeURIComponent(enfant)}`)
@@ -66,6 +66,16 @@ export function AppHeader({ prenom, classe, titrePage, familles = [] }: Props) {
       </div>
 
       <div className="relative max-w-app mx-auto px-4 pt-3.5 pb-5">
+
+        {/* Configuration — coin haut gauche */}
+        <button
+          onClick={() => router.push('/parametres')}
+          className="absolute top-3 left-4 w-9 h-9 flex items-center justify-center rounded-full transition-opacity hover:opacity-80"
+          style={{ background: 'rgba(255,255,255,0.15)', color: '#fff' }}
+          aria-label="Configuration"
+        >
+          <Settings size={17} strokeWidth={2} />
+        </button>
 
         {/* Déconnexion — coin haut droit */}
         <button
@@ -152,11 +162,13 @@ export function AppHeader({ prenom, classe, titrePage, familles = [] }: Props) {
                     minWidth: 200,
                   }}
                 >
-                  <div className="px-4 py-2.5" style={{ borderBottom: '1px solid #DCE8E4' }}>
-                    <p className="text-xs uppercase tracking-widest font-semibold" style={{ color: '#6E827B' }}>
-                      Changer d'enfant
-                    </p>
-                  </div>
+                  {autresEnfants.length > 0 && (
+                    <div className="px-4 py-2.5" style={{ borderBottom: '1px solid #DCE8E4' }}>
+                      <p className="text-xs uppercase tracking-widest font-semibold" style={{ color: '#6E827B' }}>
+                        Changer d'enfant
+                      </p>
+                    </div>
+                  )}
                   {autresEnfants.map((f, idx) => (
                     <button
                       key={f.enfant}
@@ -183,6 +195,32 @@ export function AppHeader({ prenom, classe, titrePage, familles = [] }: Props) {
                       </div>
                     </button>
                   ))}
+
+                  {/* Actions : ajouter un enfant / configuration */}
+                  <button
+                    onClick={() => { setOuvert(false); router.push('/parametres') }}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-left"
+                    style={{ borderTop: '1px solid #F0F0F2', background: 'transparent' }}
+                    onMouseEnter={e => (e.currentTarget.style.background = '#F7F8FA')}
+                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                  >
+                    <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: '#E3F0EC', color: '#1F5A4D' }}>
+                      <Plus size={18} />
+                    </div>
+                    <p className="text-sm font-bold" style={{ color: '#1E2A26' }}>Ajouter un enfant</p>
+                  </button>
+                  <button
+                    onClick={() => { setOuvert(false); router.push('/parametres') }}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-left"
+                    style={{ borderTop: '1px solid #F0F0F2', background: 'transparent' }}
+                    onMouseEnter={e => (e.currentTarget.style.background = '#F7F8FA')}
+                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                  >
+                    <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: '#F1EFE8', color: '#5F5E5A' }}>
+                      <Settings size={17} />
+                    </div>
+                    <p className="text-sm font-bold" style={{ color: '#1E2A26' }}>Configuration</p>
+                  </button>
                 </div>
               </>
             )}
