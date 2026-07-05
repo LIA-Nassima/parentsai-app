@@ -82,11 +82,14 @@ function ContenuStructure({ bloc }: { bloc: FicheBloc }) {
 }
 
 export default function FicheView({
-  session, onRetour, fromEnfant,
+  session, onRetour, fromEnfant, estParent = false, onSupprimer, suppression = false,
 }: {
   session: Session
   onRetour: () => void
   fromEnfant: boolean
+  estParent?: boolean
+  onSupprimer?: () => void
+  suppression?: boolean
 }) {
   const fiche = session.exercices_json as unknown as FicheData
   const blocs = fiche?.blocs ?? []
@@ -198,6 +201,20 @@ export default function FicheView({
         <p className="text-center text-xs mt-5" style={{ color: '#9aa8a2' }}>
           Fiche générée par IAla · à imprimer et garder pour réviser
         </p>
+
+        {/* Supprimer — parent connecté uniquement */}
+        {estParent && onSupprimer && (
+          <div className="fiche-no-print mt-8 text-center">
+            <button
+              onClick={onSupprimer}
+              disabled={suppression}
+              className="text-sm font-semibold px-4 py-2 rounded-xl transition-opacity hover:opacity-90 disabled:opacity-50"
+              style={{ color: '#A32D2D', background: '#FBE6E3', border: '1px solid #F2C9C3' }}
+            >
+              {suppression ? 'Suppression...' : '🗑️ Supprimer cette fiche'}
+            </button>
+          </div>
+        )}
 
         <div className="pb-8" />
       </div>
