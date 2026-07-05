@@ -79,6 +79,14 @@ export interface FicheData {
   blocs: FicheBloc[]
 }
 
+export interface Correction {
+  note: number
+  note_sur: number
+  appreciation: string
+  commentaires: { exercice: number; commentaire: string }[]
+  corrige_le: string
+}
+
 export interface Session {
   id: string
   enfant: string
@@ -93,6 +101,7 @@ export interface Session {
   type_evaluation?: 'session' | 'ds' | 'brevet_blanc' | 'fiche'
   created_at: string
   exercices_json?: ExercicesData
+  correction_json?: Correction
 }
 
 export interface Reponse {

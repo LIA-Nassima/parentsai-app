@@ -162,7 +162,7 @@ export default function EspaceEnfant() {
 
 // ─── Tab Suivi ────────────────────────────────────────────────────────────────
 
-function LigneSuivi({ s, retourQuery, onSupprimer }: { s: SessionAvecStats; retourQuery: string; onSupprimer: (id: string) => void }) {
+function LigneSuivi({ s, retourQuery, onSupprimer, onNote }: { s: SessionAvecStats; retourQuery: string; onSupprimer: (id: string) => void; onNote: (s: SessionAvecStats) => void }) {
   const score = s.qcm_total > 0 ? `${s.qcm_juste}/${s.qcm_total}` : null
   const date  = new Date(s.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
 
@@ -199,6 +199,13 @@ function LigneSuivi({ s, retourQuery, onSupprimer }: { s: SessionAvecStats; reto
           Corrigé
         </Link>
         <button
+          onClick={() => onNote(s)}
+          className="text-xs px-2.5 py-1.5 rounded-lg font-semibold"
+          style={{ background: s.correction_json ? '#FDF8EA' : '#F3F6F5', color: s.correction_json ? '#B8881F' : '#6E827B' }}
+        >
+          {s.correction_json ? `${s.correction_json.note}/${s.correction_json.note_sur || 20}` : 'Note'}
+        </button>
+        <button
           onClick={() => onSupprimer(s.id)}
           className="ml-1 w-8 h-8 flex items-center justify-center rounded-lg transition-opacity hover:opacity-80"
           style={{ background: '#FBE6E3', color: '#A32D2D' }}
@@ -207,6 +214,57 @@ function LigneSuivi({ s, retourQuery, onSupprimer }: { s: SessionAvecStats; reto
         >
           <Trash2 size={15} />
         </button>
+      </div>
+    </div>
+  )
+}
+
+function ModaleNote({ session, onClose }: { session: SessionAvecStats; onClose: () => void }) {
+  const c = session.correction_json
+  return (
+    <div
+      className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-4"
+      style={{ background: 'rgba(0,0,0,0.45)' }}
+      onClick={onClose}
+    >
+      <div className="w-full max-w-md rounded-2xl overflow-hidden" style={{ background: '#fff', maxHeight: '85vh' }} onClick={e => e.stopPropagation()}>
+        <div className="px-5 py-4 flex items-center justify-between" style={{ background: '#2E7D6B' }}>
+          <div className="min-w-0">
+            <p className="text-white font-bold text-sm truncate">{session.matiere}</p>
+            <p className="text-white/70 text-xs truncate">{session.chapitre}</p>
+          </div>
+          <button onClick={onClose} className="text-white text-2xl leading-none px-2" aria-label="Fermer">×</button>
+        </div>
+        <div className="p-5 overflow-y-auto" style={{ maxHeight: 'calc(85vh - 62px)' }}>
+          {!c ? (
+            <div className="text-center py-6">
+              <div className="text-4xl mb-3">📝</div>
+              <p className="font-bold" style={{ color: '#1E2A26' }}>Pas encore corrigé</p>
+              <p className="text-sm mt-2" style={{ color: '#6E827B' }}>
+                Dans Claude, demande : « <strong>Corrige la session {session.chapitre} de {session.enfant}</strong> ».
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="text-center mb-4">
+                <div className="text-3xl font-extrabold" style={{ color: '#B8881F' }}>{c.note}/{c.note_sur || 20}</div>
+                <div className="text-xs uppercase tracking-wide" style={{ color: '#6E827B' }}>Note</div>
+              </div>
+              {c.appreciation && (
+                <div className="rounded-xl p-3 mb-4 text-sm leading-relaxed" style={{ background: '#E3F0EC', color: '#1F5A4D' }}>
+                  {c.appreciation}
+                </div>
+              )}
+              {(c.commentaires || []).map((cm, i) => (
+                <div key={i} className="mb-3 pb-3" style={{ borderBottom: '1px solid #F0F1F3' }}>
+                  <p className="text-xs font-bold uppercase tracking-wide" style={{ color: '#2E7D6B' }}>Exercice {cm.exercice}</p>
+                  <p className="text-sm mt-0.5 leading-relaxed" style={{ color: '#1E2A26' }}>{cm.commentaire}</p>
+                </div>
+              ))}
+              {c.corrige_le && <p className="text-xs text-center mt-2" style={{ color: '#9aa8a2' }}>Corrigé par Claude le {c.corrige_le}</p>}
+            </>
+          )}
+        </div>
       </div>
     </div>
   )
@@ -222,6 +280,7 @@ function TabSuivi({ prenom, classe }: { prenom: string; classe: string }) {
   const [sessions, setSessions] = useState<SessionAvecStats[]>([])
   const [loading, setLoading]   = useState(true)
   const [ouverteMat, setOuverteMat] = useState<string | null>(matInit)
+  const [noteVue, setNoteVue]   = useState<SessionAvecStats | null>(null)
   const sous = useSousOuvertes(cleInit ? [cleInit] : [])
 
   useEffect(() => {
@@ -382,7 +441,7 @@ function TabSuivi({ prenom, classe }: { prenom: string; classe: string }) {
                         ouvert={sous.estOuverte(cle)} onToggle={() => sous.basculer(cle)}
                       >
                         <div className="space-y-2">
-                          {items.map(s => <LigneSuivi key={s.id} s={s} retourQuery={retourQuery} onSupprimer={supprimer} />)}
+                          {items.map(s => <LigneSuivi key={s.id} s={s} retourQuery={retourQuery} onSupprimer={supprimer} onNote={setNoteVue} />)}
                         </div>
                       </SousCategorieAccordeon>
                     )
@@ -395,6 +454,7 @@ function TabSuivi({ prenom, classe }: { prenom: string; classe: string }) {
       </div>
       </>
       )}
+      {noteVue && <ModaleNote session={noteVue} onClose={() => setNoteVue(null)} />}
     </div>
   )
 }
@@ -940,6 +1000,13 @@ function TabProgression({ prenom }: { prenom: string }) {
   const reussite = qcmT > 0 ? Math.round(qcmJ / qcmT * 100) : null
   const depuis   = new Date(sessions[0].created_at).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
 
+  const noteSur20 = (s: SessionAvecStats) =>
+    s.correction_json && typeof s.correction_json.note === 'number'
+      ? s.correction_json.note / (s.correction_json.note_sur || 20) * 20
+      : null
+  const notes   = sessions.map(noteSur20).filter((n): n is number => n !== null)
+  const moyenne = notes.length ? notes.reduce((a, b) => a + b, 0) / notes.length : null
+
   // Regroupement par matière + tendance QCM (récent vs ancien)
   const parMat = Object.entries(
     sessions.reduce<Record<string, SessionAvecStats[]>>((acc, s) => {
@@ -964,7 +1031,9 @@ function TabProgression({ prenom }: { prenom: string }) {
       const rec = p(avecQcm.slice(m))
       tendance = rec > anc + 5 ? 'up' : rec < anc - 5 ? 'down' : 'flat'
     }
-    return { matiere, count: list.length, pct, tendance }
+    const notesM = list.map(noteSur20).filter((n): n is number => n !== null)
+    const moy = notesM.length ? notesM.reduce((a, b) => a + b, 0) / notesM.length : null
+    return { matiere, count: list.length, pct, tendance, moy }
   }).sort((a, b) => b.count - a.count)
 
   // Sessions par mois (8 derniers présents)
@@ -989,7 +1058,7 @@ function TabProgression({ prenom }: { prenom: string }) {
           { v: String(total),    l: 'Sessions',     c: '#1E2A26', bg: '#F3F6F5' },
           { v: String(validees), l: 'Validées',     c: '#1F5A4D', bg: '#F3F6F5' },
           { v: reussite !== null ? `${reussite} %` : '—', l: 'Réussite QCM', c: '#3B7DD9', bg: '#F3F6F5' },
-          { v: '—',              l: 'Moyenne /20',  c: '#B8881F', bg: '#FDF8EA' },
+          { v: moyenne !== null ? moyenne.toFixed(1).replace('.', ',') : '—', l: 'Moyenne /20', c: '#B8881F', bg: '#FDF8EA' },
         ].map(card => (
           <div key={card.l} className="rounded-xl p-3" style={{ background: card.bg }}>
             <div className="text-2xl font-bold" style={{ color: card.c }}>{card.v}</div>
@@ -1012,6 +1081,11 @@ function TabProgression({ prenom }: { prenom: string }) {
                   {m.count} session{m.count > 1 ? 's' : ''}{m.pct !== null ? ` · ${m.pct} % QCM` : ''}
                 </p>
               </div>
+              {m.moy !== null && (
+                <span className="text-sm font-bold shrink-0" style={{ color: '#B8881F' }}>
+                  {m.moy.toFixed(1).replace('.', ',')}/20
+                </span>
+              )}
               {m.tendance === 'up'   && <TrendingUp size={18} style={{ color: '#3B6D11' }} />}
               {m.tendance === 'down' && <TrendingDown size={18} style={{ color: '#A32D2D' }} />}
               {m.tendance === 'flat' && <Minus size={18} style={{ color: '#888780' }} />}
