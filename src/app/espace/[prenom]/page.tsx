@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import QRCode from 'react-qr-code'
-import { BarChart2, QrCode, Settings, ChevronDown, ChevronUp, Copy, Check, ExternalLink, FileText } from 'lucide-react'
+import { BarChart2, QrCode, Settings, ChevronDown, ChevronUp, Copy, Check, ExternalLink, FileText, Trash2 } from 'lucide-react'
 import { normaliserPrenom } from '@/lib/normaliser'
 import { supabase } from '@/lib/supabase'
 import { AppHeader } from '@/components/ui/AppHeader'
@@ -50,6 +50,18 @@ function statutToVariant(statut: string): 'nonfait' | 'fait' | 'valide' | 'enatt
   if (statut === 'fait')      return 'fait'
   if (statut === 'en_attente') return 'enattente'
   return 'nonfait'
+}
+
+// Supprime une session (exercices/DS/brevet/fiche) via le MCP. Réservé aux vues parent.
+async function supprimerSessionMcp(id: string): Promise<boolean> {
+  try {
+    await fetch('https://mcp.parentsai.eu/api/session/supprimer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: id }),
+    })
+    return true
+  } catch { return false }
 }
 
 // ─── Tab Bar ──────────────────────────────────────────────────────────────────
@@ -148,7 +160,7 @@ export default function EspaceEnfant() {
 
 // ─── Tab Suivi ────────────────────────────────────────────────────────────────
 
-function LigneSuivi({ s, retourQuery }: { s: SessionAvecStats; retourQuery: string }) {
+function LigneSuivi({ s, retourQuery, onSupprimer }: { s: SessionAvecStats; retourQuery: string; onSupprimer: (id: string) => void }) {
   const score = s.qcm_total > 0 ? `${s.qcm_juste}/${s.qcm_total}` : null
   const date  = new Date(s.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
 
@@ -167,14 +179,14 @@ function LigneSuivi({ s, retourQuery }: { s: SessionAvecStats; retourQuery: stri
           {score && <span className="ml-2 font-semibold" style={{ color: '#1F5A4D' }}>· {score} QCM</span>}
         </p>
       </div>
-      <div className="flex gap-1.5 shrink-0">
+      <div className="flex items-center gap-1.5 shrink-0">
         {(s.statut === 'fait' || s.statut === 'validé') && (
           <Link
             href={`/session/${s.id}?${retourQuery}`}
             className="text-xs px-2.5 py-1.5 rounded-lg font-semibold"
             style={{ background: '#2E7D6B', color: '#fff' }}
           >
-            Voir
+            Enfant
           </Link>
         )}
         <Link
@@ -182,8 +194,17 @@ function LigneSuivi({ s, retourQuery }: { s: SessionAvecStats; retourQuery: stri
           className="text-xs px-2.5 py-1.5 rounded-lg font-semibold"
           style={{ background: '#E3F0EC', color: '#1F5A4D' }}
         >
-          📋
+          Corrigé
         </Link>
+        <button
+          onClick={() => onSupprimer(s.id)}
+          className="ml-1 w-8 h-8 flex items-center justify-center rounded-lg transition-opacity hover:opacity-80"
+          style={{ background: '#FBE6E3', color: '#A32D2D' }}
+          aria-label="Supprimer"
+          title="Supprimer"
+        >
+          <Trash2 size={15} />
+        </button>
       </div>
     </div>
   )
@@ -230,6 +251,12 @@ function TabSuivi({ prenom, classe }: { prenom: string; classe: string }) {
     }
     charger()
   }, [prenom])
+
+  async function supprimer(id: string) {
+    if (!window.confirm('Supprimer définitivement cette session ? Cette action est irréversible.')) return
+    await supprimerSessionMcp(id)
+    setSessions(prev => prev.filter(s => s.id !== id))
+  }
 
   if (loading) return (
     <div className="text-center py-16">
@@ -353,7 +380,7 @@ function TabSuivi({ prenom, classe }: { prenom: string; classe: string }) {
                         ouvert={sous.estOuverte(cle)} onToggle={() => sous.basculer(cle)}
                       >
                         <div className="space-y-2">
-                          {items.map(s => <LigneSuivi key={s.id} s={s} retourQuery={retourQuery} />)}
+                          {items.map(s => <LigneSuivi key={s.id} s={s} retourQuery={retourQuery} onSupprimer={supprimer} />)}
                         </div>
                       </SousCategorieAccordeon>
                     )
@@ -767,6 +794,12 @@ function TabFiches({ prenom }: { prenom: string }) {
     charger()
   }, [prenom])
 
+  async function supprimer(id: string) {
+    if (!window.confirm('Supprimer définitivement cette fiche ? Cette action est irréversible.')) return
+    await supprimerSessionMcp(id)
+    setFiches(prev => prev.filter(f => f.id !== id))
+  }
+
   if (loading) return (
     <div className="text-center py-16"><p className="text-sm" style={{ color: '#6E827B' }}>Chargement...</p></div>
   )
@@ -815,20 +848,29 @@ function TabFiches({ prenom }: { prenom: string }) {
                 <div className="px-4 pb-4 border-t" style={{ borderColor: '#DCE8E4' }}>
                   <div className="space-y-2 pt-3">
                     {list.map(f => (
-                      <Link
-                        key={f.id}
-                        href={`/session/${f.id}`}
-                        className="flex items-center justify-between p-3 rounded-xl transition-opacity active:opacity-70"
-                        style={{ background: '#F7F8FA', border: '1px solid #DCE8E4' }}
-                      >
-                        <div>
-                          <p className="text-sm font-semibold" style={{ color: '#1E2A26' }}>{f.exercices_json?.titre || f.chapitre}</p>
-                          <p className="text-xs mt-0.5" style={{ color: '#6E827B' }}>
-                            {new Date(f.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
-                          </p>
-                        </div>
-                        <span className="text-xs px-3 py-1.5 rounded-xl font-bold shrink-0" style={{ background: '#2E7D6B', color: '#fff' }}>Ouvrir →</span>
-                      </Link>
+                      <div key={f.id} className="flex items-center gap-2">
+                        <Link
+                          href={`/session/${f.id}`}
+                          className="flex-1 flex items-center justify-between p-3 rounded-xl transition-opacity active:opacity-70 min-w-0"
+                          style={{ background: '#F7F8FA', border: '1px solid #DCE8E4' }}
+                        >
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold truncate" style={{ color: '#1E2A26' }}>{f.exercices_json?.titre || f.chapitre}</p>
+                            <p className="text-xs mt-0.5" style={{ color: '#6E827B' }}>
+                              {new Date(f.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                            </p>
+                          </div>
+                          <span className="text-xs px-3 py-1.5 rounded-xl font-bold shrink-0 ml-2" style={{ background: '#2E7D6B', color: '#fff' }}>Ouvrir →</span>
+                        </Link>
+                        <button
+                          onClick={() => supprimer(f.id)}
+                          className="w-9 h-9 flex items-center justify-center rounded-lg shrink-0 transition-opacity hover:opacity-80"
+                          style={{ background: '#FBE6E3', color: '#A32D2D' }}
+                          aria-label="Supprimer" title="Supprimer"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
                     ))}
                   </div>
                 </div>

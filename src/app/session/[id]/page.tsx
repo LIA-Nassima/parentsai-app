@@ -26,27 +26,6 @@ export default function SessionPage() {
   const [loading,    setLoading]    = useState(true)
   const [validating, setValidating] = useState(false)
   const [submitting, setSubmitting] = useState(false)
-  const [estParent,  setEstParent]  = useState(false)
-  const [suppression, setSuppression] = useState(false)
-
-  // Le bouton Supprimer n'apparaît que pour un parent connecté (l'enfant, en accès token, n'a pas de session).
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => setEstParent(!!user))
-  }, [])
-
-  async function supprimerSession() {
-    if (!session || suppression) return
-    if (!window.confirm('Supprimer définitivement cette session ? Cette action est irréversible.')) return
-    setSuppression(true)
-    try {
-      await fetch('https://mcp.parentsai.eu/api/session/supprimer', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ session_id: sessionId }),
-      })
-    } catch { /* silencieux */ }
-    router.push(urlRetour())
-  }
 
   function handleReponseQCM(exerciceNum: number, estCorrect: boolean) {
     setReponses(prev => {
@@ -143,16 +122,7 @@ export default function SessionPage() {
 
   // Une fiche de révision n'a pas d'exercices : rendu et impression dédiés.
   if (session.type_evaluation === 'fiche') {
-    return (
-      <FicheView
-        session={session}
-        onRetour={retour}
-        fromEnfant={fromEnfant}
-        estParent={estParent}
-        onSupprimer={supprimerSession}
-        suppression={suppression}
-      />
-    )
+    return <FicheView session={session} onRetour={retour} fromEnfant={fromEnfant} />
   }
 
   const { exercices, niveau, duree_estimee, encouragement, competences, titre, bareme_total, calculatrice } = session.exercices_json
@@ -409,20 +379,6 @@ export default function SessionPage() {
             style={{ background: '#E3F0EC', color: '#1F5A4D', border: '1.5px solid #2E7D6B' }}
           >
             ✅ Session validée par le parent
-          </div>
-        )}
-
-        {/* Supprimer — parent connecté uniquement */}
-        {estParent && (
-          <div className="session-no-print mt-10 text-center">
-            <button
-              onClick={supprimerSession}
-              disabled={suppression}
-              className="text-sm font-semibold px-4 py-2 rounded-xl transition-opacity hover:opacity-90 disabled:opacity-50"
-              style={{ color: '#A32D2D', background: '#FBE6E3', border: '1px solid #F2C9C3' }}
-            >
-              {suppression ? 'Suppression...' : '🗑️ Supprimer cette session'}
-            </button>
           </div>
         )}
 
