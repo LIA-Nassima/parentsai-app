@@ -714,22 +714,25 @@ function TabProfs({
             marchent aussi depuis l'<strong>app Claude sur téléphone</strong>.
           </p>
         </div>
+
+        {/* Étape 3 : une fois les profs prêts */}
+        <div className="mt-4 pt-4" style={{ borderTop: '1px solid #C2DED6' }}>
+          <p className="text-sm font-bold mb-1" style={{ color: '#1F5A4D' }}>3. Une fois vos profs prêts, demandez dans Claude</p>
+          <ul className="space-y-1 text-xs leading-relaxed" style={{ color: '#1F5A4D' }}>
+            <li>« <strong>Session [chapitre]</strong> » → des exercices</li>
+            <li>« <strong>DS [chapitre]</strong> » → un devoir surveillé</li>
+            <li>« <strong>Brevet blanc</strong> » → un examen blanc</li>
+            <li>« <strong>Fiche de révision [chapitre]</strong> » → une fiche imprimable</li>
+            <li>« <strong>Corrige la session de {prenom}</strong> » → une note + des commentaires</li>
+          </ul>
+          <p className="text-xs mt-2 font-semibold" style={{ color: '#2E7D6B' }}>
+            ➡️ Tout s'affiche automatiquement dans IAla : Suivi, Fiches, Progression et Notes.
+          </p>
+        </div>
       </div>
 
-      {/* Une fois configuré : que demander à Claude */}
-      <div className="rounded-2xl p-4 mb-4" style={{ background: '#FDF8EA', border: '1px solid #EAD8A0' }}>
-        <p className="font-bold text-sm mb-2" style={{ color: '#B8881F' }}>Une fois vos profs prêts, demandez dans Claude :</p>
-        <ul className="space-y-1.5 text-xs leading-relaxed" style={{ color: '#7a5910' }}>
-          <li>« <strong>Session [chapitre]</strong> » → des exercices</li>
-          <li>« <strong>DS [chapitre]</strong> » → un devoir surveillé</li>
-          <li>« <strong>Brevet blanc</strong> » → un examen blanc</li>
-          <li>« <strong>Fiche de révision [chapitre]</strong> » → une fiche imprimable</li>
-          <li>« <strong>Corrige la session de {prenom}</strong> » → une note + des commentaires</li>
-        </ul>
-        <p className="text-xs mt-2.5 font-semibold" style={{ color: '#B8881F' }}>
-          ➡️ Tout s'affiche automatiquement dans IAla : Suivi, Fiches, Progression et Notes.
-        </p>
-      </div>
+      {/* Allez, on crée les profs ! */}
+      <p className="font-bold text-base mb-3" style={{ color: '#1E2A26' }}>Allez, on crée les profs !</p>
 
       {/* Avertissement */}
       {avertissement && (
