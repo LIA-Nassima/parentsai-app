@@ -36,9 +36,9 @@ export default function Home() {
   const ETAPES = [
     { Icon: UserPlus,          titre: 'Créez le profil de votre enfant', texte: 'Son prénom et sa classe — c’est tout. En 30 secondes.' },
     { Icon: Plug,              titre: 'Branchez l’IA',                texte: 'Ajoutez le « connecteur » IAla dans Claude depuis un ordinateur, comme une prise. Une seule fois — ensuite tout marche aussi sur mobile.' },
-    { Icon: MessageSquareText, titre: 'Demandez, l’IA crée',         texte: '« Une session de maths », « un DS sur Pythagore », « un brevet blanc »… et c’est prêt.' },
+    { Icon: MessageSquareText, titre: 'Demandez, l’IA crée',         texte: '« Une session », « un DS », « un brevet blanc », « une fiche de révision », « corrige la copie »… et c’est prêt.' },
     { Icon: Smartphone,        titre: 'Votre enfant révise',             texte: 'Il ouvre son lien perso sur son téléphone et s’entraîne, où qu’il soit.' },
-    { Icon: BarChart3,         titre: 'Vous suivez ses progrès',         texte: 'Semaine après semaine, matière par matière, ce qui est fait et à corriger.' },
+    { Icon: BarChart3,         titre: 'Vous suivez ses progrès',         texte: 'Exercices, fiches, notes et corrections : tout revient dans IAla, semaine après semaine.' },
   ]
 
   const COULEURS_ETAPE = [

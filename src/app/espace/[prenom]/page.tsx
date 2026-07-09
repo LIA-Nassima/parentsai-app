@@ -716,6 +716,21 @@ function TabProfs({
         </div>
       </div>
 
+      {/* Une fois configuré : que demander à Claude */}
+      <div className="rounded-2xl p-4 mb-4" style={{ background: '#FDF8EA', border: '1px solid #EAD8A0' }}>
+        <p className="font-bold text-sm mb-2" style={{ color: '#B8881F' }}>Une fois vos profs prêts, demandez dans Claude :</p>
+        <ul className="space-y-1.5 text-xs leading-relaxed" style={{ color: '#7a5910' }}>
+          <li>« <strong>Session [chapitre]</strong> » → des exercices</li>
+          <li>« <strong>DS [chapitre]</strong> » → un devoir surveillé</li>
+          <li>« <strong>Brevet blanc</strong> » → un examen blanc</li>
+          <li>« <strong>Fiche de révision [chapitre]</strong> » → une fiche imprimable</li>
+          <li>« <strong>Corrige la session de {prenom}</strong> » → une note + des commentaires</li>
+        </ul>
+        <p className="text-xs mt-2.5 font-semibold" style={{ color: '#B8881F' }}>
+          ➡️ Tout s'affiche automatiquement dans IAla : Suivi, Fiches, Progression et Notes.
+        </p>
+      </div>
+
       {/* Avertissement */}
       {avertissement && (
         <div
