@@ -8,7 +8,7 @@ import { normaliserPrenom } from '@/lib/normaliser'
 import { supabase } from '@/lib/supabase'
 
 const CLASSES = ['6ème', '5ème', '4ème', '3ème', '2nde', '1ère', 'Terminale']
-const MCP_URL = 'mcp.parentsai.eu'
+const MCP_URL = 'https://mcp.parentsai.eu/mcp'
 
 const ICONES_MATIERE: Record<string, string> = {
   'Mathématiques': '🔢', 'Français': '📖', 'Physique-Chimie': '🧪',
@@ -191,7 +191,8 @@ export default function Onboarding() {
             <div className="text-3xl mb-3">🔗</div>
             <p className="font-bold text-base mb-1" style={{ color: '#1E2A26' }}>Connecter Claude</p>
             <p className="text-sm mb-5" style={{ color: '#6E827B' }}>
-              Ajoutez le serveur MCP dans vos paramètres Claude.ai — une seule fois.
+              Ajoutez le connecteur IAla dans Claude — <strong>depuis un ordinateur</strong>, une seule fois.
+              (L'app mobile ne permet pas d'ajouter un connecteur.)
             </p>
 
             <div className="rounded-xl p-4 mb-5" style={{ background: '#F7F8FA', border: '1.5px solid #DCE8E4' }}>
@@ -212,12 +213,15 @@ export default function Onboarding() {
             </div>
 
             <div className="rounded-xl p-4 mb-5 text-sm" style={{ background: '#E3F0EC' }}>
-              <p className="font-bold mb-2" style={{ color: '#1F5A4D' }}>Comment faire :</p>
+              <p className="font-bold mb-2" style={{ color: '#1F5A4D' }}>Comment faire (sur ordinateur) :</p>
               <ol className="space-y-1 text-xs" style={{ color: '#1F5A4D' }}>
-                <li>1. Ouvrez <strong>claude.ai</strong> → Paramètres → Connecteurs</li>
-                <li>2. Ajoutez un serveur MCP avec l'URL ci-dessus</li>
-                <li>3. Nommez-le <strong>"IAlla"</strong></li>
+                <li>1. Sur <strong>ordinateur</strong>, ouvrez <strong>claude.ai</strong> → Paramètres → Connecteurs</li>
+                <li>2. « Ajouter un connecteur » avec l'URL ci-dessus</li>
+                <li>3. Nommez-le <strong>IAla</strong></li>
               </ol>
+              <p className="text-xs mt-2" style={{ color: '#2E7D6B' }}>
+                💡 Ensuite, la configuration des profs marche aussi depuis l'app Claude sur téléphone.
+              </p>
             </div>
 
             <button
@@ -239,7 +243,7 @@ export default function Onboarding() {
                 Pour chaque matière, créez un projet dans Claude.ai et collez les instructions.
               </p>
               <div className="rounded-xl p-3 text-xs" style={{ background: '#E3F0EC', color: '#1F5A4D' }}>
-                Créer un projet → Nommez-le → Collez les instructions → Connectez le MCP IAlla
+                Créer un projet → Nommez-le → Collez les instructions → Connectez le connecteur IAla
               </div>
             </div>
 

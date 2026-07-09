@@ -629,7 +629,7 @@ function TabProfs({
     setTimeout(() => setCopie(null), 2000)
   }
 
-  const MCP_URL = 'mcp.parentsai.eu'
+  const MCP_URL = 'https://mcp.parentsai.eu/mcp'
   function copierConnecteur() {
     navigator.clipboard.writeText(MCP_URL)
     setCopie('__mcp')
@@ -679,9 +679,10 @@ function TabProfs({
         {/* Étape 1 : le connecteur */}
         <div className="mb-4">
           <p className="text-sm font-bold mb-1" style={{ color: '#1F5A4D' }}>
-            1. Branchez le connecteur IAla <span className="font-normal">(une seule fois)</span>
+            1. Branchez le connecteur IAla <span className="font-normal">(une seule fois, sur ordinateur)</span>
           </p>
           <p className="text-xs mb-2 leading-relaxed" style={{ color: '#1F5A4D' }}>
+            ⚠️ <strong>Depuis un ordinateur</strong> (l'app mobile ne permet pas d'ajouter un connecteur).
             Dans <strong>claude.ai</strong> → Paramètres → Connecteurs → « Ajouter un connecteur »,
             collez cette adresse et nommez-le <strong>IAla</strong> :
           </p>
@@ -708,6 +709,10 @@ function TabProfs({
             <li>② Sur Claude.ai → Mes projets → <strong>Nouveau projet</strong></li>
             <li>③ Collez les instructions dans « Instructions du projet »</li>
           </ol>
+          <p className="text-xs mt-2 leading-relaxed" style={{ color: '#2E7D6B' }}>
+            💡 Une fois le connecteur ajouté sur ordinateur, la création des profs et l'usage au quotidien
+            marchent aussi depuis l'<strong>app Claude sur téléphone</strong>.
+          </p>
         </div>
       </div>
 
