@@ -683,7 +683,7 @@ function TabProfs({
           </p>
           <p className="text-xs mb-2 leading-relaxed" style={{ color: '#1F5A4D' }}>
             ⚠️ <strong>Depuis un ordinateur</strong> (l'app mobile ne permet pas d'ajouter un connecteur).
-            Dans <strong>claude.ai</strong> → Paramètres → Connecteurs → « Ajouter un connecteur »,
+            Dans <strong>claude.ai</strong> → <strong>Personnaliser</strong> → <strong>Connecteurs</strong> → <strong>Ajouter</strong>,
             collez cette adresse et nommez-le <strong>IAla</strong> :
           </p>
           <div className="flex items-center gap-2 rounded-xl px-3 py-2" style={{ background: '#fff', border: '1px solid #C2DED6' }}>

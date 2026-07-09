@@ -215,9 +215,9 @@ export default function Onboarding() {
             <div className="rounded-xl p-4 mb-5 text-sm" style={{ background: '#E3F0EC' }}>
               <p className="font-bold mb-2" style={{ color: '#1F5A4D' }}>Comment faire (sur ordinateur) :</p>
               <ol className="space-y-1 text-xs" style={{ color: '#1F5A4D' }}>
-                <li>1. Sur <strong>ordinateur</strong>, ouvrez <strong>claude.ai</strong> → Paramètres → Connecteurs</li>
-                <li>2. « Ajouter un connecteur » avec l'URL ci-dessus</li>
-                <li>3. Nommez-le <strong>IAla</strong></li>
+                <li>1. Sur <strong>ordinateur</strong>, ouvrez <strong>claude.ai</strong></li>
+                <li>2. <strong>Personnaliser</strong> → <strong>Connecteurs</strong> → <strong>Ajouter</strong></li>
+                <li>3. Collez l'URL ci-dessus et nommez-le <strong>IAla</strong></li>
               </ol>
               <p className="text-xs mt-2" style={{ color: '#2E7D6B' }}>
                 💡 Ensuite, la configuration des profs marche aussi depuis l'app Claude sur téléphone.
