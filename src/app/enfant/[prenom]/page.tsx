@@ -15,12 +15,14 @@ import { lundiCourant, dansLaSemaine } from '@/lib/semaine'
 type Filtre = 'afaire' | 'valide'
 
 const ICONES_MATIERE: Record<string, string> = {
+  'Sciences et Technologie': '🔬',
   'Mathématiques': '🔢', 'Français': '📖', 'Physique-Chimie': '🧪',
   'SVT': '🌱', 'Technologie': '⚙️', 'Histoire-Géographie-EMC': '🌍',
   'Anglais': '🇬🇧', 'Espagnol': '🇪🇸', 'Allemand': '🇩🇪', 'Coach': '🧭',
 }
 
 const COULEURS_MATIERE: Record<string, string> = {
+  'Sciences et Technologie': '#17A398',
   'Mathématiques': '#3B7DD9', 'Français': '#2E7D6B', 'Physique-Chimie': '#5BA491',
   'SVT': '#1F5A4D', 'Technologie': '#B8881F', 'Histoire-Géographie-EMC': '#E8B53A',
   'Anglais': '#3B7DD9', 'Espagnol': '#E2685C', 'Allemand': '#6E827B',
