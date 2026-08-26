@@ -7,7 +7,7 @@ import { LogoIAla } from '@/components/brand/LogoIAla'
 import { supabase } from '@/lib/supabase'
 import { normaliserPrenom } from '@/lib/normaliser'
 
-const CLASSES = ['CM1', 'CM2', '6ème', '5ème', '4ème', '3ème']
+const CLASSES = ['CM1', 'CM2', '6ème', '5ème', '4ème', '3ème', '2nde']
 const COULEURS_AVATAR = ['#E8B53A', '#3B7DD9', '#D9483B', '#5BA491', '#B8881F', '#2E7D6B']
 
 interface Famille {
