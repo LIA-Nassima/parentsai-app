@@ -88,23 +88,28 @@ export default function EspaceEnfant() {
   const [classe, setClasse] = useState('')
   const [profsConfigures, setProfsConfigures] = useState<string[]>([])
   const [toutes, setToutes] = useState<{ enfant: string; classe?: string }[]>([])
+  const [familleId, setFamilleId] = useState<string | null>(null)
+  const [accessToken, setAccessToken] = useState<string | null>(null)
 
   useEffect(() => {
     async function chargerFamille() {
       // Lecture directe : la RLS Supabase ne renvoie que les familles du parent connecté
       const { data } = await supabase
         .from('familles')
-        .select('enfant, classe, profs_configures')
+        .select('id, enfant, classe, profs_configures, access_token')
         .order('enfant')
       const familles = data || []
       setToutes(familles)
       const famille = familles.find(
-        (f: { enfant: string; classe: string; profs_configures: string[] }) =>
+        (f: { id: string; enfant: string; classe: string; profs_configures: string[] }) =>
           f.enfant.toLowerCase() === prenom.toLowerCase()
       )
       if (famille) {
         setClasse(famille.classe || '')
         setProfsConfigures(famille.profs_configures || [])
+        // Identifiant unique de la famille : isole les sessions même en cas d'homonymes
+        setFamilleId(famille.id)
+        setAccessToken(famille.access_token || null)
       }
     }
     chargerFamille()
@@ -121,14 +126,16 @@ export default function EspaceEnfant() {
 
       {/* ── Contenu ── */}
       <div className="max-w-app mx-auto px-4 py-5">
-        {activeTab === 'suivi'       && <TabSuivi prenom={prenom} classe={classe} />}
-        {activeTab === 'progression' && <TabProgression prenom={prenom} />}
-        {activeTab === 'fiches'      && <TabFiches prenom={prenom} />}
+        {activeTab === 'suivi'       && <TabSuivi prenom={prenom} classe={classe} familleId={familleId} />}
+        {activeTab === 'progression' && <TabProgression prenom={prenom} familleId={familleId} />}
+        {activeTab === 'fiches'      && <TabFiches prenom={prenom} familleId={familleId} />}
         {activeTab === 'exercices' && <TabExercices prenom={prenom} />}
         {activeTab === 'profs'     && (
           <TabProfs
             prenom={prenom}
             classe={classe}
+            token={accessToken}
+            familleId={familleId}
             profsConfigures={profsConfigures}
             onProfsChange={setProfsConfigures}
           />
@@ -272,7 +279,7 @@ function ModaleNote({ session, onClose }: { session: SessionAvecStats; onClose: 
   )
 }
 
-function TabSuivi({ prenom, classe }: { prenom: string; classe: string }) {
+function TabSuivi({ prenom, classe, familleId }: { prenom: string; classe: string; familleId: string | null }) {
   const searchParams = useSearchParams()
   const matInit = searchParams.get('mat')
   const catInit = searchParams.get('cat')
@@ -287,10 +294,11 @@ function TabSuivi({ prenom, classe }: { prenom: string; classe: string }) {
 
   useEffect(() => {
     async function charger() {
+      if (!familleId) return
       setLoading(true)
       const { data } = await supabase
         .from('sessions').select('*')
-        .ilike('enfant', prenom)
+        .eq('famille_id', familleId)
         .order('created_at', { ascending: false })
 
       if (!data) { setLoading(false); return }
@@ -313,7 +321,7 @@ function TabSuivi({ prenom, classe }: { prenom: string; classe: string }) {
       setLoading(false)
     }
     charger()
-  }, [prenom])
+  }, [prenom, familleId])
 
   async function supprimer(id: string) {
     if (!window.confirm('Supprimer définitivement cette session ? Cette action est irréversible.')) return
@@ -567,10 +575,12 @@ function TabExercices({ prenom }: { prenom: string }) {
 // ─── Tab Profs ────────────────────────────────────────────────────────────────
 
 function TabProfs({
-  prenom, classe, profsConfigures, onProfsChange,
+  prenom, classe, token, familleId, profsConfigures, onProfsChange,
 }: {
   prenom: string
   classe: string
+  token: string | null
+  familleId: string | null
   profsConfigures: string[]
   onProfsChange: (profs: string[]) => void
 }) {
@@ -586,28 +596,31 @@ function TabProfs({
     if (!classe) return
     setLoading(true)
     try {
-      const res  = await fetch(
-        `https://mcp.parentsai.eu/api/professeurs?enfant=${encodeURIComponent(prenom)}&classe=${encodeURIComponent(classe)}`
-      )
+      // On passe le token : le bootstrap injecté dans le projet Claude identifie
+      // ainsi l'enfant par son jeton unique (et non par son prénom).
+      const params = new URLSearchParams({ enfant: prenom, classe })
+      if (token) params.set('token', token)
+      const res  = await fetch(`https://mcp.parentsai.eu/api/professeurs?${params.toString()}`)
       const json = await res.json()
       setProfesseurs(json.professeurs || [])
       setAvertissement(json.avertissement || null)
     } catch { /* silencieux */ }
     setLoading(false)
-  }, [prenom, classe])
+  }, [prenom, classe, token])
 
   useEffect(() => { chargerProfs() }, [chargerProfs])
 
   // Une session existante prouve que le prof + le connecteur fonctionnent → configuré d'office
   useEffect(() => {
+    if (!familleId) return
     supabase
-      .from('sessions').select('matiere').ilike('enfant', prenom)
+      .from('sessions').select('matiere').eq('famille_id', familleId)
       .then(({ data }) => {
         if (data) setMatieresAvecSession(
           new Set(data.map((s: { matiere: string }) => normaliserMatiere(s.matiere)))
         )
       })
-  }, [prenom])
+  }, [familleId])
 
   async function marquerConfigure(matiere: string) {
     const dejaConfigures = profsConfigures.includes(matiere)
@@ -617,7 +630,7 @@ function TabProfs({
       const res  = await fetch('https://mcp.parentsai.eu/api/famille/profs', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ enfant: prenom, matiere, action }),
+        body: JSON.stringify({ token, enfant: prenom, matiere, action }),
       })
       const json = await res.json()
       if (json.succes) onProfsChange(json.profs_configures)
@@ -862,24 +875,25 @@ function TabProfs({
 
 // ─── Tab Fiches de révision ─────────────────────────────────────────────────────
 
-function TabFiches({ prenom }: { prenom: string }) {
+function TabFiches({ prenom, familleId }: { prenom: string; familleId: string | null }) {
   const [fiches, setFiches]       = useState<Session[]>([])
   const [loading, setLoading]     = useState(true)
   const [ouverteMat, setOuverteMat] = useState<string | null>(null)
 
   useEffect(() => {
     async function charger() {
+      if (!familleId) return
       setLoading(true)
       const { data } = await supabase
         .from('sessions').select('*')
-        .ilike('enfant', prenom)
+        .eq('famille_id', familleId)
         .eq('type_evaluation', 'fiche')
         .order('created_at', { ascending: false })
       setFiches(((data || []) as Session[]).map(s => ({ ...s, matiere: normaliserMatiere(s.matiere) })))
       setLoading(false)
     }
     charger()
-  }, [prenom])
+  }, [prenom, familleId])
 
   async function supprimer(id: string) {
     if (!window.confirm('Supprimer définitivement cette fiche ? Cette action est irréversible.')) return
@@ -972,16 +986,17 @@ function TabFiches({ prenom }: { prenom: string }) {
 
 // ─── Tab Progression (bilan de l'année) ─────────────────────────────────────────
 
-function TabProgression({ prenom }: { prenom: string }) {
+function TabProgression({ prenom, familleId }: { prenom: string; familleId: string | null }) {
   const [sessions, setSessions] = useState<SessionAvecStats[]>([])
   const [loading, setLoading]   = useState(true)
 
   useEffect(() => {
     async function charger() {
+      if (!familleId) return
       setLoading(true)
       const { data: sess } = await supabase
         .from('sessions').select('*')
-        .ilike('enfant', prenom)
+        .eq('famille_id', familleId)
         .order('created_at', { ascending: true })
       const liste = ((sess || []) as Session[]).filter(s => s.type_evaluation !== 'fiche')
       const ids = liste.map(s => s.id)
@@ -1004,7 +1019,7 @@ function TabProgression({ prenom }: { prenom: string }) {
       setLoading(false)
     }
     charger()
-  }, [prenom])
+  }, [prenom, familleId])
 
   if (loading) return (
     <div className="text-center py-16"><p className="text-sm" style={{ color: '#6E827B' }}>Chargement...</p></div>

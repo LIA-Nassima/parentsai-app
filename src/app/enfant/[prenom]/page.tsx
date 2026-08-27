@@ -102,6 +102,7 @@ export default function EspaceEnfant() {
   const prenom       = normaliserPrenom(decodeURIComponent(params.prenom as string))
 
   const [classe, setClasse]             = useState('')
+  const [familleId, setFamilleId]       = useState<string | null>(null)
   const [tokenVerifie, setTokenVerifie] = useState<boolean | null>(null)
   const [estParent, setEstParent]       = useState(false)
 
@@ -113,12 +114,14 @@ export default function EspaceEnfant() {
 
   useEffect(() => {
     async function init() {
-      const cachedClasse = localStorage.getItem(`classe_${prenom}`)
-      const dejaVerifie  = localStorage.getItem(`qr_ok_${prenom}`) === '1'
+      const cachedClasse    = localStorage.getItem(`classe_${prenom}`)
+      const cachedFamilleId = localStorage.getItem(`famille_${prenom}`)
+      const dejaVerifie     = localStorage.getItem(`qr_ok_${prenom}`) === '1'
 
-      // Raccourci : déjà vérifié et classe en cache
-      if (dejaVerifie && cachedClasse !== null) {
+      // Raccourci : déjà vérifié, classe ET famille_id en cache
+      if (dejaVerifie && cachedClasse !== null && cachedFamilleId) {
         setClasse(cachedClasse)
+        setFamilleId(cachedFamilleId)
         setTokenVerifie(true)
         return
       }
@@ -129,6 +132,7 @@ export default function EspaceEnfant() {
       if (!token) {
         if (dejaVerifie) {
           setClasse(cachedClasse ?? '')
+          setFamilleId(cachedFamilleId)
           setTokenVerifie(true)
         } else {
           setTokenVerifie(false)
@@ -136,7 +140,8 @@ export default function EspaceEnfant() {
         return
       }
 
-      // Jeton présent : on vérifie et on récupère la classe (source sûre, scellée par le jeton)
+      // Jeton présent : on vérifie et on récupère la classe + le famille_id
+      // (source sûre, scellée par le jeton) pour isoler les sessions.
       try {
         const res = await fetch('/api/verify-token', {
           method: 'POST',
@@ -146,9 +151,12 @@ export default function EspaceEnfant() {
         if (res.ok) {
           const data = await res.json()
           const classeVal = data.classe ?? ''
+          const fid = data.famille_id ?? null
           localStorage.setItem(`qr_ok_${prenom}`, '1')
           localStorage.setItem(`classe_${prenom}`, classeVal)
+          if (fid) localStorage.setItem(`famille_${prenom}`, fid)
           setClasse(classeVal)
+          setFamilleId(fid)
           window.history.replaceState({}, '', `/enfant/${encodeURIComponent(prenom)}`)
           setTokenVerifie(true)
         } else {
@@ -210,7 +218,7 @@ export default function EspaceEnfant() {
 
       {/* ── Contenu : révisions semaine par semaine ── */}
       <div className="max-w-app mx-auto px-4 py-5">
-        <TabRevisions prenom={prenom} classe={classe} />
+        <TabRevisions prenom={prenom} classe={classe} familleId={familleId} />
       </div>
     </div>
   )
@@ -218,7 +226,7 @@ export default function EspaceEnfant() {
 
 // ─── Tab Révisions (À faire + Validé fusionnés) ────────────────────────────────
 
-function TabRevisions({ prenom, classe }: { prenom: string; classe: string }) {
+function TabRevisions({ prenom, classe, familleId }: { prenom: string; classe: string; familleId: string | null }) {
   const searchParams = useSearchParams()
   const matInit = searchParams.get('mat')
   const catInit = searchParams.get('cat')
@@ -232,10 +240,11 @@ function TabRevisions({ prenom, classe }: { prenom: string; classe: string }) {
 
   useEffect(() => {
     async function charger() {
+      if (!familleId) return
       setLoading(true)
       const { data } = await supabase
         .from('sessions').select('*')
-        .ilike('enfant', prenom)
+        .eq('famille_id', familleId)
         .order('created_at', { ascending: false })
 
       if (!data) { setLoading(false); return }
@@ -258,7 +267,7 @@ function TabRevisions({ prenom, classe }: { prenom: string; classe: string }) {
       setLoading(false)
     }
     charger()
-  }, [prenom])
+  }, [prenom, familleId])
 
   const sessionsSemaine = sessions.filter(s => s.type_evaluation !== 'fiche' && dansLaSemaine(s.created_at, semaineDebut))
   const aFaire = sessionsSemaine.filter(s => s.statut === 'en_attente' || s.statut === 'fait')
