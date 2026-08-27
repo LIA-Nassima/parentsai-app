@@ -230,6 +230,19 @@ function LigneSuivi({ s, retourQuery, onSupprimer, onNote }: { s: SessionAvecSta
 
 function ModaleNote({ session, onClose }: { session: SessionAvecStats; onClose: () => void }) {
   const c = session.correction_json
+  const [copie, setCopie] = useState(false)
+
+  // Wording prêt à coller dans Claude : la date d'abord (repère simple), puis le
+  // thème entre guillemets pour lever toute ambiguïté si plusieurs sessions le même jour.
+  const dateFr = new Date(session.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })
+  const demande = `Corrige la session du ${dateFr} « ${session.chapitre} » de ${session.enfant}`
+
+  function copierDemande() {
+    navigator.clipboard.writeText(demande)
+    setCopie(true)
+    setTimeout(() => setCopie(false), 2000)
+  }
+
   return (
     <div
       className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-4"
@@ -250,8 +263,21 @@ function ModaleNote({ session, onClose }: { session: SessionAvecStats; onClose: 
               <div className="text-4xl mb-3">📝</div>
               <p className="font-bold" style={{ color: '#1E2A26' }}>Pas encore corrigé</p>
               <p className="text-sm mt-2" style={{ color: '#6E827B' }}>
-                Dans Claude, demande : « <strong>Corrige la session {session.chapitre} de {session.enfant}</strong> ».
+                Dans Claude, demande la correction — ou copie la phrase toute prête :
               </p>
+              <div
+                className="mt-3 rounded-xl p-3 text-left text-sm"
+                style={{ background: '#F4F6F5', color: '#1E2A26', border: '1px solid #E3E7E5' }}
+              >
+                « {demande} »
+              </div>
+              <button
+                onClick={copierDemande}
+                className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-opacity hover:opacity-90"
+                style={{ background: copie ? '#2E7D6B' : '#1E2A26', color: '#fff' }}
+              >
+                {copie ? <><Check size={15} /> Copié !</> : <><Copy size={15} /> Copier la demande</>}
+              </button>
             </div>
           ) : (
             <>
