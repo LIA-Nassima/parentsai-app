@@ -294,6 +294,42 @@ export default function SessionPage() {
           </div>
         )}
 
+        {/* Correction de Claude — visible par l'enfant ET le parent une fois corrigée */}
+        {session.correction_json && (
+          <div
+            className="rounded-2xl mb-5 overflow-hidden"
+            style={{ background: '#fff', border: '1.5px solid #E8B53A', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}
+          >
+            <div className="px-4 py-3" style={{ background: '#2E7D6B' }}>
+              <span className="text-white font-bold text-sm">📋 Correction de Claude</span>
+            </div>
+            <div className="p-4">
+              <div className="text-center mb-4">
+                <div className="text-3xl font-extrabold" style={{ color: '#B8881F' }}>
+                  {session.correction_json.note}/{session.correction_json.note_sur || 20}
+                </div>
+                <div className="text-xs uppercase tracking-wide" style={{ color: '#6E827B' }}>Note</div>
+              </div>
+              {session.correction_json.appreciation && (
+                <div className="rounded-xl p-3 mb-4 text-sm leading-relaxed" style={{ background: '#E3F0EC', color: '#1F5A4D' }}>
+                  {session.correction_json.appreciation}
+                </div>
+              )}
+              {(session.correction_json.commentaires || []).map((cm, i) => (
+                <div key={i} className="mb-3 pb-3" style={{ borderBottom: '1px solid #F0F1F3' }}>
+                  <p className="text-xs font-bold uppercase tracking-wide" style={{ color: '#2E7D6B' }}>Exercice {cm.exercice}</p>
+                  <p className="text-sm mt-0.5 leading-relaxed" style={{ color: '#1E2A26' }}>{cm.commentaire}</p>
+                </div>
+              ))}
+              {session.correction_json.corrige_le && (
+                <p className="text-xs text-center mt-2" style={{ color: '#9aa8a2' }}>
+                  Corrigé par Claude le {session.correction_json.corrige_le}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Encouragement */}
         {!modeParent && encouragement && (
           <div

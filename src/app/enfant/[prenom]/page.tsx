@@ -76,9 +76,19 @@ function LigneValide({ s, retourQuery }: { s: SessionAvecStats; retourQuery: str
         <p className="text-xs font-semibold" style={{ color: '#1E2A26' }}>{s.chapitre}</p>
         <p className="text-xs" style={{ color: '#6E827B' }}>{date}</p>
       </div>
-      {score && (
-        <span className="text-xs font-bold" style={{ color: '#1F5A4D' }}>✅ {score}</span>
-      )}
+      <div className="flex items-center gap-2 shrink-0">
+        {s.correction_json && (
+          <span
+            className="text-xs font-bold px-2 py-0.5 rounded-full"
+            style={{ background: '#FDF8EA', color: '#B8881F' }}
+          >
+            {s.correction_json.note}/{s.correction_json.note_sur || 20}
+          </span>
+        )}
+        {score && (
+          <span className="text-xs font-bold" style={{ color: '#1F5A4D' }}>✅ {score}</span>
+        )}
+      </div>
     </Link>
   )
 }
