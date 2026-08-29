@@ -102,6 +102,7 @@ export interface Session {
   created_at: string
   exercices_json?: ExercicesData
   correction_json?: Correction
+  corrige_visible?: boolean
 }
 
 export interface Reponse {

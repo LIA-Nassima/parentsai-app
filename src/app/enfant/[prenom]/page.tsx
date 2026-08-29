@@ -39,27 +39,40 @@ function normaliserMatiere(m: string): string {
 function CarteAFaire({ s, retourQuery }: { s: SessionAvecStats; retourQuery: string }) {
   const estFait = s.statut === 'fait'
   return (
-    <Link
-      href={`/session/${s.id}?${retourQuery}`}
-      className="flex items-center justify-between p-4 rounded-xl transition-opacity active:opacity-70"
+    <div
+      className="flex items-center justify-between p-4 rounded-xl"
       style={{
         background: estFait ? '#FDF8EA' : '#F7F8FA',
         border: `1.5px solid ${estFait ? '#E8B53A' : '#DCE8E4'}`,
       }}
     >
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold truncate" style={{ color: '#1E2A26' }}>{s.chapitre}</p>
-        <p className="text-xs mt-0.5" style={{ color: '#6E827B' }}>
-          {new Date(s.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
-        </p>
-      </div>
-      <span
-        className="text-xs px-3 py-1.5 rounded-xl font-bold ml-3 shrink-0"
-        style={{ background: estFait ? '#E8B53A' : '#2E7D6B', color: '#fff' }}
+      <Link
+        href={`/session/${s.id}?${retourQuery}`}
+        className="flex items-center justify-between gap-3 flex-1 min-w-0 transition-opacity active:opacity-70"
       >
-        {estFait ? 'À corriger' : 'Commencer →'}
-      </span>
-    </Link>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold truncate" style={{ color: '#1E2A26' }}>{s.chapitre}</p>
+          <p className="text-xs mt-0.5" style={{ color: '#6E827B' }}>
+            {new Date(s.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+          </p>
+        </div>
+        <span
+          className="text-xs px-3 py-1.5 rounded-xl font-bold shrink-0"
+          style={{ background: estFait ? '#E8B53A' : '#2E7D6B', color: '#fff' }}
+        >
+          {estFait ? 'À corriger' : 'Commencer →'}
+        </span>
+      </Link>
+      {s.corrige_visible && (
+        <Link
+          href={`/session/${s.id}?${retourQuery}&corrige=1`}
+          className="text-xs font-bold px-2.5 py-1.5 rounded-xl ml-2 shrink-0 transition-opacity hover:opacity-80"
+          style={{ background: '#E3F0EC', color: '#1F5A4D' }}
+        >
+          📗 Corrigé
+        </Link>
+      )}
+    </div>
   )
 }
 
@@ -67,16 +80,15 @@ function LigneValide({ s, retourQuery }: { s: SessionAvecStats; retourQuery: str
   const date  = new Date(s.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
   const score = s.qcm_total > 0 ? `${s.qcm_juste}/${s.qcm_total}` : null
   return (
-    <Link
-      href={`/session/${s.id}?${retourQuery}`}
-      className="flex items-center justify-between py-2.5 transition-opacity hover:opacity-70"
+    <div
+      className="flex items-center justify-between py-2.5"
       style={{ borderBottom: '1px solid #DCE8E4' }}
     >
-      <div>
+      <Link href={`/session/${s.id}?${retourQuery}`} className="flex-1 min-w-0 transition-opacity hover:opacity-70">
         <p className="text-xs font-semibold" style={{ color: '#1E2A26' }}>{s.chapitre}</p>
         <p className="text-xs" style={{ color: '#6E827B' }}>{date}</p>
-      </div>
-      <div className="flex items-center gap-2 shrink-0">
+      </Link>
+      <div className="flex items-center gap-2 shrink-0 ml-3">
         {s.correction_json && (
           <span
             className="text-xs font-bold px-2 py-0.5 rounded-full"
@@ -88,8 +100,17 @@ function LigneValide({ s, retourQuery }: { s: SessionAvecStats; retourQuery: str
         {score && (
           <span className="text-xs font-bold" style={{ color: '#1F5A4D' }}>✅ {score}</span>
         )}
+        {s.corrige_visible && (
+          <Link
+            href={`/session/${s.id}?${retourQuery}&corrige=1`}
+            className="text-xs font-bold px-2.5 py-1 rounded-full transition-opacity hover:opacity-80"
+            style={{ background: '#E3F0EC', color: '#1F5A4D' }}
+          >
+            📗 Corrigé
+          </Link>
+        )}
       </div>
-    </Link>
+    </div>
   )
 }
 

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Home, ArrowLeft, Printer } from 'lucide-react'
+import { Home, ArrowLeft, Printer, Send, Check } from 'lucide-react'
 import { LogoIAla } from '@/components/brand/LogoIAla'
 import { lundiDeLaDate } from '@/lib/semaine'
 import QCMExercice from '@/components/exercices/QCMExercice'
@@ -20,12 +20,25 @@ export default function SessionPage() {
   const sessionId    = params.id as string
   const modeParent   = searchParams.get('mode') === 'parent'
   const fromEnfant   = searchParams.get('from') === 'enfant'
+  // Lien « corrigé » que le parent envoie à l'enfant : affiche les corrections en lecture seule.
+  const corrigeMode  = searchParams.get('corrige') === '1'
 
   const [session,    setSession]    = useState<Session | null>(null)
   const [reponses,   setReponses]   = useState<Reponse[]>([])
   const [loading,    setLoading]    = useState(true)
   const [validating, setValidating] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [partageEnCours, setPartageEnCours] = useState(false)
+
+  // Le parent met le corrigé à disposition de l'enfant (ou le retire) : simple bascule en base.
+  async function basculerCorrige() {
+    if (!session) return
+    setPartageEnCours(true)
+    const nouveau = !session.corrige_visible
+    await supabase.from('sessions').update({ corrige_visible: nouveau }).eq('id', sessionId)
+    setSession({ ...session, corrige_visible: nouveau })
+    setPartageEnCours(false)
+  }
 
   function handleReponseQCM(exerciceNum: number, estCorrect: boolean) {
     setReponses(prev => {
@@ -136,7 +149,11 @@ export default function SessionPage() {
   const qcmJuste   = reponses.filter(r => r.type === 'qcm' && r.est_correct).length
   const qcmTotal   = reponses.filter(r => r.type === 'qcm').length
   const pbTermines = reponses.filter(r => r.type === 'probleme' && r.est_termine).length
-  const estBloque  = !modeParent && (session.statut === 'fait' || session.statut === 'validé')
+  // voirCorrige = on affiche les corrections. Parent : toujours. Enfant : seulement
+  // via ?corrige=1 ET si le parent a explicitement mis le corrigé à disposition.
+  const corrigeEnfant = corrigeMode && session.corrige_visible === true
+  const voirCorrige = modeParent || corrigeEnfant
+  const estBloque  = voirCorrige || (session.statut === 'fait' || session.statut === 'validé')
 
   const evalColor  = isDS ? '#B8881F' : '#27518f'
   const evalBg     = isDS ? '#FDF8EA' : '#E2ECFB'
@@ -193,6 +210,23 @@ export default function SessionPage() {
             <LogoIAla size={26} dark={false} />
 
             <div className="flex items-center gap-2">
+              {modeParent && (
+                <button
+                  onClick={basculerCorrige}
+                  disabled={partageEnCours}
+                  className="flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-full transition-opacity hover:opacity-90 disabled:opacity-50"
+                  style={
+                    session.corrige_visible
+                      ? { background: 'rgba(255,255,255,0.18)', color: '#fff', border: '1px solid rgba(255,255,255,0.35)' }
+                      : { background: '#fff', color: '#2E7D6B' }
+                  }
+                  title="Rend le corrigé visible dans l'espace de l'enfant"
+                >
+                  {session.corrige_visible
+                    ? <><Check size={14} /> Corrigé partagé</>
+                    : <><Send size={14} /> Mettre à dispo</>}
+                </button>
+              )}
               <button
                 onClick={() => window.print()}
                 className="flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-full transition-opacity hover:opacity-90"
@@ -349,7 +383,7 @@ export default function SessionPage() {
                 exercice={ex as ExerciceQCM}
                 sessionId={sessionId}
                 reponseInitiale={repExo?.reponse_index ?? null}
-                modeParent={modeParent}
+                modeParent={voirCorrige}
                 estBloque={estBloque}
                 onReponse={handleReponseQCM}
               />
@@ -361,14 +395,14 @@ export default function SessionPage() {
               sessionId={sessionId}
               estTermineInitial={repExo?.est_termine ?? false}
               photoUrlInitiale={repExo?.photo_url ?? null}
-              modeParent={modeParent}
+              modeParent={voirCorrige}
               estBloque={estBloque}
             />
           )
         })}
 
-        {/* Soumettre au parent — côté enfant */}
-        {!modeParent && session.statut === 'en_attente' && (
+        {/* Soumettre au parent — côté enfant (masqué en lecture de corrigé) */}
+        {!voirCorrige && session.statut === 'en_attente' && (
           <div className="session-no-print mt-8 text-center">
             <p className="text-xs mb-3" style={{ color: '#6E827B' }}>
               Quand tu as fini, envoie ton travail au parent.
