@@ -1,10 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { ChevronDown, LogOut, Settings, Plus } from 'lucide-react'
+import { ChevronDown, LogOut, Settings, Plus, BarChart2 } from 'lucide-react'
 import { LogoIAla } from '@/components/brand/LogoIAla'
 import { supabase } from '@/lib/supabase'
+
+const ADMIN_EMAIL = 'n_hamzaoui@yahoo.fr'
 
 interface FamilleOption {
   enfant: string
@@ -24,6 +26,13 @@ export function AppHeader({ prenom, classe, titrePage, familles = [] }: Props) {
   const router   = useRouter()
   const initiale = prenom.charAt(0).toUpperCase()
   const [ouvert, setOuvert] = useState(false)
+  const [estAdmin, setEstAdmin] = useState(false)
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setEstAdmin(user?.email?.toLowerCase() === ADMIN_EMAIL)
+    })
+  }, [])
 
   const autresEnfants = familles.filter(f => f.enfant.toLowerCase() !== prenom.toLowerCase())
   const aDropdown = true  // le menu s'ouvre toujours (changer d'enfant + ajouter + configuration)
@@ -76,6 +85,19 @@ export function AppHeader({ prenom, classe, titrePage, familles = [] }: Props) {
         >
           <Settings size={17} strokeWidth={2} />
         </button>
+
+        {/* Tableau de bord admin — visible uniquement pour l'administrateur */}
+        {estAdmin && (
+          <button
+            onClick={() => router.push('/admin')}
+            className="absolute top-3 left-16 w-9 h-9 flex items-center justify-center rounded-full transition-opacity hover:opacity-80"
+            style={{ background: 'rgba(255,255,255,0.15)', color: '#fff' }}
+            aria-label="Tableau de bord admin"
+            title="Tableau de bord admin"
+          >
+            <BarChart2 size={17} strokeWidth={2} />
+          </button>
+        )}
 
         {/* Déconnexion — coin haut droit */}
         <button
