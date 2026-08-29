@@ -25,12 +25,19 @@ export async function GET(req: NextRequest) {
   }
 
   // 3) Lecture globale (service_role contourne la RLS — réservé à l'admin authentifié)
-  const [{ data: familles }, { data: sessions }] = await Promise.all([
+  const [{ data: familles }, { data: sessions }, { data: usersData }] = await Promise.all([
     supabase.from('familles').select('id, enfant, classe, parent_id, created_at').order('created_at', { ascending: false }),
     supabase.from('sessions').select('famille_id, created_at'),
+    supabase.auth.admin.listUsers({ perPage: 1000 }),
   ])
   const fam  = familles || []
   const sess = sessions || []
+
+  // Map parent_id → email (comptes d'authentification)
+  const emailParId: Record<string, string> = {}
+  for (const u of usersData?.users || []) {
+    if (u.id) emailParId[u.id] = u.email || '—'
+  }
 
   // Comptes parents distincts / enfants
   const comptes   = new Set(fam.map(f => f.parent_id).filter(Boolean)).size
@@ -75,10 +82,24 @@ export async function GET(req: NextRequest) {
     if (age <= 30 * JOUR) actives30.add(s.famille_id)
   }
 
-  // Dernières inscriptions
-  const recentes = fam.slice(0, 12).map(f => ({
-    enfant: f.enfant, classe: f.classe, date: f.created_at,
-  }))
+  // Dernières inscriptions — regroupées par PARENT (email + nb d'enfants)
+  const parParent: Record<string, { email: string; nbEnfants: number; date: string }> = {}
+  for (const f of fam) {
+    const pid = f.parent_id || 'sans-compte'
+    if (!parParent[pid]) {
+      parParent[pid] = {
+        email: f.parent_id ? (emailParId[f.parent_id] || '—') : 'Sans compte',
+        nbEnfants: 0,
+        date: f.created_at,
+      }
+    }
+    parParent[pid].nbEnfants += 1
+    // On garde la date d'inscription la plus récente de la famille
+    if (f.created_at && f.created_at > parParent[pid].date) parParent[pid].date = f.created_at
+  }
+  const recentes = Object.values(parParent)
+    .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+    .slice(0, 12)
 
   return NextResponse.json({
     ok: true,

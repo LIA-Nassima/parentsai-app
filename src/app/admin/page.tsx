@@ -19,7 +19,7 @@ interface Stats {
   nouveaux30: number
   parClasse: Record<string, number>
   jours: { date: string; label: string; count: number }[]
-  recentes: { enfant: string; classe: string; date: string }[]
+  recentes: { email: string; nbEnfants: number; date: string }[]
 }
 
 const ORDRE_CLASSES = ['CM1', 'CM2', '6ème', '5ème', '4ème', '3ème', '2nde', '1ère', 'Terminale']
@@ -173,17 +173,19 @@ export default function AdminPage() {
           ) : (
             <div className="divide-y" style={{ borderColor: '#F0F1F3' }}>
               {stats.recentes.map((r, i) => (
-                <div key={i} className="flex items-center justify-between py-2.5">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ background: '#2E7D6B' }}>
-                      {r.enfant?.charAt(0).toUpperCase()}
+                <div key={i} className="flex items-center justify-between gap-3 py-2.5">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0" style={{ background: '#2E7D6B' }}>
+                      {r.email?.charAt(0).toUpperCase()}
                     </div>
-                    <div>
-                      <p className="text-sm font-semibold" style={{ color: '#1E2A26' }}>{r.enfant}</p>
-                      <p className="text-xs" style={{ color: '#6E827B' }}>{r.classe}</p>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold truncate" style={{ color: '#1E2A26' }}>{r.email}</p>
+                      <p className="text-xs" style={{ color: '#6E827B' }}>
+                        {r.nbEnfants} enfant{r.nbEnfants > 1 ? 's' : ''}
+                      </p>
                     </div>
                   </div>
-                  <span className="text-xs" style={{ color: '#9aa8a2' }}>
+                  <span className="text-xs shrink-0" style={{ color: '#9aa8a2' }}>
                     {r.date ? new Date(r.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }) : '—'}
                   </span>
                 </div>
