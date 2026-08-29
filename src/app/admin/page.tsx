@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Users, UserPlus, Baby, Activity, TrendingUp } from 'lucide-react'
+import { Users, UserPlus, Baby, Activity, TrendingUp, ArrowLeft } from 'lucide-react'
 import { LogoIAla } from '@/components/brand/LogoIAla'
 import { supabase } from '@/lib/supabase'
 
@@ -94,6 +94,12 @@ export default function AdminPage() {
       <header className="w-full" style={{ background: 'linear-gradient(160deg, #35907B 0%, #2E7D6B 45%, #1F5A4D 100%)' }}>
         <div className="max-w-4xl mx-auto px-5 pt-5 pb-6">
           <div className="flex items-center justify-between">
+            <button
+              onClick={() => router.push('/')}
+              className="flex items-center gap-1 text-white/85 text-sm font-medium hover:text-white transition-colors"
+            >
+              <ArrowLeft size={18} strokeWidth={2.2} /> Retour
+            </button>
             <LogoIAla size={26} dark={false} />
             <span className="text-xs font-semibold px-3 py-1 rounded-full" style={{ background: 'rgba(255,255,255,0.15)', color: '#fff' }}>
               Admin
