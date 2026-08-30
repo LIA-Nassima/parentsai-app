@@ -299,7 +299,7 @@ export default function SessionPage() {
               style={
                 session.corrige_visible
                   ? { background: 'rgba(255,255,255,0.2)', color: '#fff', border: '1px solid rgba(255,255,255,0.45)' }
-                  : { background: '#fff', color: isEval ? evalColor : '#2E7D6B' }
+                  : { background: '#E8B53A', color: '#7a5910' }
               }
             >
               {session.corrige_visible
