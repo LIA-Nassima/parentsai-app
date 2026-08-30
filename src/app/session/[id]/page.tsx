@@ -210,23 +210,6 @@ export default function SessionPage() {
             <LogoIAla size={26} dark={false} />
 
             <div className="flex items-center gap-2">
-              {modeParent && (
-                <button
-                  onClick={basculerCorrige}
-                  disabled={partageEnCours}
-                  className="flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-full transition-opacity hover:opacity-90 disabled:opacity-50"
-                  style={
-                    session.corrige_visible
-                      ? { background: 'rgba(255,255,255,0.18)', color: '#fff', border: '1px solid rgba(255,255,255,0.35)' }
-                      : { background: '#fff', color: '#2E7D6B' }
-                  }
-                  title="Rend le corrigé visible dans l'espace de l'enfant"
-                >
-                  {session.corrige_visible
-                    ? <><Check size={14} /> Corrigé partagé</>
-                    : <><Send size={14} /> Mettre à dispo</>}
-                </button>
-              )}
               <button
                 onClick={() => window.print()}
                 className="flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-full transition-opacity hover:opacity-90"
@@ -300,13 +283,29 @@ export default function SessionPage() {
           </p>
         </div>
 
-        {/* Bandeau mode parent */}
+        {/* Bandeau mode parent + action de partage du corrigé */}
         {modeParent && (
           <div
-            className="session-no-print p-3.5 rounded-xl mb-5 text-sm font-bold text-center"
+            className="session-no-print rounded-xl mb-5 p-3.5"
             style={{ background: isEval ? evalColor : '#2E7D6B', color: '#fff' }}
           >
-            📋 MODE CORRIGÉS — {session.enfant} · {session.matiere}
+            <p className="text-sm font-bold text-center">
+              📋 MODE CORRIGÉS — {session.enfant} · {session.matiere}
+            </p>
+            <button
+              onClick={basculerCorrige}
+              disabled={partageEnCours}
+              className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold transition-opacity hover:opacity-90 disabled:opacity-50"
+              style={
+                session.corrige_visible
+                  ? { background: 'rgba(255,255,255,0.2)', color: '#fff', border: '1px solid rgba(255,255,255,0.45)' }
+                  : { background: '#fff', color: isEval ? evalColor : '#2E7D6B' }
+              }
+            >
+              {session.corrige_visible
+                ? <><Check size={16} /> Corrigé partagé — appuyer pour retirer</>
+                : <><Send size={16} /> Mettre le corrigé à dispo de {session.enfant}</>}
+            </button>
           </div>
         )}
 
