@@ -52,9 +52,13 @@ export default function Parametres() {
     setBusy(true); setMsg(null)
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { setMsg('Session expirée — reconnecte-toi.'); setBusy(false); return }
+    // Conserve le jeton QR si ce parent a déjà cet enfant (sinon on en génère un)
+    const { data: existant } = await supabase
+      .from('familles').select('access_token').eq('enfant', norm).maybeSingle()
+    const access_token = existant?.access_token || crypto.randomUUID()
     const { error } = await supabase.from('familles').upsert(
-      { enfant: norm, classe: nouvClasse, access_token: crypto.randomUUID(), parent_id: user.id },
-      { onConflict: 'enfant' },
+      { enfant: norm, classe: nouvClasse, access_token, parent_id: user.id },
+      { onConflict: 'parent_id,enfant' },
     )
     if (error) setMsg(`Impossible d'ajouter ${norm} : ${error.message}`)
     else {

@@ -73,7 +73,7 @@ export default function Onboarding() {
 
       const { error: errUpsert } = await supabase.from('familles').upsert(
         { enfant: enfantNorm, classe, access_token, parent_id: user.id },
-        { onConflict: 'enfant' },
+        { onConflict: 'parent_id,enfant' },
       )
       if (errUpsert) throw new Error(errUpsert.message)
       setEnfant(enfantNorm)
