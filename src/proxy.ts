@@ -3,7 +3,10 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 const PROTECTED = ['/espace', '/parent', '/onboarding', '/parametres']
-const AUTH_PAGES = ['/login', '/register', '/forgot-password', '/update-password']
+// NB : /update-password est volontairement ABSENT — la réinitialisation connecte
+// l'utilisateur (session de récupération), il doit donc pouvoir y accéder connecté
+// pour définir son nouveau mot de passe (sinon le middleware l'éjecte vers /espace).
+const AUTH_PAGES = ['/login', '/register', '/forgot-password']
 
 export async function proxy(request: NextRequest) {
   const response = NextResponse.next({
