@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { LogoIAla } from '@/components/brand/LogoIAla'
 import { supabase } from '@/lib/supabase'
 
@@ -11,6 +12,17 @@ export default function UpdatePassword() {
   const [confirm, setConfirm]   = useState('')
   const [loading, setLoading]   = useState(false)
   const [erreur, setErreur]     = useState('')
+  // null = on vérifie encore le lien ; true = session prête ; false = lien invalide/expiré
+  const [sessionPrete, setSessionPrete] = useState<boolean | null>(null)
+
+  useEffect(() => {
+    // La session de récupération est posée par /auth/confirm (cookie) ou par le lien.
+    supabase.auth.getSession().then(({ data }) => setSessionPrete(!!data.session))
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
+      if (session) setSessionPrete(true)
+    })
+    return () => subscription.unsubscribe()
+  }, [])
 
   async function mettrAJour() {
     if (password.length < 6)   { setErreur('6 caractères minimum'); return }
@@ -34,6 +46,30 @@ export default function UpdatePassword() {
       </div>
 
       <div className="flex-1 px-5 pt-6 max-w-sm mx-auto w-full">
+        {sessionPrete === null && (
+          <div className="rounded-2xl p-6 text-center" style={{ background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+            <p className="text-sm" style={{ color: '#6E827B' }}>Vérification du lien…</p>
+          </div>
+        )}
+
+        {sessionPrete === false && (
+          <div className="rounded-2xl p-6 text-center" style={{ background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+            <div className="text-4xl mb-3">⏳</div>
+            <p className="font-bold mb-2" style={{ color: '#1E2A26' }}>Lien expiré ou déjà utilisé</p>
+            <p className="text-sm mb-5" style={{ color: '#6E827B' }}>
+              Les liens de réinitialisation sont valables un court instant et à usage unique. Demande-en un nouveau.
+            </p>
+            <Link
+              href="/forgot-password"
+              className="inline-block px-5 py-2.5 rounded-xl text-sm font-bold text-white"
+              style={{ background: '#2E7D6B' }}
+            >
+              Recevoir un nouveau lien
+            </Link>
+          </div>
+        )}
+
+        {sessionPrete === true && (
         <div className="rounded-2xl p-6 space-y-4" style={{ background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
           <div>
             <label className="block text-sm font-semibold mb-1.5" style={{ color: '#1E2A26' }}>Nouveau mot de passe</label>
@@ -69,6 +105,7 @@ export default function UpdatePassword() {
             {loading ? 'Mise à jour...' : 'Enregistrer →'}
           </button>
         </div>
+        )}
       </div>
     </div>
   )
