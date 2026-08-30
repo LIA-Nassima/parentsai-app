@@ -26,6 +26,10 @@ export default function Parametres() {
   const [ajout, setAjout]         = useState(false)
   const [nouvPrenom, setNouvPrenom] = useState('')
   const [nouvClasse, setNouvClasse] = useState('6ème')
+  const [nouvMdp, setNouvMdp]       = useState('')
+  const [confirmMdp, setConfirmMdp] = useState('')
+  const [mdpMsg, setMdpMsg]         = useState<string | null>(null)
+  const [mdpBusy, setMdpBusy]       = useState(false)
 
   async function charger() {
     setLoading(true)
@@ -66,6 +70,16 @@ export default function Parametres() {
       setNouvPrenom(''); setAjout(false)
     }
     await charger(); setBusy(false)
+  }
+
+  async function changerMotDePasse() {
+    if (nouvMdp.length < 6) { setMdpMsg('6 caractères minimum'); return }
+    if (nouvMdp !== confirmMdp) { setMdpMsg('Les mots de passe ne correspondent pas'); return }
+    setMdpBusy(true); setMdpMsg(null)
+    const { error } = await supabase.auth.updateUser({ password: nouvMdp })
+    if (error) setMdpMsg(`Erreur : ${error.message}`)
+    else { setMdpMsg('✅ Mot de passe mis à jour. Note-le bien !'); setNouvMdp(''); setConfirmMdp('') }
+    setMdpBusy(false)
   }
 
   function copierLien(f: Famille) {
@@ -199,6 +213,43 @@ export default function Parametres() {
             )}
           </div>
         )}
+
+        {/* Changer mon mot de passe */}
+        <div className="rounded-2xl p-4 mt-6" style={{ background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+          <p className="font-bold text-sm mb-1 flex items-center gap-1.5" style={{ color: '#1E2A26' }}>
+            🔑 Mon mot de passe
+          </p>
+          <p className="text-xs mb-3" style={{ color: '#6E827B' }}>
+            Choisis un mot de passe que tu retiens pour te reconnecter.
+          </p>
+          <div className="space-y-3">
+            <input
+              type="password" value={nouvMdp} onChange={e => setNouvMdp(e.target.value)}
+              placeholder="Nouveau mot de passe (6 caractères min.)"
+              className="w-full px-4 py-3 rounded-xl text-sm outline-none"
+              style={{ border: '1.5px solid #DCE8E4', background: '#F7F8FA', color: '#1E2A26' }}
+            />
+            <input
+              type="password" value={confirmMdp} onChange={e => setConfirmMdp(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && changerMotDePasse()}
+              placeholder="Confirmer"
+              className="w-full px-4 py-3 rounded-xl text-sm outline-none"
+              style={{ border: '1.5px solid #DCE8E4', background: '#F7F8FA', color: '#1E2A26' }}
+            />
+            {mdpMsg && (
+              <p className="text-sm font-medium" style={{ color: mdpMsg.startsWith('✅') ? '#1F5A4D' : '#D9483B' }}>
+                {mdpMsg}
+              </p>
+            )}
+            <button
+              onClick={changerMotDePasse} disabled={mdpBusy || !nouvMdp}
+              className="w-full py-3 rounded-xl font-bold text-white text-sm disabled:opacity-50"
+              style={{ background: '#2E7D6B' }}
+            >
+              {mdpBusy ? 'Mise à jour...' : 'Enregistrer mon mot de passe'}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   )
