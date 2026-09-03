@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { ChevronDown, ChevronUp, ArrowLeft } from 'lucide-react'
+import { ChevronDown, ChevronUp, ArrowLeft, BookOpen, FileText, LineChart } from 'lucide-react'
 import { LogoIAla } from '@/components/brand/LogoIAla'
 import { grouperParType, useSousOuvertes, SousCategorieAccordeon } from '@/components/ui/SousCategorie'
 import { SelecteurSemaine } from '@/components/ui/SelecteurSemaine'
@@ -136,6 +136,7 @@ export default function EspaceEnfant() {
   const [familleId, setFamilleId]       = useState<string | null>(null)
   const [tokenVerifie, setTokenVerifie] = useState<boolean | null>(null)
   const [estParent, setEstParent]       = useState(false)
+  const [vue, setVue]                   = useState<'revisions' | 'fiches' | 'progres'>('revisions')
 
   // Un parent connecté qui consulte l'aperçu → on lui propose un retour vers son espace.
   // L'enfant qui arrive par QR n'a pas de session Supabase : il ne verra rien.
@@ -205,8 +206,14 @@ export default function EspaceEnfant() {
 
   const initiale = prenom.charAt(0).toUpperCase()
 
+  const NAV: { id: 'revisions' | 'fiches' | 'progres'; label: string; Icon: React.ComponentType<{ size?: number }> }[] = [
+    { id: 'revisions', label: 'Révisions', Icon: BookOpen },
+    { id: 'fiches',    label: 'Fiches',    Icon: FileText },
+    { id: 'progres',   label: 'Progrès',   Icon: LineChart },
+  ]
+
   return (
-    <div className="min-h-screen pb-8" style={{ background: '#F7F8FA' }}>
+    <div className="min-h-screen pb-24" style={{ background: '#F7F8FA' }}>
 
       {/* ── En-tête vert ── */}
       <header className="sticky top-0 z-50 w-full" style={{ background: '#2E7D6B' }}>
@@ -247,10 +254,35 @@ export default function EspaceEnfant() {
         </div>
       </header>
 
-      {/* ── Contenu : révisions semaine par semaine ── */}
+      {/* ── Contenu ── */}
       <div className="max-w-app mx-auto px-4 py-5">
-        <TabRevisions prenom={prenom} classe={classe} familleId={familleId} />
+        {vue === 'revisions' && <TabRevisions prenom={prenom} classe={classe} familleId={familleId} />}
+        {vue === 'fiches'    && <FichesEnfant familleId={familleId} />}
+        {vue === 'progres'   && <ProgresEnfant prenom={prenom} familleId={familleId} />}
       </div>
+
+      {/* ── Navigation du bas ── */}
+      <nav
+        className="fixed bottom-0 left-0 right-0 z-50"
+        style={{ background: '#fff', borderTop: '1px solid #E1E8E5', boxShadow: '0 -2px 12px rgba(0,0,0,0.05)' }}
+      >
+        <div className="max-w-app mx-auto flex">
+          {NAV.map(n => {
+            const actif = vue === n.id
+            return (
+              <button
+                key={n.id}
+                onClick={() => setVue(n.id)}
+                className="flex-1 flex flex-col items-center gap-0.5 py-2.5 transition-colors"
+                style={{ color: actif ? '#2E7D6B' : '#9aa8a2' }}
+              >
+                <n.Icon size={20} />
+                <span className="text-xs font-semibold">{n.label}</span>
+              </button>
+            )
+          })}
+        </div>
+      </nav>
     </div>
   )
 }
@@ -603,6 +635,198 @@ function VueValide({
           })}
         </div>
       )}
+    </div>
+  )
+}
+
+// ─── Vue « Fiches » (côté enfant) ──────────────────────────────────────────────
+
+function FichesEnfant({ familleId }: { familleId: string | null }) {
+  const [fiches, setFiches]   = useState<Session[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function charger() {
+      if (!familleId) return
+      setLoading(true)
+      const { data } = await supabase
+        .from('sessions').select('*')
+        .eq('famille_id', familleId)
+        .eq('type_evaluation', 'fiche')
+        .order('created_at', { ascending: false })
+      setFiches(((data || []) as Session[]).map(s => ({ ...s, matiere: normaliserMatiere(s.matiere) })))
+      setLoading(false)
+    }
+    charger()
+  }, [familleId])
+
+  if (loading) return (
+    <div className="text-center py-16"><p className="text-sm" style={{ color: '#6E827B' }}>Chargement...</p></div>
+  )
+
+  if (fiches.length === 0) return (
+    <div className="text-center py-16">
+      <div className="text-5xl mb-4">📄</div>
+      <p className="font-bold" style={{ color: '#1E2A26' }}>Pas encore de fiche.</p>
+      <p className="text-sm mt-2" style={{ color: '#6E827B' }}>Demande à tes parents une fiche de révision !</p>
+    </div>
+  )
+
+  const parMatiere = fiches.reduce<Record<string, Session[]>>((acc, f) => {
+    if (!acc[f.matiere]) acc[f.matiere] = []
+    acc[f.matiere].push(f)
+    return acc
+  }, {})
+
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-center" style={{ color: '#6E827B' }}>
+        Tes fiches de révision — à lire avant un contrôle 📚
+      </p>
+      {Object.entries(parMatiere).map(([matiere, liste]) => {
+        const icone   = ICONES_MATIERE[matiere] || '📚'
+        const couleur = COULEURS_MATIERE[matiere] || '#2E7D6B'
+        return (
+          <div key={matiere} className="rounded-2xl overflow-hidden" style={{ background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+            <div className="px-4 py-3 flex items-center gap-2" style={{ borderBottom: '1px solid #F0F1F3' }}>
+              <div className="w-1 h-6 rounded-full" style={{ background: couleur }} />
+              <span className="font-bold text-sm uppercase tracking-wide" style={{ color: '#1E2A26' }}>{icone} {matiere}</span>
+            </div>
+            <div className="p-2">
+              {liste.map(f => (
+                <Link
+                  key={f.id}
+                  href={`/session/${f.id}?from=enfant`}
+                  className="flex items-center justify-between p-3 rounded-xl transition-opacity active:opacity-70"
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold truncate" style={{ color: '#1E2A26' }}>{f.chapitre}</p>
+                    <p className="text-xs mt-0.5" style={{ color: '#6E827B' }}>
+                      {new Date(f.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                    </p>
+                  </div>
+                  <span className="text-xs px-3 py-1.5 rounded-xl font-bold shrink-0" style={{ background: '#E3F0EC', color: '#1F5A4D' }}>
+                    Ouvrir →
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+// ─── Vue « Progrès » (côté enfant) ─────────────────────────────────────────────
+
+function ProgresEnfant({ prenom, familleId }: { prenom: string; familleId: string | null }) {
+  const [sessions, setSessions] = useState<SessionAvecStats[]>([])
+  const [loading, setLoading]   = useState(true)
+
+  useEffect(() => {
+    async function charger() {
+      if (!familleId) return
+      setLoading(true)
+      const { data: sess } = await supabase
+        .from('sessions').select('*')
+        .eq('famille_id', familleId)
+      const liste = ((sess || []) as Session[]).filter(s => s.type_evaluation !== 'fiche')
+      const ids = liste.map(s => s.id)
+      let reps: Reponse[] = []
+      if (ids.length) {
+        const { data } = await supabase.from('reponses').select('*').in('session_id', ids)
+        reps = (data || []) as Reponse[]
+      }
+      const avec: SessionAvecStats[] = liste.map(s => {
+        const r = reps.filter(x => x.session_id === s.id)
+        return {
+          ...s,
+          matiere: normaliserMatiere(s.matiere),
+          qcm_total: r.filter(x => x.type === 'qcm').length,
+          qcm_juste: r.filter(x => x.type === 'qcm' && x.est_correct).length,
+          pb_termine: r.filter(x => x.type === 'probleme' && x.est_termine).length,
+        }
+      })
+      setSessions(avec)
+      setLoading(false)
+    }
+    charger()
+  }, [familleId])
+
+  if (loading) return (
+    <div className="text-center py-16"><p className="text-sm" style={{ color: '#6E827B' }}>Chargement...</p></div>
+  )
+
+  const validees   = sessions.filter(s => s.statut === 'validé')
+  const totalQcm   = sessions.reduce((a, s) => a + s.qcm_total, 0)
+  const totalJuste = sessions.reduce((a, s) => a + s.qcm_juste, 0)
+  const pct        = totalQcm > 0 ? Math.round(totalJuste / totalQcm * 100) : null
+
+  if (sessions.length === 0) return (
+    <div className="text-center py-16">
+      <div className="text-5xl mb-4">🌱</div>
+      <p className="font-bold" style={{ color: '#1E2A26' }}>Tes progrès arrivent bientôt !</p>
+      <p className="text-sm mt-2" style={{ color: '#6E827B' }}>Fais ta première session pour voir tes résultats ici.</p>
+    </div>
+  )
+
+  const parMatiere = sessions.reduce<Record<string, { total: number; juste: number; sessions: number }>>((acc, s) => {
+    if (!acc[s.matiere]) acc[s.matiere] = { total: 0, juste: 0, sessions: 0 }
+    acc[s.matiere].total += s.qcm_total
+    acc[s.matiere].juste += s.qcm_juste
+    acc[s.matiere].sessions += 1
+    return acc
+  }, {})
+
+  // Petit mot d'encouragement selon le score
+  const mot = pct === null ? 'Continue comme ça !' : pct >= 80 ? 'Excellent, continue ! 🌟' : pct >= 50 ? 'Bien joué, tu progresses ! 💪' : 'Chaque essai te fait progresser ! 🚀'
+
+  return (
+    <div className="space-y-4">
+      {/* Bandeau encouragement */}
+      <div className="rounded-2xl p-5 text-center" style={{ background: 'linear-gradient(160deg, #35907B 0%, #1F5A4D 100%)' }}>
+        <p className="text-white/80 text-xs uppercase tracking-widest mb-1">Tes progrès</p>
+        <p className="text-white font-extrabold text-lg">Bravo {prenom} ! 🎉</p>
+        <p className="text-white/85 text-sm mt-1">{mot}</p>
+      </div>
+
+      {/* Stats globales */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="rounded-2xl p-4 text-center" style={{ background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+          <div className="text-3xl font-extrabold" style={{ color: '#1F5A4D' }}>{validees.length}</div>
+          <div className="text-xs uppercase tracking-wide mt-0.5" style={{ color: '#6E827B' }}>Sessions validées</div>
+        </div>
+        <div className="rounded-2xl p-4 text-center" style={{ background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+          <div className="text-3xl font-extrabold" style={{ color: '#B8881F' }}>{pct !== null ? `${pct}%` : '—'}</div>
+          <div className="text-xs uppercase tracking-wide mt-0.5" style={{ color: '#6E827B' }}>Réussite QCM</div>
+        </div>
+      </div>
+
+      {/* Par matière */}
+      <div className="rounded-2xl p-4" style={{ background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+        <p className="font-bold text-sm mb-3" style={{ color: '#1E2A26' }}>Par matière</p>
+        <div className="space-y-3">
+          {Object.entries(parMatiere).map(([matiere, m]) => {
+            const icone   = ICONES_MATIERE[matiere] || '📚'
+            const couleur = COULEURS_MATIERE[matiere] || '#2E7D6B'
+            const p       = m.total > 0 ? Math.round(m.juste / m.total * 100) : null
+            return (
+              <div key={matiere}>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm font-semibold" style={{ color: '#1E2A26' }}>{icone} {matiere}</span>
+                  <span className="text-xs font-bold" style={{ color: '#1F5A4D' }}>
+                    {p !== null ? `${p}%` : `${m.sessions} session${m.sessions > 1 ? 's' : ''}`}
+                  </span>
+                </div>
+                <div className="h-2.5 rounded-full overflow-hidden" style={{ background: '#EDF1EF' }}>
+                  <div className="h-full rounded-full transition-all" style={{ width: `${p ?? 0}%`, background: couleur, minWidth: p ? 6 : 0 }} />
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
     </div>
   )
 }
