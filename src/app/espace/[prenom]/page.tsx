@@ -720,11 +720,12 @@ function TabProfs({
         {/* Étape 1 : le connecteur */}
         <div className="mb-4">
           <p className="text-sm font-bold mb-1" style={{ color: '#1F5A4D' }}>
-            1. Branchez le connecteur IAla <span className="font-normal">(une seule fois, sur ordinateur)</span>
+            1. Branchez le connecteur IAla <span className="font-normal">(une seule fois)</span>
           </p>
           <p className="text-xs mb-2 leading-relaxed" style={{ color: '#1F5A4D' }}>
-            ⚠️ <strong>Depuis un ordinateur</strong> (l'app mobile ne permet pas d'ajouter un connecteur).
-            Dans <strong>claude.ai</strong> → <strong>Personnaliser</strong> → <strong>Connecteurs</strong> → <strong>Ajouter</strong>,
+            📱 Depuis le <strong>téléphone</strong> (ou l'ordinateur, au choix).
+            Dans l'app <strong>Claude</strong> → <strong>Paramètres</strong> → <strong>Connecteurs</strong> → <strong>Ajouter</strong>
+            {' '}(ou sur <strong>claude.ai</strong> → <strong>Personnaliser</strong> → <strong>Connecteurs</strong>),
             collez cette adresse et nommez-le <strong>IAla</strong> :
           </p>
           <div className="flex items-center gap-2 rounded-xl px-3 py-2" style={{ background: '#fff', border: '1px solid #C2DED6' }}>
@@ -740,6 +741,16 @@ function TabProfs({
               {copie === '__mcp' ? <><Check size={13} /> Copié</> : <><Copy size={13} /> Copier</>}
             </button>
           </div>
+          <p className="text-xs mt-2 leading-relaxed rounded-lg p-2" style={{ color: '#1F5A4D', background: '#FDF8EA', border: '1px solid #EAD8A0' }}>
+            ✅ <strong>À ne pas rater :</strong> ouvrez ensuite le connecteur IAla → <strong>« Tous les outils »</strong> → <strong>« Toujours autoriser »</strong> — sinon Claude redemande la permission à chaque exercice.
+          </p>
+          <a
+            href="/guide-connecteur"
+            className="mt-2 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-opacity hover:opacity-90"
+            style={{ background: '#fff', color: '#2E7D6B', border: '1.5px solid #2E7D6B' }}
+          >
+            📖 Voir le guide en images
+          </a>
         </div>
 
         {/* Étape 2 : les profs */}
@@ -751,8 +762,7 @@ function TabProfs({
             <li>③ Collez les instructions dans « Instructions du projet »</li>
           </ol>
           <p className="text-xs mt-2 leading-relaxed" style={{ color: '#2E7D6B' }}>
-            💡 Une fois le connecteur ajouté sur ordinateur, la création des profs et l'usage au quotidien
-            marchent aussi depuis l'<strong>app Claude sur téléphone</strong>.
+            💡 Tout se fait depuis le <strong>téléphone</strong> : le connecteur, la création des profs et l'usage au quotidien.
           </p>
         </div>
 

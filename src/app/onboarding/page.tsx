@@ -193,8 +193,8 @@ export default function Onboarding() {
             <div className="text-3xl mb-3">🔗</div>
             <p className="font-bold text-base mb-1" style={{ color: '#1E2A26' }}>Connecter Claude</p>
             <p className="text-sm mb-5" style={{ color: '#6E827B' }}>
-              Ajoutez le connecteur IAla dans Claude — <strong>depuis un ordinateur</strong>, une seule fois.
-              (L'app mobile ne permet pas d'ajouter un connecteur.)
+              Ajoutez le connecteur IAla dans Claude, une seule fois. Ça se fait
+              <strong> directement depuis le téléphone</strong> (ou l'ordinateur).
             </p>
 
             <div className="rounded-xl p-4 mb-5" style={{ background: '#F7F8FA', border: '1.5px solid #DCE8E4' }}>
@@ -214,17 +214,26 @@ export default function Onboarding() {
               </div>
             </div>
 
-            <div className="rounded-xl p-4 mb-5 text-sm" style={{ background: '#E3F0EC' }}>
-              <p className="font-bold mb-2" style={{ color: '#1F5A4D' }}>Comment faire (sur ordinateur) :</p>
+            <div className="rounded-xl p-4 mb-4 text-sm" style={{ background: '#E3F0EC' }}>
+              <p className="font-bold mb-2" style={{ color: '#1F5A4D' }}>En bref (tout se fait sur le téléphone) :</p>
               <ol className="space-y-1 text-xs" style={{ color: '#1F5A4D' }}>
-                <li>1. Sur <strong>ordinateur</strong>, ouvrez <strong>claude.ai</strong></li>
-                <li>2. <strong>Personnaliser</strong> → <strong>Connecteurs</strong> → <strong>Ajouter</strong></li>
-                <li>3. Collez l'URL ci-dessus et nommez-le <strong>IAla</strong></li>
+                <li>1. App <strong>Claude</strong> → <strong>Paramètres</strong> → <strong>Connecteurs</strong> → <strong>+</strong></li>
+                <li>2. <strong>« Ajouter un connecteur personnalisé »</strong></li>
+                <li>3. Nom <strong>IAla</strong> + collez l'URL ci-dessus, puis validez</li>
+                <li>4. Ouvrez IAla → <strong>« Tous les outils »</strong> → <strong>« Toujours autoriser »</strong></li>
               </ol>
-              <p className="text-xs mt-2" style={{ color: '#2E7D6B' }}>
-                💡 Ensuite, la configuration des profs marche aussi depuis l'app Claude sur téléphone.
+              <p className="text-xs mt-2 rounded-lg p-2" style={{ color: '#1F5A4D', background: '#FDF8EA', border: '1px solid #EAD8A0' }}>
+                ✅ <strong>À ne pas rater :</strong> l'étape 4 (« Toujours autoriser ») — sinon Claude redemande la permission à chaque exercice.
               </p>
             </div>
+
+            <a
+              href="/guide-connecteur"
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm mb-3 transition-opacity hover:opacity-90"
+              style={{ background: '#fff', color: '#2E7D6B', border: '1.5px solid #2E7D6B' }}
+            >
+              📖 Voir le guide en images (recommandé)
+            </a>
 
             <button
               onClick={() => setEtape(3)}
