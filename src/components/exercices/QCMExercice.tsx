@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { ExerciceQCM } from '@/types'
 import { FigureSVG, extractSvg } from '@/components/ui/FigureSVG'
+import { TexteMath } from '@/components/ui/TexteMath'
 import { supabase } from '@/lib/supabase'
 
 interface Props {
@@ -73,7 +74,7 @@ export default function QCMExercice({ exercice, sessionId, reponseInitiale, mode
         return (
           <>
             <p className="mb-5" style={{ color: ENCRE, fontSize: '1.0625rem', fontWeight: 500, lineHeight: 1.6 }}>
-              {texte}
+              <TexteMath>{texte}</TexteMath>
             </p>
             <FigureSVG svg={exercice.figure || svg} />
           </>
@@ -102,7 +103,7 @@ export default function QCMExercice({ exercice, sessionId, reponseInitiale, mode
           return (
             <button key={idx} style={style} onClick={() => choisir(idx)}>
               <span style={{ fontWeight: 700, marginRight: '10px' }}>{LETTRES[idx]})</span>
-              {rep}
+              <TexteMath>{rep}</TexteMath>
             </button>
           )
         })}
@@ -121,10 +122,10 @@ export default function QCMExercice({ exercice, sessionId, reponseInitiale, mode
         <div className="mt-4 p-4 rounded-xl text-sm leading-relaxed"
           style={{ borderLeft: `4px solid ${OR}`, border: '1px solid #EAD8A0', background: '#FAF1D0', color: ENCRE }}>
           <strong style={{ color: '#7a5910' }}>Correction : </strong>
-          {exercice.correction}
+          <TexteMath>{exercice.correction}</TexteMath>
           {exercice.piege && (
             <p className="mt-2 italic font-medium" style={{ color: '#7a5910' }}>
-              💡 {exercice.piege}
+              💡 <TexteMath>{exercice.piege}</TexteMath>
             </p>
           )}
         </div>
@@ -134,7 +135,7 @@ export default function QCMExercice({ exercice, sessionId, reponseInitiale, mode
       {(revealed || modeParent) && exercice.metacog && (
         <div className="mt-3 p-3 rounded-xl text-sm italic"
           style={{ background: '#eef1f5', color: '#2e3b4e', borderLeft: '3px solid #2e3b4e' }}>
-          🤔 {exercice.metacog}
+          🤔 <TexteMath>{exercice.metacog}</TexteMath>
         </div>
       )}
     </div>

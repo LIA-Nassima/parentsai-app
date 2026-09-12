@@ -3,6 +3,7 @@
 import { ArrowLeft, Printer, BookOpen, BookA, CalendarDays, Users, ListChecks, Sparkles, AlertTriangle, Lightbulb, Brain } from 'lucide-react'
 import { LogoIAla } from '@/components/brand/LogoIAla'
 import { FigureSVG, extractSvg } from '@/components/ui/FigureSVG'
+import { TexteMath } from '@/components/ui/TexteMath'
 import { Session, FicheData, FicheBloc, FicheItem } from '@/types'
 
 // Couleur + icône par type de bloc (types ouverts : fallback = "default")
@@ -41,7 +42,7 @@ function ContenuStructure({ bloc }: { bloc: FicheBloc }) {
             <p className="text-sm font-bold mb-1" style={{ color: accent }}>{p.titre}</p>
             <ul className="list-disc pl-5 space-y-1">
               {(p.points ?? []).map((pt, j) => (
-                <li key={j} className="text-sm leading-relaxed" style={{ color: '#1E2A26' }}>{pt}</li>
+                <li key={j} className="text-sm leading-relaxed" style={{ color: '#1E2A26' }}><TexteMath>{pt}</TexteMath></li>
               ))}
             </ul>
           </div>
@@ -55,13 +56,13 @@ function ContenuStructure({ bloc }: { bloc: FicheBloc }) {
       <div className="flex flex-col gap-1.5">
         {bloc.items.map((it, i) => {
           const o = asObjet(it)
-          if (!o) return <div key={i} className="text-sm leading-relaxed" style={{ color: '#1E2A26' }}>• {it as string}</div>
+          if (!o) return <div key={i} className="text-sm leading-relaxed" style={{ color: '#1E2A26' }}>• <TexteMath>{it as string}</TexteMath></div>
           const gauche = o.date || o.terme || o.nom || o.formule
           const droite = o.evenement || o.definition || o.role || o.usage || o.enonce
           return (
             <div key={i} className="text-sm leading-snug">
-              <span className="font-bold" style={{ color: '#1E2A26' }}>{gauche}</span>
-              {droite && <span style={{ color: '#6E827B' }}> — {droite}</span>}
+              <span className="font-bold" style={{ color: '#1E2A26' }}><TexteMath>{gauche}</TexteMath></span>
+              {droite && <span style={{ color: '#6E827B' }}> — <TexteMath>{droite}</TexteMath></span>}
             </div>
           )
         })}
@@ -78,7 +79,7 @@ function ContenuStructure({ bloc }: { bloc: FicheBloc }) {
     )
   }
 
-  return <p className="text-sm leading-relaxed" style={{ color: '#1E2A26', whiteSpace: 'pre-line' }}>{bloc.texte || bloc.description}</p>
+  return <p className="text-sm leading-relaxed" style={{ color: '#1E2A26', whiteSpace: 'pre-line' }}><TexteMath>{bloc.texte || bloc.description}</TexteMath></p>
 }
 
 export default function FicheView({
@@ -169,7 +170,7 @@ export default function FicheView({
                   return (
                     <>
                       {bloc.contenu
-                        ? <p className="text-sm leading-relaxed" style={{ color: '#1E2A26', whiteSpace: 'pre-line' }}>{texte}</p>
+                        ? <p className="text-sm leading-relaxed" style={{ color: '#1E2A26', whiteSpace: 'pre-line' }}><TexteMath>{texte}</TexteMath></p>
                         : <ContenuStructure bloc={bloc} />
                       }
                       <FigureSVG svg={bloc.figure || svg} />
@@ -180,14 +181,14 @@ export default function FicheView({
                 {/* Encadré piège */}
                 {bloc.piege && (
                   <div className="mt-3 rounded-xl p-3" style={{ background: '#FBE6E3', border: '1px solid #F2C9C3' }}>
-                    <p className="text-sm leading-relaxed" style={{ color: '#A32D2D', whiteSpace: 'pre-line' }}>{bloc.piege}</p>
+                    <p className="text-sm leading-relaxed" style={{ color: '#A32D2D', whiteSpace: 'pre-line' }}><TexteMath>{bloc.piege}</TexteMath></p>
                   </div>
                 )}
 
                 {/* Conseil méthode */}
                 {bloc.metacog && (
                   <div className="mt-3 rounded-xl p-3" style={{ background: '#E3F0EC', border: '1px solid #C2DED6' }}>
-                    <p className="text-sm leading-relaxed" style={{ color: '#1F5A4D', whiteSpace: 'pre-line' }}>{bloc.metacog}</p>
+                    <p className="text-sm leading-relaxed" style={{ color: '#1F5A4D', whiteSpace: 'pre-line' }}><TexteMath>{bloc.metacog}</TexteMath></p>
                   </div>
                 )}
               </div>

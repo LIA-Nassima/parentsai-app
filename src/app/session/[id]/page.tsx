@@ -8,6 +8,7 @@ import { LogoIAla } from '@/components/brand/LogoIAla'
 import { lundiDeLaDate } from '@/lib/semaine'
 import QCMExercice from '@/components/exercices/QCMExercice'
 import ProblemeExercice from '@/components/exercices/ProblemeExercice'
+import { TexteMath } from '@/components/ui/TexteMath'
 import FicheView from '@/components/fiche/FicheView'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { supabase } from '@/lib/supabase'
@@ -345,13 +346,13 @@ export default function SessionPage() {
               </div>
               {session.correction_json.appreciation && (
                 <div className="rounded-xl p-3 mb-4 text-sm leading-relaxed" style={{ background: '#E3F0EC', color: '#1F5A4D' }}>
-                  {session.correction_json.appreciation}
+                  <TexteMath>{session.correction_json.appreciation}</TexteMath>
                 </div>
               )}
               {(session.correction_json.commentaires || []).map((cm, i) => (
                 <div key={i} className="mb-3 pb-3" style={{ borderBottom: '1px solid #F0F1F3' }}>
                   <p className="text-xs font-bold uppercase tracking-wide" style={{ color: '#2E7D6B' }}>Exercice {cm.exercice}</p>
-                  <p className="text-sm mt-0.5 leading-relaxed" style={{ color: '#1E2A26' }}>{cm.commentaire}</p>
+                  <p className="text-sm mt-0.5 leading-relaxed" style={{ color: '#1E2A26' }}><TexteMath>{cm.commentaire}</TexteMath></p>
                 </div>
               ))}
               {session.correction_json.corrige_le && (

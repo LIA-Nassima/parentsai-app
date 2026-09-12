@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next"
 import { Plus_Jakarta_Sans, Dancing_Script } from "next/font/google"
 import "./globals.css"
+import "katex/dist/katex.min.css"
 import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration"
 
 const plusJakartaSans = Plus_Jakarta_Sans({

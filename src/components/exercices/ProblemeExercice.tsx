@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react'
 import { ExerciceProbleme } from '@/types'
 import { FigureSVG, extractSvg } from '@/components/ui/FigureSVG'
+import { TexteMath } from '@/components/ui/TexteMath'
 import { supabase } from '@/lib/supabase'
 
 interface Props {
@@ -86,8 +87,8 @@ export default function ProblemeExercice({ exercice, sessionId, estTermineInitia
         const { texte, svg } = extractSvg(exercice.contexte)
         return (
           <>
-            <p className="mb-5" style={{ color: ENCRE, fontSize: '1.0625rem', fontWeight: 500, lineHeight: 1.6 }}>
-              {texte}
+            <p className="mb-5" style={{ color: ENCRE, fontSize: '1.0625rem', fontWeight: 500, lineHeight: 1.6, whiteSpace: 'pre-line' }}>
+              <TexteMath>{texte}</TexteMath>
             </p>
             <FigureSVG svg={exercice.figure || svg} />
           </>
@@ -99,10 +100,10 @@ export default function ProblemeExercice({ exercice, sessionId, estTermineInitia
         {exercice.questions.map((q, i) => (
           <div key={i} className="p-4 rounded-xl" style={{ background: '#fff', border: `1.5px solid ${BORDURE}` }}>
             <span className="font-bold" style={{ color: OR, fontSize: '1rem' }}>{q.lettre})</span>
-            <span className="ml-2" style={{ color: ENCRE, fontSize: '1rem', fontWeight: 500 }}>{q.enonce}</span>
+            <span className="ml-2" style={{ color: ENCRE, fontSize: '1rem', fontWeight: 500 }}><TexteMath>{q.enonce}</TexteMath></span>
             {(modeParent || showCorrection) && (
-              <div className="mt-2 text-sm pl-4" style={{ borderLeft: `2px solid ${OR}`, color: MUTED }}>
-                {q.correction}
+              <div className="mt-2 text-sm pl-4" style={{ borderLeft: `2px solid ${OR}`, color: MUTED, whiteSpace: 'pre-line' }}>
+                <TexteMath>{q.correction}</TexteMath>
               </div>
             )}
           </div>
@@ -163,7 +164,7 @@ export default function ProblemeExercice({ exercice, sessionId, estTermineInitia
       {modeParent && exercice.metacog && (
         <div className="mt-3 p-3 rounded-xl text-sm italic"
           style={{ background: '#eef1f5', color: '#2e3b4e', borderLeft: '3px solid #2e3b4e' }}>
-          🤔 {exercice.metacog}
+          🤔 <TexteMath>{exercice.metacog}</TexteMath>
         </div>
       )}
 
