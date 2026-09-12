@@ -7,6 +7,7 @@ import { ChevronDown, ChevronUp, ArrowLeft, BookOpen, FileText, LineChart } from
 import { LogoIAla } from '@/components/brand/LogoIAla'
 import { grouperParType, useSousOuvertes, SousCategorieAccordeon } from '@/components/ui/SousCategorie'
 import { SelecteurSemaine } from '@/components/ui/SelecteurSemaine'
+import { RechercheSessions } from '@/components/ui/RechercheSessions'
 import { supabase } from '@/lib/supabase'
 import { Session, Reponse, SessionAvecStats } from '@/types'
 import { normaliserPrenom } from '@/lib/normaliser'
@@ -300,6 +301,7 @@ function TabRevisions({ prenom, classe, familleId }: { prenom: string; classe: s
   const [loading, setLoading]       = useState(true)
   const [filtre, setFiltre]         = useState<Filtre>((searchParams.get('filtre') as Filtre) || 'afaire')
   const [ouverteMat, setOuverteMat] = useState<string | null>(matInit)
+  const [modeVue, setModeVue]       = useState<'semaine' | 'recherche'>('semaine')
 
   useEffect(() => {
     async function charger() {
@@ -352,6 +354,39 @@ function TabRevisions({ prenom, classe, familleId }: { prenom: string; classe: s
 
   return (
     <div>
+      {/* Sélecteur de mode : Semaine (quotidien) / Rechercher (archive) */}
+      <div className="flex gap-1 p-1 rounded-full mb-4" style={{ background: '#EAEDF0' }}>
+        {([
+          { id: 'semaine' as const,   label: '📅 Semaine' },
+          { id: 'recherche' as const, label: '🔍 Rechercher' },
+        ]).map(m => {
+          const actif = modeVue === m.id
+          return (
+            <button
+              key={m.id}
+              onClick={() => setModeVue(m.id)}
+              className="flex-1 py-2.5 rounded-full text-sm font-bold transition-all"
+              style={{
+                background: actif ? '#fff' : 'transparent',
+                color: actif ? '#1E2A26' : '#6E827B',
+                boxShadow: actif ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
+              }}
+            >
+              {m.label}
+            </button>
+          )
+        })}
+      </div>
+
+      {modeVue === 'recherche' ? (
+        <RechercheSessions
+          sessions={sessions}
+          couleurs={COULEURS_MATIERE}
+          icones={ICONES_MATIERE}
+          renderLigne={s => <LigneValide s={s} retourQuery="from=enfant" />}
+        />
+      ) : (
+      <>
       <SelecteurSemaine
         semaineDebut={semaineDebut}
         onChange={s => { setSemaineDebut(s); setOuverteMat(null) }}
@@ -405,6 +440,8 @@ function TabRevisions({ prenom, classe, familleId }: { prenom: string; classe: s
         ? <VueAFaire sessions={aFaire} classe={classe} ouverteMat={ouverteMat} setOuverteMat={setOuverteMat} ouvertureInitiale={cleInit} />
         : <VueValide  sessions={valide} classe={classe} ouverteMat={ouverteMat} setOuverteMat={setOuverteMat} ouvertureInitiale={cleInit} />
       }
+      </>
+      )}
       </>
       )}
     </div>

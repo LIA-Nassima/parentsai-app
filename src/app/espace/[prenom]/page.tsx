@@ -11,6 +11,7 @@ import { AppHeader } from '@/components/ui/AppHeader'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { grouperParType, useSousOuvertes, SousCategorieAccordeon } from '@/components/ui/SousCategorie'
 import { SelecteurSemaine } from '@/components/ui/SelecteurSemaine'
+import { RechercheSessions } from '@/components/ui/RechercheSessions'
 import { lundiCourant, dansLaSemaine } from '@/lib/semaine'
 import { Session, Reponse, SessionAvecStats } from '@/types'
 
@@ -316,6 +317,7 @@ function TabSuivi({ prenom, classe, familleId }: { prenom: string; classe: strin
   const [loading, setLoading]   = useState(true)
   const [ouverteMat, setOuverteMat] = useState<string | null>(matInit)
   const [noteVue, setNoteVue]   = useState<SessionAvecStats | null>(null)
+  const [modeVue, setModeVue]   = useState<'semaine' | 'recherche'>('semaine')
   const sous = useSousOuvertes(cleInit ? [cleInit] : [])
 
   useEffect(() => {
@@ -384,6 +386,39 @@ function TabSuivi({ prenom, classe, familleId }: { prenom: string; classe: strin
 
   return (
     <div>
+      {/* Sélecteur de mode : Semaine (quotidien) / Rechercher (archive) */}
+      <div className="flex gap-1 p-1 rounded-full mb-4" style={{ background: '#EAEDF0' }}>
+        {([
+          { id: 'semaine' as const,   label: '📅 Semaine' },
+          { id: 'recherche' as const, label: '🔍 Rechercher' },
+        ]).map(m => {
+          const actif = modeVue === m.id
+          return (
+            <button
+              key={m.id}
+              onClick={() => setModeVue(m.id)}
+              className="flex-1 py-2.5 rounded-full text-sm font-bold transition-all"
+              style={{
+                background: actif ? '#fff' : 'transparent',
+                color: actif ? '#1E2A26' : '#6E827B',
+                boxShadow: actif ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
+              }}
+            >
+              {m.label}
+            </button>
+          )
+        })}
+      </div>
+
+      {modeVue === 'recherche' ? (
+        <RechercheSessions
+          sessions={sessions}
+          couleurs={COULEURS_MATIERE}
+          icones={ICONES_MATIERE}
+          renderLigne={s => <LigneSuivi s={s} retourQuery="" onSupprimer={supprimer} onNote={setNoteVue} />}
+        />
+      ) : (
+      <>
       <SelecteurSemaine
         semaineDebut={semaineDebut}
         onChange={s => { setSemaineDebut(s); setOuverteMat(null) }}
@@ -488,6 +523,8 @@ function TabSuivi({ prenom, classe, familleId }: { prenom: string; classe: strin
           )
         })}
       </div>
+      </>
+      )}
       </>
       )}
       {noteVue && <ModaleNote session={noteVue} onClose={() => setNoteVue(null)} />}
