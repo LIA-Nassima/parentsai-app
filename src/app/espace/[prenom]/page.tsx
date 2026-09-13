@@ -12,8 +12,9 @@ import { StatusBadge } from '@/components/ui/StatusBadge'
 import { grouperParType, useSousOuvertes, SousCategorieAccordeon } from '@/components/ui/SousCategorie'
 import { SelecteurSemaine } from '@/components/ui/SelecteurSemaine'
 import { RechercheSessions } from '@/components/ui/RechercheSessions'
+import { SectionNotesEcole } from '@/components/ui/NotesEcole'
 import { lundiCourant, dansLaSemaine } from '@/lib/semaine'
-import { Session, Reponse, SessionAvecStats } from '@/types'
+import { Session, Reponse, SessionAvecStats, NoteEcole } from '@/types'
 
 // ─── Types locaux ──────────────────────────────────────────────────────────────
 
@@ -1061,12 +1062,18 @@ function TabFiches({ prenom, familleId }: { prenom: string; familleId: string | 
 
 function TabProgression({ prenom, familleId }: { prenom: string; familleId: string | null }) {
   const [sessions, setSessions] = useState<SessionAvecStats[]>([])
+  const [notesEcole, setNotesEcole] = useState<NoteEcole[]>([])
   const [loading, setLoading]   = useState(true)
 
   useEffect(() => {
     async function charger() {
       if (!familleId) return
       setLoading(true)
+      const { data: notes } = await supabase
+        .from('notes_ecole').select('*')
+        .eq('famille_id', familleId)
+        .order('created_at', { ascending: false })
+      setNotesEcole((notes || []) as NoteEcole[])
       const { data: sess } = await supabase
         .from('sessions').select('*')
         .eq('famille_id', familleId)
@@ -1163,7 +1170,12 @@ function TabProgression({ prenom, familleId }: { prenom: string; familleId: stri
 
   return (
     <div>
-      <p className="text-sm mb-4" style={{ color: '#6E827B' }}>Depuis {depuis}</p>
+      <p className="text-sm mb-3" style={{ color: '#6E827B' }}>Depuis {depuis}</p>
+
+      <div className="flex items-baseline gap-2 mb-3">
+        <span className="font-bold text-base" style={{ color: '#1E2A26' }}>📊 Notes IAla</span>
+        <span className="text-xs" style={{ color: '#6E827B' }}>— entraînement</span>
+      </div>
 
       {/* Chiffres clés */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-6">
@@ -1221,9 +1233,20 @@ function TabProgression({ prenom, familleId }: { prenom: string; familleId: stri
         </div>
       </div>
 
-      <p className="text-xs text-center mt-5" style={{ color: '#9aa8a2' }}>
-        La moyenne /20 se remplira avec les corrections notées par Claude (à venir).
-      </p>
+      {/* Notes prof — les vrais contrôles */}
+      <div className="flex items-baseline gap-2 mt-7 mb-3">
+        <span className="font-bold text-base" style={{ color: '#1E2A26' }}>🏫 Notes prof</span>
+        <span className="text-xs" style={{ color: '#6E827B' }}>— vrais contrôles</span>
+      </div>
+      <SectionNotesEcole notes={notesEcole} />
+      {notesEcole.length > 0 && (
+        <div className="mt-3 rounded-xl p-3 flex gap-2.5 items-start" style={{ background: '#E3F0EC' }}>
+          <span>💡</span>
+          <p className="text-xs leading-relaxed" style={{ color: '#1F5A4D' }}>
+            Dans Claude : « <strong>Entraîne {prenom} sur ce qui n&apos;est pas acquis</strong> » → des exercices ciblés sur ces notions.
+          </p>
+        </div>
+      )}
     </div>
   )
 }

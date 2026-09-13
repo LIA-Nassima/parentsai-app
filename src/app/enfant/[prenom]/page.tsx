@@ -8,8 +8,9 @@ import { LogoIAla } from '@/components/brand/LogoIAla'
 import { grouperParType, useSousOuvertes, SousCategorieAccordeon } from '@/components/ui/SousCategorie'
 import { SelecteurSemaine } from '@/components/ui/SelecteurSemaine'
 import { RechercheSessions } from '@/components/ui/RechercheSessions'
+import { SectionNotesEcole } from '@/components/ui/NotesEcole'
 import { supabase } from '@/lib/supabase'
-import { Session, Reponse, SessionAvecStats } from '@/types'
+import { Session, Reponse, SessionAvecStats, NoteEcole } from '@/types'
 import { normaliserPrenom } from '@/lib/normaliser'
 import { lundiCourant, dansLaSemaine } from '@/lib/semaine'
 
@@ -759,12 +760,18 @@ function FichesEnfant({ familleId }: { familleId: string | null }) {
 
 function ProgresEnfant({ prenom, familleId }: { prenom: string; familleId: string | null }) {
   const [sessions, setSessions] = useState<SessionAvecStats[]>([])
+  const [notesEcole, setNotesEcole] = useState<NoteEcole[]>([])
   const [loading, setLoading]   = useState(true)
 
   useEffect(() => {
     async function charger() {
       if (!familleId) return
       setLoading(true)
+      const { data: notes } = await supabase
+        .from('notes_ecole').select('*')
+        .eq('famille_id', familleId)
+        .order('created_at', { ascending: false })
+      setNotesEcole((notes || []) as NoteEcole[])
       const { data: sess } = await supabase
         .from('sessions').select('*')
         .eq('famille_id', familleId)
@@ -864,6 +871,19 @@ function ProgresEnfant({ prenom, familleId }: { prenom: string; familleId: strin
           })}
         </div>
       </div>
+
+      {/* Notes prof — les vrais contrôles + ce qu'il faut retravailler */}
+      {notesEcole.length > 0 && (
+        <div>
+          <div className="flex items-baseline gap-2 mt-2 mb-2">
+            <span className="font-bold text-base" style={{ color: '#1E2A26' }}>🏫 Notes du prof</span>
+          </div>
+          <div className="rounded-2xl p-3 mb-2.5 text-sm" style={{ background: '#E3F0EC', color: '#1F5A4D' }}>
+            💪 Voici tes vrais contrôles. Les points « à revoir » sont tes prochaines victoires — demande à tes parents des exos dessus !
+          </div>
+          <SectionNotesEcole notes={notesEcole} />
+        </div>
+      )}
     </div>
   )
 }

@@ -87,6 +87,18 @@ export interface Correction {
   corrige_le: string
 }
 
+export interface NoteEcole {
+  id: string
+  matiere: string
+  chapitre?: string
+  note?: number
+  note_sur?: number
+  notions_a_revoir?: string[]
+  commentaire?: string
+  date_controle?: string
+  created_at: string
+}
+
 export interface Session {
   id: string
   enfant: string
