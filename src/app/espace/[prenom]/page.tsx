@@ -193,21 +193,12 @@ function LigneSuivi({ s, retourQuery, onSupprimer, onNote }: { s: SessionAvecSta
         </p>
       </div>
       <div className="flex items-center gap-1.5 shrink-0">
-        {(s.statut === 'fait' || s.statut === 'validé') && (
-          <Link
-            href={`/session/${s.id}?${retourQuery}`}
-            className="text-xs px-2.5 py-1.5 rounded-lg font-semibold"
-            style={{ background: '#2E7D6B', color: '#fff' }}
-          >
-            Enfant
-          </Link>
-        )}
         <Link
           href={`/session/${s.id}?mode=parent&${retourQuery}`}
           className="text-xs px-2.5 py-1.5 rounded-lg font-semibold"
-          style={{ background: '#E3F0EC', color: '#1F5A4D' }}
+          style={{ background: '#2E7D6B', color: '#fff' }}
         >
-          Corrigé
+          Ouvrir
         </Link>
         <button
           onClick={() => onNote(s)}

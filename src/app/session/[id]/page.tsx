@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Home, ArrowLeft, Printer, Send, Check } from 'lucide-react'
+import { Home, ArrowLeft, Printer } from 'lucide-react'
 import { LogoIAla } from '@/components/brand/LogoIAla'
 import { lundiDeLaDate } from '@/lib/semaine'
 import QCMExercice from '@/components/exercices/QCMExercice'
@@ -21,24 +21,20 @@ export default function SessionPage() {
   const sessionId    = params.id as string
   const modeParent   = searchParams.get('mode') === 'parent'
   const fromEnfant   = searchParams.get('from') === 'enfant'
-  // Lien « corrigé » que le parent envoie à l'enfant : affiche les corrections en lecture seule.
-  const corrigeMode  = searchParams.get('corrige') === '1'
 
   const [session,    setSession]    = useState<Session | null>(null)
   const [reponses,   setReponses]   = useState<Reponse[]>([])
   const [loading,    setLoading]    = useState(true)
-  const [validating, setValidating] = useState(false)
   const [submitting, setSubmitting] = useState(false)
-  const [partageEnCours, setPartageEnCours] = useState(false)
+  const [promptCopie, setPromptCopie] = useState(false)
 
-  // Le parent met le corrigé à disposition de l'enfant (ou le retire) : simple bascule en base.
-  async function basculerCorrige() {
+  // Copie la demande de correction à coller dans Claude (enfant OU parent).
+  function copierPrompt() {
     if (!session) return
-    setPartageEnCours(true)
-    const nouveau = !session.corrige_visible
-    await supabase.from('sessions').update({ corrige_visible: nouveau }).eq('id', sessionId)
-    setSession({ ...session, corrige_visible: nouveau })
-    setPartageEnCours(false)
+    const dateFr = new Date(session.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })
+    navigator.clipboard.writeText(`Corrige la session du ${dateFr} « ${session.chapitre} » de ${session.enfant}`)
+    setPromptCopie(true)
+    setTimeout(() => setPromptCopie(false), 2000)
   }
 
   function handleReponseQCM(exerciceNum: number, estCorrect: boolean) {
@@ -62,11 +58,13 @@ export default function SessionPage() {
     setLoading(false)
   }
 
-  async function soumettreAuParent() {
+  // L'enfant valide lui-même sa session une fois le travail terminé : les réponses se figent
+  // et le corrigé-type devient visible. La note viendra ensuite via le prompt (enfant ou parent).
+  async function validerParEnfant() {
     if (!session) return
     setSubmitting(true)
-    await supabase.from('sessions').update({ statut: 'fait' }).eq('id', sessionId)
-    setSession({ ...session, statut: 'fait' })
+    await supabase.from('sessions').update({ statut: 'validé' }).eq('id', sessionId)
+    setSession({ ...session, statut: 'validé' })
     setSubmitting(false)
   }
 
@@ -90,14 +88,6 @@ export default function SessionPage() {
     }
     // Le parent revient sur le suivi de l'enfant
     return prenom ? `/espace/${encodeURIComponent(prenom)}${suffix}` : '/'
-  }
-
-  async function validerSession() {
-    if (!session) return
-    setValidating(true)
-    await supabase.from('sessions').update({ statut: 'validé' }).eq('id', sessionId)
-    setValidating(false)
-    router.push(urlRetour())
   }
 
   function retour() {
@@ -150,11 +140,15 @@ export default function SessionPage() {
   const qcmJuste   = reponses.filter(r => r.type === 'qcm' && r.est_correct).length
   const qcmTotal   = reponses.filter(r => r.type === 'qcm').length
   const pbTermines = reponses.filter(r => r.type === 'probleme' && r.est_termine).length
-  // voirCorrige = on affiche les corrections. Parent : toujours. Enfant : seulement
-  // via ?corrige=1 ET si le parent a explicitement mis le corrigé à disposition.
-  const corrigeEnfant = corrigeMode && session.corrige_visible === true
-  const voirCorrige = modeParent || corrigeEnfant
-  const estBloque  = voirCorrige || (session.statut === 'fait' || session.statut === 'validé')
+  // Travail validé par l'enfant (on tolère l'ancien statut « fait »).
+  const travailValide = session.statut === 'validé' || session.statut === 'fait'
+  // voirCorrige = on affiche le corrigé-type. Parent : toujours (dès la création).
+  // Enfant : seulement APRÈS avoir validé sa session (sinon il recopierait les solutions).
+  const voirCorrige = modeParent || travailValide
+  const estBloque   = voirCorrige
+  // Demande prête à coller dans Claude pour obtenir la note sur le vrai travail de l'enfant.
+  const dateFrCorr = new Date(session.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })
+  const demandeCorrection = `Corrige la session du ${dateFrCorr} « ${session.chapitre} » de ${session.enfant}`
 
   const evalColor  = isDS ? '#B8881F' : '#27518f'
   const evalBg     = isDS ? '#FDF8EA' : '#E2ECFB'
@@ -284,32 +278,6 @@ export default function SessionPage() {
           </p>
         </div>
 
-        {/* Bandeau mode parent + action de partage du corrigé */}
-        {modeParent && (
-          <div
-            className="session-no-print rounded-xl mb-5 p-3.5"
-            style={{ background: isEval ? evalColor : '#2E7D6B', color: '#fff' }}
-          >
-            <p className="text-sm font-bold text-center">
-              📋 MODE CORRIGÉS — {session.enfant} · {session.matiere}
-            </p>
-            <button
-              onClick={basculerCorrige}
-              disabled={partageEnCours}
-              className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold transition-opacity hover:opacity-90 disabled:opacity-50"
-              style={
-                session.corrige_visible
-                  ? { background: 'rgba(255,255,255,0.2)', color: '#fff', border: '1px solid rgba(255,255,255,0.45)' }
-                  : { background: '#E8B53A', color: '#7a5910' }
-              }
-            >
-              {session.corrige_visible
-                ? <><Check size={16} /> Corrigé partagé — appuyer pour retirer</>
-                : <><Send size={16} /> Mettre le corrigé à dispo de {session.enfant}</>}
-            </button>
-          </div>
-        )}
-
         {/* Stats */}
         {(qcmTotal > 0 || pbTermines > 0) && (
           <div className="session-no-print grid grid-cols-2 gap-3 mb-5">
@@ -325,6 +293,32 @@ export default function SessionPage() {
               </div>
               <div className="text-xs uppercase tracking-wide" style={{ color: '#6E827B', fontSize: 10 }}>Problèmes</div>
             </div>
+          </div>
+        )}
+
+        {/* Obtenir la note de Claude — une fois validé, tant que pas corrigé (enfant ET parent) */}
+        {travailValide && !session.correction_json && (
+          <div
+            className="session-no-print rounded-2xl mb-5 p-4"
+            style={{ background: '#FDF8EA', border: '1.5px solid #E8B53A' }}
+          >
+            <p className="text-sm font-bold" style={{ color: '#7a5910' }}>📋 Obtenir la note de Claude</p>
+            <p className="text-xs mt-1 mb-3" style={{ color: '#8a6a1e' }}>
+              Copie cette demande et colle-la dans Claude pour recevoir la note et les commentaires.
+            </p>
+            <div
+              className="rounded-xl p-3 text-sm mb-3"
+              style={{ background: '#fff', color: '#1E2A26', border: '1px solid #EADFBE' }}
+            >
+              « {demandeCorrection} »
+            </div>
+            <button
+              onClick={copierPrompt}
+              className="w-full py-2.5 rounded-lg text-sm font-bold transition-opacity hover:opacity-90"
+              style={promptCopie ? { background: '#2E7D6B', color: '#fff' } : { background: '#E8B53A', color: '#7a5910' }}
+            >
+              {promptCopie ? '✓ Copié !' : '📋 Copier la demande'}
+            </button>
           </div>
         )}
 
@@ -401,54 +395,30 @@ export default function SessionPage() {
           )
         })}
 
-        {/* Soumettre au parent — côté enfant (masqué en lecture de corrigé) */}
-        {!voirCorrige && session.statut === 'en_attente' && (
+        {/* Valider — côté enfant (quand il a terminé) */}
+        {!modeParent && session.statut === 'en_attente' && (
           <div className="session-no-print mt-8 text-center">
             <p className="text-xs mb-3" style={{ color: '#6E827B' }}>
-              Quand tu as fini, envoie ton travail au parent.
+              Quand tu as terminé, valide ta session pour débloquer le corrigé.
             </p>
             <button
-              onClick={soumettreAuParent}
+              onClick={validerParEnfant}
               disabled={submitting}
               className="px-8 py-4 rounded-xl font-bold text-white text-sm transition-opacity hover:opacity-90 disabled:opacity-50"
               style={{ background: '#E8B53A' }}
             >
-              {submitting ? 'Envoi...' : '📤 Envoyer au parent'}
+              {submitting ? 'Validation...' : '✅ Valider la session'}
             </button>
           </div>
         )}
 
-        {/* Déjà soumis — côté enfant */}
-        {!modeParent && session.statut === 'fait' && (
-          <div
-            className="session-no-print mt-8 p-4 rounded-xl text-center text-sm font-semibold"
-            style={{ background: '#FDF8EA', color: '#B8881F', border: '1px solid #E8B53A' }}
-          >
-            ✉️ Travail envoyé au parent — en attente de correction
-          </div>
-        )}
-
-        {/* Valider — côté parent */}
-        {modeParent && session.statut === 'fait' && (
-          <div className="session-no-print mt-8 text-center">
-            <button
-              onClick={validerSession}
-              disabled={validating}
-              className="px-8 py-4 rounded-xl font-bold text-white text-sm transition-opacity hover:opacity-90 disabled:opacity-50"
-              style={{ background: '#2E7D6B' }}
-            >
-              {validating ? 'Validation...' : '✅ Valider la session'}
-            </button>
-          </div>
-        )}
-
-        {/* Validé */}
-        {session.statut === 'validé' && (
+        {/* Validée */}
+        {travailValide && (
           <div
             className="session-no-print mt-8 p-4 rounded-xl text-center text-sm font-semibold"
             style={{ background: '#E3F0EC', color: '#1F5A4D', border: '1.5px solid #2E7D6B' }}
           >
-            ✅ Session validée par le parent
+            {session.correction_json ? '✅ Session validée et corrigée' : '✅ Session validée'}
           </div>
         )}
 

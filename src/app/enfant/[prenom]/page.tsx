@@ -65,15 +65,6 @@ function CarteAFaire({ s, retourQuery }: { s: SessionAvecStats; retourQuery: str
           {estFait ? 'À corriger' : 'Commencer →'}
         </span>
       </Link>
-      {s.corrige_visible && (
-        <Link
-          href={`/session/${s.id}?${retourQuery}&corrige=1`}
-          className="text-xs font-bold px-2.5 py-1.5 rounded-xl ml-2 shrink-0 transition-opacity hover:opacity-80"
-          style={{ background: '#E3F0EC', color: '#1F5A4D' }}
-        >
-          📗 Corrigé
-        </Link>
-      )}
     </div>
   )
 }
@@ -91,25 +82,23 @@ function LigneValide({ s, retourQuery }: { s: SessionAvecStats; retourQuery: str
         <p className="text-xs" style={{ color: '#6E827B' }}>{date}</p>
       </Link>
       <div className="flex items-center gap-2 shrink-0 ml-3">
-        {s.correction_json && (
+        {s.correction_json ? (
           <span
             className="text-xs font-bold px-2 py-0.5 rounded-full"
             style={{ background: '#FDF8EA', color: '#B8881F' }}
           >
             {s.correction_json.note}/{s.correction_json.note_sur || 20}
           </span>
+        ) : (
+          <span
+            className="text-xs font-bold px-2 py-0.5 rounded-full"
+            style={{ background: '#FBE6E3', color: '#D9483B' }}
+          >
+            ⏳ à corriger
+          </span>
         )}
         {score && (
           <span className="text-xs font-bold" style={{ color: '#1F5A4D' }}>✅ {score}</span>
-        )}
-        {s.corrige_visible && (
-          <Link
-            href={`/session/${s.id}?${retourQuery}&corrige=1`}
-            className="text-xs font-bold px-2.5 py-1 rounded-full transition-opacity hover:opacity-80"
-            style={{ background: '#E3F0EC', color: '#1F5A4D' }}
-          >
-            📗 Corrigé
-          </Link>
         )}
       </div>
     </div>
