@@ -121,7 +121,7 @@ export interface Reponse {
   id: string
   session_id: string
   exercice_num: number
-  type: 'qcm' | 'probleme'
+  type: 'qcm' | 'probleme' | 'photo'
   reponse_index: number | null
   est_correct: boolean | null
   est_termine: boolean | null

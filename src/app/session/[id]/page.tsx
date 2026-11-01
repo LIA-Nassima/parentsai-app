@@ -8,6 +8,7 @@ import { LogoIAla } from '@/components/brand/LogoIAla'
 import { lundiDeLaDate } from '@/lib/semaine'
 import QCMExercice from '@/components/exercices/QCMExercice'
 import ProblemeExercice from '@/components/exercices/ProblemeExercice'
+import CopiePhotos, { PhotoCopie } from '@/components/exercices/CopiePhotos'
 import { TexteMath } from '@/components/ui/TexteMath'
 import FicheView from '@/components/fiche/FicheView'
 import { StatusBadge } from '@/components/ui/StatusBadge'
@@ -27,6 +28,8 @@ export default function SessionPage() {
   const [loading,    setLoading]    = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [promptCopie, setPromptCopie] = useState(false)
+  const [copieUpload, setCopieUpload] = useState(false)          // une photo de copie est en cours d'envoi
+  const [copiePhotosLive, setCopiePhotosLive] = useState<PhotoCopie[]>([])  // photos courantes (pour l'avertissement)
 
   // Copie la demande de correction à coller dans Claude (enfant OU parent).
   function copierPrompt() {
@@ -62,10 +65,26 @@ export default function SessionPage() {
   // et le corrigé-type devient visible. La note viendra ensuite via le prompt (enfant ou parent).
   async function validerParEnfant() {
     if (!session) return
+    // 1) Ne jamais valider pendant qu'une photo s'envoie (sinon on la perd).
+    if (copieUpload) {
+      alert('⏳ Une photo est encore en cours d\'envoi. Attends qu\'elle soit terminée, puis valide.')
+      return
+    }
+    // 2) Prévenir si des exercices écrits n'ont aucune photo de copie.
+    const aEcrits = (session.exercices_json?.exercices || []).some((e: { type: string }) => e.type === 'probleme')
+    if (aEcrits && copiePhotosLive.length === 0) {
+      if (!confirm("Tu n'as pas encore ajouté de photo de ta copie. Valider quand même ?")) return
+    }
+    // 3) Valider ET vérifier que c'est bien enregistré (sinon faux succès).
     setSubmitting(true)
-    await supabase.from('sessions').update({ statut: 'validé' }).eq('id', sessionId)
-    setSession({ ...session, statut: 'validé' })
+    const { data, error } = await supabase
+      .from('sessions').update({ statut: 'validé' }).eq('id', sessionId).select('id')
     setSubmitting(false)
+    if (error || !data || data.length === 0) {
+      alert("La validation n'a pas pu être enregistrée. Vérifie ta connexion et réessaie.")
+      return
+    }
+    setSession({ ...session, statut: 'validé' })
   }
 
   // Construit l'URL de retour en conservant le contexte (filtre / matière / sous-catégorie)
@@ -139,7 +158,6 @@ export default function SessionPage() {
   const pbExos     = exercices.filter(e => e.type === 'probleme') as ExerciceProbleme[]
   const qcmJuste   = reponses.filter(r => r.type === 'qcm' && r.est_correct).length
   const qcmTotal   = reponses.filter(r => r.type === 'qcm').length
-  const pbTermines = reponses.filter(r => r.type === 'probleme' && r.est_termine).length
   // Travail validé par l'enfant (on tolère l'ancien statut « fait »).
   const travailValide = session.statut === 'validé' || session.statut === 'fait'
   // voirCorrige = on affiche le corrigé-type. Parent : toujours (dès la création).
@@ -149,6 +167,13 @@ export default function SessionPage() {
   // Demande prête à coller dans Claude pour obtenir la note sur le vrai travail de l'enfant.
   const dateFrCorr = new Date(session.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })
   const demandeCorrection = `Corrige la session du ${dateFrCorr} « ${session.chapitre} » de ${session.enfant}`
+
+  // Photos de la copie de l'enfant (nouveau modèle : un seul upload global en bas du devoir).
+  const photosCopie: PhotoCopie[] = reponses
+    .filter(r => r.type === 'photo')
+    .sort((a, b) => a.exercice_num - b.exercice_num)
+    .map(r => ({ exercice_num: r.exercice_num, photo_url: r.photo_url as string }))
+  const aDesEcrits = pbExos.length > 0
 
   const evalColor  = isDS ? '#B8881F' : '#27518f'
   const evalBg     = isDS ? '#FDF8EA' : '#E2ECFB'
@@ -279,7 +304,7 @@ export default function SessionPage() {
         </div>
 
         {/* Stats */}
-        {(qcmTotal > 0 || pbTermines > 0) && (
+        {(qcmTotal > 0 || aDesEcrits) && (
           <div className="session-no-print grid grid-cols-2 gap-3 mb-5">
             <div className="rounded-2xl p-4 text-center" style={{ background: '#fff', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
               <div className="text-2xl font-bold mb-0.5" style={{ color: '#1F5A4D' }}>
@@ -289,9 +314,9 @@ export default function SessionPage() {
             </div>
             <div className="rounded-2xl p-4 text-center" style={{ background: '#fff', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
               <div className="text-2xl font-bold mb-0.5" style={{ color: '#E8B53A' }}>
-                {pbTermines}/{pbExos.length}
+                {aDesEcrits ? photosCopie.length : '—'}
               </div>
-              <div className="text-xs uppercase tracking-wide" style={{ color: '#6E827B', fontSize: 10 }}>Problèmes</div>
+              <div className="text-xs uppercase tracking-wide" style={{ color: '#6E827B', fontSize: 10 }}>Photos copie</div>
             </div>
           </div>
         )}
@@ -386,28 +411,58 @@ export default function SessionPage() {
           return (
             <ProblemeExercice key={ex.num}
               exercice={ex as ExerciceProbleme}
-              sessionId={sessionId}
-              estTermineInitial={repExo?.est_termine ?? false}
-              photoUrlInitiale={repExo?.photo_url ?? null}
               modeParent={voirCorrige}
-              estBloque={estBloque}
+              photoUrlInitiale={repExo?.photo_url ?? null}
             />
           )
         })}
+
+        {/* Zone « Ma copie » — côté enfant, tant que la session n'est pas validée */}
+        {!modeParent && !estBloque && aDesEcrits && (
+          <CopiePhotos
+            sessionId={sessionId}
+            photosInitiales={photosCopie}
+            onUploadingChange={setCopieUpload}
+            onPhotosChange={setCopiePhotosLive}
+          />
+        )}
+
+        {/* Galerie de la copie — lecture seule (parent, ou enfant après validation) */}
+        {estBloque && photosCopie.length > 0 && (
+          <div className="rounded-2xl mb-5 p-4" style={{ background: '#fff', border: '1px solid #E4EAE7', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
+            <p className="text-xs uppercase tracking-wide mb-3" style={{ color: '#6E827B' }}>
+              📸 Copie de {session.enfant}
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              {photosCopie.map((ph, i) => (
+                <a key={ph.exercice_num} href={ph.photo_url} target="_blank" rel="noopener noreferrer" className="block">
+                  <img
+                    src={ph.photo_url}
+                    alt={`Page ${i + 1}`}
+                    className="w-full rounded-lg object-cover"
+                    style={{ aspectRatio: '3/4', border: '1px solid #DCE8E4' }}
+                  />
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Valider — côté enfant (quand il a terminé) */}
         {!modeParent && session.statut === 'en_attente' && (
           <div className="session-no-print mt-8 text-center">
             <p className="text-xs mb-3" style={{ color: '#6E827B' }}>
-              Quand tu as terminé, valide ta session pour débloquer le corrigé.
+              {copieUpload
+                ? '⏳ Attends que tes photos soient envoyées avant de valider.'
+                : 'Quand tu as terminé, valide ta session pour débloquer le corrigé.'}
             </p>
             <button
               onClick={validerParEnfant}
-              disabled={submitting}
+              disabled={submitting || copieUpload}
               className="px-8 py-4 rounded-xl font-bold text-white text-sm transition-opacity hover:opacity-90 disabled:opacity-50"
               style={{ background: '#E8B53A' }}
             >
-              {submitting ? 'Validation...' : '✅ Valider la session'}
+              {submitting ? 'Validation...' : copieUpload ? '⏳ Photo en cours d\'envoi…' : '✅ Valider la session'}
             </button>
           </div>
         )}
